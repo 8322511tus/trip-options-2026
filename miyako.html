@@ -1,0 +1,845 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>宮古島・下地島 2泊3日</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+  integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="">
+<style>
+  :root{
+    --ink:#1b2733; --muted:#64727f; --line:#e3e8ec; --paper:#f7f5ef; --panel:#ffffff;
+    --blue:#1f6f8b; --green:#3d7a5c; --gold:#b07d24; --red:#d23b2c; --shadow:0 10px 30px rgba(20,40,55,.10);
+  }
+  *{box-sizing:border-box}
+  body{margin:0;color:var(--ink);background:var(--paper);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Hiragino Kaku Gothic ProN","Yu Gothic",Meiryo,sans-serif;
+    line-height:1.7;-webkit-text-size-adjust:100%}
+  a{color:#155f80;text-underline-offset:.16em}
+  .wrap{max-width:760px;margin:0 auto;padding:18px 14px 64px}
+  header.hero{background:linear-gradient(160deg,#e7f2f3,#fbf7ef);border:1px solid var(--line);
+    border-radius:20px;padding:20px 18px;box-shadow:var(--shadow)}
+  .kicker{font-size:12px;font-weight:800;color:var(--blue);letter-spacing:.06em}
+  h1{margin:4px 0 6px;font-size:clamp(26px,7vw,38px);line-height:1.15}
+  .lead{color:#33424f;margin:0 0 12px}
+  .badges{display:flex;gap:7px;flex-wrap:wrap}
+  .badge{display:inline-flex;align-items:center;gap:5px;border:1px solid #cdd9dd;background:#fff;
+    border-radius:999px;padding:6px 11px;font-size:13px;font-weight:800}
+  section{margin-top:30px}
+  h2{font-size:20px;margin:0 0 4px;display:flex;align-items:center;gap:8px}
+  h2 .dot{width:10px;height:10px;border-radius:3px;background:var(--red)}
+  .sub{color:var(--muted);font-size:13px;margin:0 0 14px}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:14px;
+    box-shadow:0 6px 18px rgba(25,45,58,.05);margin-bottom:12px}
+  #map{height:62vh;min-height:380px;max-height:560px;width:100%;border-radius:16px;border:1px solid var(--line);z-index:0}
+  .mapfallback{height:100%;display:flex;align-items:center;justify-content:center;text-align:center;padding:24px;color:#566675;background:#eef4f2}
+  .legend{display:flex;gap:14px;flex-wrap:wrap;margin-top:10px;font-size:13px;color:#445}
+  .legend span{display:inline-flex;align-items:center;gap:6px}
+  .swatch{width:14px;height:14px;border-radius:50%;display:inline-block}
+  .routeline{width:22px;height:0;border-top:3px solid var(--red);display:inline-block}
+  .pinindex{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+  .pinbtn{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line);background:#fff;
+    border-radius:999px;padding:5px 11px 5px 6px;font-size:13px;font-weight:700;color:#26323d;cursor:pointer}
+  .pinbtn:hover,.pinbtn.active{border-color:var(--red);background:#fff4f2}
+  .pinbtn .num{width:20px;height:20px;border-radius:50%;background:var(--red);color:#fff;font-size:12px;font-weight:800;
+    display:inline-flex;align-items:center;justify-content:center}
+  .pinbtn .num.hub{background:#16354a}
+  .pin{width:22px;height:22px;border-radius:50%;color:#fff;font-weight:800;font-size:12px;
+    display:flex;align-items:center;justify-content:center;border:2px solid #fff;box-shadow:0 2px 6px rgba(0,0,0,.35)}
+  .access{display:grid;gap:10px}
+  .leg{display:grid;grid-template-columns:30px 1fr;gap:10px;padding:10px 0;border-bottom:1px dashed #e6ebee}
+  .leg:last-child{border-bottom:0}
+  .leg .ic{font-size:20px;text-align:center}
+  .leg .ttl{font-weight:800}
+  .leg .meta{font-size:13px;color:#475663}
+  .pillrow{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
+  .pill{font-size:12px;font-weight:700;border-radius:999px;padding:4px 10px;text-decoration:none;background:#eef4f2;color:#27514a}
+  .pill.book{background:#eaf1f7;color:#1c537a}
+  .day{margin-bottom:14px}
+  .day h3{margin:0 0 8px;font-size:16px;color:#234}
+  .stop{padding:11px 0;border-bottom:1px solid #eef2f4}
+  .stop:last-child{border-bottom:0}
+  .stop .top{display:flex;gap:9px;align-items:baseline}
+  .stop .num{flex:0 0 auto;width:22px;height:22px;border-radius:50%;background:var(--red);color:#fff;
+    font-size:12px;font-weight:800;display:inline-flex;align-items:center;justify-content:center;align-self:center}
+  .stop .num.hub{background:#16354a}
+  .stop .t{color:var(--blue);font-weight:800;font-variant-numeric:tabular-nums;min-width:46px}
+  .stop .p{font-weight:800}
+  .stop .hint{color:var(--muted);font-size:13px;margin-left:31px}
+  .movelink{margin:8px 0 2px 31px;display:inline-flex;align-items:center;gap:7px;font-size:13px;font-weight:700;
+    background:#f3f7f5;border:1px solid #e2ebe6;border-radius:10px;padding:5px 11px;color:#2f5a4c;text-decoration:none}
+  .grid2{display:grid;grid-template-columns:1fr;gap:10px}
+  .mealgroup{margin-bottom:8px}
+  .mealgroup .when{font-weight:800;font-size:14px;color:#234;margin:6px 2px 8px}
+  .item{border:1px solid var(--line);border-radius:13px;padding:12px;background:#fff}
+  .item .name{font-weight:800}
+  .item .price{font-weight:800;color:#123e5b;font-size:14px}
+  .item .hint{color:var(--muted);font-size:13px}
+  .tag{display:inline-block;font-size:11px;font-weight:800;color:#6a4a14;background:#fdf0d6;border-radius:6px;padding:2px 7px;margin-right:6px}
+  .tag.sns{color:#8a2b6b;background:#fbe4f1}
+  table{width:100%;border-collapse:collapse;font-size:14px}
+  th,td{padding:9px 8px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top}
+  th{background:#eef4f6;color:#39525f;font-size:12px}
+  td.r{text-align:right;font-variant-numeric:tabular-nums}
+  .todo{list-style:none;padding:0;margin:0}
+  .todo li{padding:8px 0;border-bottom:1px solid #eef2f4}
+  .todo.book li:before{content:"☐ ";color:var(--blue);font-weight:800}
+  .todo.decide li:before{content:"・";color:var(--gold);font-weight:800;margin-right:4px}
+  .twohead{font-weight:800;margin:2px 0 6px;font-size:14px}
+  footer{margin-top:34px;color:var(--muted);font-size:12px;text-align:center}
+  @media(min-width:640px){.grid2{grid-template-columns:1fr 1fr}}
+</style>
+</head>
+<body>
+<main class="wrap">
+  <header class="hero">
+    <div class="kicker">6人旅行・候補B</div>
+    <h1>宮古島・下地島 2泊3日</h1>
+    <p class="lead">那覇空港で合流して宮古方面へ入る、海とマリン体験を主役にした島旅。現地は8人乗りワゴン1台で動きます。</p>
+    <div class="badges"><span class="badge">🗓 2泊3日</span><span class="badge">👥 6人（東京4・神戸2）</span><span class="badge">✈️ 共通区間: 那覇→宮古</span><span class="badge">🚐 レンタカー1台</span><span class="badge">🐠 海アクティビティ</span></div>
+  </header>
+
+  <section id="route">
+    <h2><span class="dot"></span>ルート地図</h2>
+    <p class="sub">番号順に巡るルート。赤い線が実際の移動経路です。</p>
+    <div id="map"></div>
+    <div class="legend">
+      <span><i class="routeline"></i>順路</span>
+      <span><i class="swatch" style="background:#16354a"></i>集合・拠点</span>
+      <span><i class="swatch" style="background:#d23b2c"></i>観光スポット</span>
+      <span><i class="swatch" style="background:#b07d24"></i>食事の街</span>
+    </div>
+    <div class="pinindex" id="pinindex"></div>
+    <p class="sub" style="margin-top:8px">番号をタップすると、地図のその場所に移動します。</p>
+  </section>
+
+  <section id="access">
+    <h2><span class="dot"></span>行き帰りのアクセス</h2>
+    <p class="sub">東京組・神戸組は那覇空港で合流し、那覇→宮古/下地島の同じ便から共通行程に入ります。</p>
+    <div class="card"><div class="twohead">東京発（4人）</div><div class="access" id="acc-a"></div></div>
+    <div class="card"><div class="twohead">神戸発（2人）</div><div class="access" id="acc-b"></div></div>
+  </section>
+
+  <section id="itinerary">
+    <h2><span class="dot"></span>行程</h2>
+    <p class="sub">番号は上の地図のピンと同じ順番です。スポット名は地図リンク、区間の「🚗 ◯分」は経路に飛びます。</p>
+    <div id="days"></div>
+  </section>
+
+  <section id="meals">
+    <h2><span class="dot"></span>食事候補</h2>
+    <p class="sub">タイミング別の候補。気分と予約状況で選べます。</p>
+    <div id="meal-list"></div>
+  </section>
+
+  <section id="activities">
+    <h2><span class="dot"></span>アクティビティ候補</h2>
+    <p class="sub">行程に入れるかを相談しやすい体験候補です。天気・体力・予約状況で選べます。</p>
+    <div class="grid2" id="activity-list"></div>
+  </section>
+
+  <section id="other">
+    <h2><span class="dot"></span>他にもおすすめのスポット</h2>
+    <p class="sub">天気や気分で順路に足せる候補です。</p>
+    <div class="grid2" id="other-list"></div>
+  </section>
+
+  <section id="car">
+    <h2><span class="dot"></span>レンタカー</h2>
+    <p class="sub">下地島空港または宮古空港で8人乗りワゴン1台を受取。荷物が多い場合も1台でまとまりやすいです。</p>
+    <div class="grid2" id="car-list"></div>
+  </section>
+
+  <section id="stay">
+    <h2><span class="dot"></span>宿</h2>
+    <p class="sub">男女3:3のため宿検索は6名/2室（男性3名・女性3名）目安。個室重視なら6室で再検索。</p>
+    <div class="grid2" id="stay-list"></div>
+  </section>
+
+  <section id="budget">
+    <h2><span class="dot"></span>費用のめやす（1人あたり）</h2>
+    <div class="card" style="overflow-x:auto"><table id="budget-table"></table></div>
+  </section>
+
+  <section id="next">
+    <h2><span class="dot"></span>これから決める・予約すること</h2>
+    <div class="card"><div class="twohead">予約するもの</div><ul class="todo book" id="book-list"></ul></div>
+    <div class="card"><div class="twohead">グループで決めること（まだ未確定）</div><ul class="todo decide" id="decide-list"></ul></div>
+  </section>
+
+  <footer>所要時間・便は作成時点の各社公式時刻表・地図経路に基づくめやすです。</footer>
+</main>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+  integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+<script>
+/* =================== DATA（ここだけ案件ごとに差し替える） =================== */
+const mapSpots = [
+  {
+    "n": 1,
+    "name": "那覇空港（合流）",
+    "short": "那覇空港",
+    "lat": 26.1958,
+    "lng": 127.6469,
+    "kind": "hub",
+    "time": "Day1 12:30"
+  },
+  {
+    "n": 2,
+    "name": "下地島空港（レンタカー受取）",
+    "short": "下地島空港",
+    "lat": 24.827,
+    "lng": 125.145,
+    "kind": "hub",
+    "time": "Day1 14:30"
+  },
+  {
+    "n": 3,
+    "name": "17END",
+    "short": "17END",
+    "lat": 24.84,
+    "lng": 125.144,
+    "kind": "spot",
+    "time": "Day1 15:00"
+  },
+  {
+    "n": 4,
+    "name": "伊良部大橋",
+    "short": "伊良部大橋",
+    "lat": 24.8,
+    "lng": 125.247,
+    "kind": "spot",
+    "time": "Day1 16:10"
+  },
+  {
+    "n": 5,
+    "name": "平良市街（宿・夕食）",
+    "short": "市街",
+    "lat": 24.804,
+    "lng": 125.281,
+    "kind": "hub",
+    "time": "Day1 17:30"
+  },
+  {
+    "n": 6,
+    "name": "与那覇前浜ビーチ",
+    "short": "前浜",
+    "lat": 24.735,
+    "lng": 125.268,
+    "kind": "spot",
+    "time": "Day2 09:30"
+  },
+  {
+    "n": 7,
+    "name": "来間大橋・竜宮城展望台",
+    "short": "来間",
+    "lat": 24.724,
+    "lng": 125.258,
+    "kind": "spot",
+    "time": "Day2 11:30"
+  },
+  {
+    "n": 8,
+    "name": "東平安名崎",
+    "short": "東平安名崎",
+    "lat": 24.719,
+    "lng": 125.468,
+    "kind": "spot",
+    "time": "Day2 15:30"
+  },
+  {
+    "n": 9,
+    "name": "下地島空港（帰り）",
+    "short": "空港",
+    "lat": 24.827,
+    "lng": 125.145,
+    "kind": "hub",
+    "time": "Day3 14:00"
+  }
+];
+
+const foodTowns = [
+  {
+    "name": "平良市街",
+    "lat": 24.804,
+    "lng": 125.281
+  },
+  {
+    "name": "来間島カフェ",
+    "lat": 24.7255,
+    "lng": 125.256
+  }
+];
+
+const access = {
+  "a": [
+    {
+      "ic": "✈️",
+      "ttl": "羽田 → 那覇",
+      "meta": "午前便で那覇 12:00前後着を目安（約2時間40分／片道めやす 1.5万〜3.0万円）",
+      "pills": [
+        {
+          "cls": "book",
+          "label": "便・料金",
+          "url": "https://www.google.com/travel/flights?q=HND%20to%20OKA%202026-09-12%20return%202026-09-14"
+        }
+      ]
+    },
+    {
+      "ic": "✈️",
+      "ttl": "那覇 → 宮古/下地島（共通区間）",
+      "meta": "那覇 13:00前後発 → 宮古/下地島 14:00前後着（約50分）",
+      "pills": [
+        {
+          "cls": "book",
+          "label": "Skymark",
+          "url": "https://www.skymark.co.jp/ja/"
+        },
+        {
+          "cls": "book",
+          "label": "JAL/ANA時刻",
+          "url": "https://www.jal.co.jp/jp/ja/dom/route/time/"
+        }
+      ]
+    },
+    {
+      "ic": "✈️",
+      "ttl": "帰り",
+      "meta": "下地島/宮古→那覇後、那覇→羽田。羽田着は20時台目安。",
+      "pills": [
+        {
+          "cls": "book",
+          "label": "帰り便",
+          "url": "https://www.google.com/travel/flights?q=SHI%20MMY%20to%20HND%20via%20OKA%202026-09-14"
+        }
+      ]
+    }
+  ],
+  "b": [
+    {
+      "ic": "✈️",
+      "ttl": "神戸 → 那覇",
+      "meta": "午前便で那覇 12:00前後着を目安（約2時間10分／片道めやす 1.2万〜2.5万円）",
+      "pills": [
+        {
+          "cls": "book",
+          "label": "便・料金",
+          "url": "https://www.google.com/travel/flights?q=UKB%20to%20OKA%202026-09-12%20return%202026-09-14"
+        }
+      ]
+    },
+    {
+      "ic": "✈️",
+      "ttl": "那覇 → 宮古/下地島（共通区間）",
+      "meta": "東京組と同じ便で宮古方面へ。",
+      "pills": [
+        {
+          "cls": "book",
+          "label": "Skymark",
+          "url": "https://www.skymark.co.jp/ja/"
+        },
+        {
+          "cls": "book",
+          "label": "便・料金",
+          "url": "https://www.google.com/travel/flights?q=OKA%20to%20SHI%20MMY%202026-09-12%20return%202026-09-14"
+        }
+      ]
+    },
+    {
+      "ic": "✈️",
+      "ttl": "帰り",
+      "meta": "下地島/宮古→那覇後、那覇→神戸。神戸着は19〜21時台目安。",
+      "pills": [
+        {
+          "cls": "book",
+          "label": "帰り便",
+          "url": "https://www.google.com/travel/flights?q=SHI%20MMY%20to%20UKB%20via%20OKA%202026-09-14"
+        }
+      ]
+    }
+  ]
+};
+
+const days = [
+  {
+    "label": "Day1 那覇合流 → 下地島 → 市街",
+    "stops": [
+      {
+        "num": 1,
+        "kind": "hub",
+        "t": "12:30",
+        "p": "那覇空港 集合",
+        "url": "https://www.google.com/maps/search/?api=1&query=%E9%82%A3%E8%A6%87%E7%A9%BA%E6%B8%AF",
+        "hint": "ここから全員同じ便で宮古方面へ。",
+        "move": {
+          "ic": "✈️",
+          "label": "約50分",
+          "url": "https://www.google.com/travel/flights?q=OKA%20to%20SHI%20MMY%202026-09-12"
+        }
+      },
+      {
+        "num": 2,
+        "kind": "hub",
+        "t": "14:30",
+        "p": "下地島空港・レンタカー受取",
+        "url": "https://www.google.com/maps/search/?api=1&query=%E4%B8%8B%E5%9C%B0%E5%B3%B6%E7%A9%BA%E6%B8%AF",
+        "hint": "宮古空港着の場合は受取場所を宮古空港に調整。",
+        "move": {
+          "ic": "🚗",
+          "label": "約5分",
+          "url": "https://www.google.com/maps/dir/?api=1&origin=%E4%B8%8B%E5%9C%B0%E5%B3%B6%E7%A9%BA%E6%B8%AF&destination=17END%20%E4%B8%8B%E5%9C%B0%E5%B3%B6&travelmode=driving"
+        }
+      },
+      {
+        "num": 3,
+        "t": "15:00",
+        "p": "17END",
+        "url": "https://www.google.com/maps/search/?api=1&query=17END%20%E4%B8%8B%E5%9C%B0%E5%B3%B6",
+        "hint": "到着直後に海景色。",
+        "move": {
+          "ic": "🚗",
+          "label": "約25分",
+          "url": "https://www.google.com/maps/dir/?api=1&origin=17END%20%E4%B8%8B%E5%9C%B0%E5%B3%B6&destination=%E4%BC%8A%E8%89%AF%E9%83%A8%E5%A4%A7%E6%A9%8B&travelmode=driving"
+        }
+      },
+      {
+        "num": 4,
+        "t": "16:10",
+        "p": "伊良部大橋",
+        "url": "https://www.google.com/maps/search/?api=1&query=%E4%BC%8A%E8%89%AF%E9%83%A8%E5%A4%A7%E6%A9%8B",
+        "hint": "宮古島側へ渡る景色が強い。",
+        "move": {
+          "ic": "🚗",
+          "label": "約20分",
+          "url": "https://www.google.com/maps/dir/?api=1&origin=%E4%BC%8A%E8%89%AF%E9%83%A8%E5%A4%A7%E6%A9%8B&destination=%E5%B9%B3%E8%89%AF%20%E5%AE%AE%E5%8F%A4%E5%B3%B6&travelmode=driving"
+        }
+      },
+      {
+        "num": 5,
+        "kind": "hub",
+        "t": "17:30",
+        "p": "平良市街チェックイン",
+        "url": "https://www.google.com/maps/search/?api=1&query=%E5%B9%B3%E8%89%AF%20%E5%AE%AE%E5%8F%A4%E5%B3%B6%20%E3%83%9B%E3%83%86%E3%83%AB",
+        "hint": "夕食の選択肢を広く取れる。"
+      },
+      {
+        "t": "19:00",
+        "p": "夕食",
+        "url": "#meals",
+        "hint": "島料理か宮古牛。"
+      }
+    ]
+  },
+  {
+    "label": "Day2 海・橋・アクティビティ",
+    "stops": [
+      {
+        "num": 6,
+        "t": "09:30",
+        "p": "与那覇前浜ビーチ",
+        "url": "https://www.google.com/maps/search/?api=1&query=%E4%B8%8E%E9%82%A3%E8%A6%87%E5%89%8D%E6%B5%9C%E3%83%93%E3%83%BC%E3%83%81",
+        "hint": "午前に海遊びを入れるならここ周辺。",
+        "move": {
+          "ic": "🚗",
+          "label": "約10分",
+          "url": "https://www.google.com/maps/dir/?api=1&origin=%E4%B8%8E%E9%82%A3%E8%A6%87%E5%89%8D%E6%B5%9C%E3%83%93%E3%83%BC%E3%83%81&destination=%E7%AB%9C%E5%AE%AE%E5%9F%8E%E5%B1%95%E6%9C%9B%E5%8F%B0%20%E5%AE%AE%E5%8F%A4%E5%B3%B6&travelmode=driving"
+        }
+      },
+      {
+        "num": 7,
+        "t": "11:30",
+        "p": "来間大橋・竜宮城展望台",
+        "url": "https://www.google.com/maps/search/?api=1&query=%E7%AB%9C%E5%AE%AE%E5%9F%8E%E5%B1%95%E6%9C%9B%E5%8F%B0%20%E5%AE%AE%E5%8F%A4%E5%B3%B6",
+        "hint": "前浜を上から見る。カフェ昼食も組みやすい。"
+      },
+      {
+        "t": "13:00",
+        "p": "昼食",
+        "url": "#meals",
+        "hint": "来間島カフェか宮古そば。"
+      },
+      {
+        "t": "14:00",
+        "p": "マリン体験候補",
+        "url": "#activities",
+        "hint": "シュノーケリング/SUP/カヤックから天候で選択。",
+        "move": {
+          "ic": "🚗",
+          "label": "約60〜75分",
+          "url": "https://www.google.com/maps/dir/?api=1&origin=%E6%9D%A5%E9%96%93%E5%B3%B6&destination=%E6%9D%B1%E5%B9%B3%E5%AE%89%E5%90%8D%E5%B4%8E&travelmode=driving"
+        }
+      },
+      {
+        "num": 8,
+        "t": "15:30",
+        "p": "東平安名崎",
+        "url": "https://www.google.com/maps/search/?api=1&query=%E6%9D%B1%E5%B9%B3%E5%AE%89%E5%90%8D%E5%B4%8E",
+        "hint": "岬の絶景。体験を厚くする日は短縮可。"
+      },
+      {
+        "t": "19:00",
+        "p": "夕食",
+        "url": "#meals",
+        "hint": "宮古牛か島居酒屋。"
+      }
+    ]
+  },
+  {
+    "label": "Day3 空港へ",
+    "stops": [
+      {
+        "t": "10:00",
+        "p": "土産・軽め散策",
+        "url": "https://www.google.com/maps/search/?api=1&query=%E5%AE%AE%E5%8F%A4%E5%B3%B6%20%E5%9C%9F%E7%94%A3",
+        "hint": "帰り便に合わせて軽め。",
+        "move": {
+          "ic": "🚗",
+          "label": "約30分",
+          "url": "https://www.google.com/maps/dir/?api=1&origin=%E5%B9%B3%E8%89%AF%20%E5%AE%AE%E5%8F%A4%E5%B3%B6&destination=%E4%B8%8B%E5%9C%B0%E5%B3%B6%E7%A9%BA%E6%B8%AF&travelmode=driving"
+        }
+      },
+      {
+        "num": 9,
+        "kind": "hub",
+        "t": "14:00",
+        "p": "下地島空港・返却",
+        "url": "https://www.google.com/maps/search/?api=1&query=%E4%B8%8B%E5%9C%B0%E5%B3%B6%E7%A9%BA%E6%B8%AF",
+        "hint": "那覇経由で各出発地へ。"
+      }
+    ]
+  }
+];
+
+const meals = [
+  {
+    "when": "1日目の夜｜島料理",
+    "items": [
+      {
+        "name": "島おでん たから",
+        "url": "https://www.google.com/maps/search/?api=1&query=%E5%B3%B6%E3%81%8A%E3%81%A7%E3%82%93%20%E3%81%9F%E3%81%8B%E3%82%89%20%E5%AE%AE%E5%8F%A4%E5%B3%B6",
+        "price": "5,000〜8,000円",
+        "hint": "宮古の定番。到着日の乾杯に。",
+        "tag": "定番",
+        "sns": true
+      },
+      {
+        "name": "郷家",
+        "url": "https://www.google.com/maps/search/?api=1&query=%E9%83%B7%E5%AE%B6%20%E5%AE%AE%E5%8F%A4%E5%B3%B6",
+        "price": "5,000〜8,000円",
+        "hint": "島唄系の雰囲気も楽しめる。"
+      },
+      {
+        "name": "でいりぐち",
+        "url": "https://www.google.com/maps/search/?api=1&query=%E3%81%A7%E3%81%84%E3%82%8A%E3%81%90%E3%81%A1%20%E5%AE%AE%E5%8F%A4%E5%B3%B6",
+        "price": "4,000〜7,000円",
+        "hint": "島料理の居酒屋候補。"
+      }
+    ]
+  },
+  {
+    "when": "2日目の昼｜海カフェ・宮古そば",
+    "items": [
+      {
+        "name": "楽園の果実",
+        "url": "https://www.google.com/maps/search/?api=1&query=%E6%A5%BD%E5%9C%92%E3%81%AE%E6%9E%9C%E5%AE%9F%20%E5%AE%AE%E5%8F%A4%E5%B3%B6",
+        "price": "1,500〜3,000円",
+        "hint": "来間島で入れやすい。",
+        "tag": "写真映え",
+        "sns": true
+      },
+      {
+        "name": "古謝そば屋",
+        "url": "https://www.google.com/maps/search/?api=1&query=%E5%8F%A4%E8%AC%9D%E3%81%9D%E3%81%B0%E5%B1%8B%20%E5%AE%AE%E5%8F%A4%E5%B3%B6",
+        "price": "1,000〜2,000円",
+        "hint": "宮古そばの定番。"
+      },
+      {
+        "name": "丸吉食堂",
+        "url": "https://www.google.com/maps/search/?api=1&query=%E4%B8%B8%E5%90%89%E9%A3%9F%E5%A0%82%20%E5%AE%AE%E5%8F%A4%E5%B3%B6",
+        "price": "1,000〜2,000円",
+        "hint": "東平安名崎方面の日に組みやすい。"
+      }
+    ]
+  },
+  {
+    "when": "2日目の夜｜宮古牛",
+    "items": [
+      {
+        "name": "焼肉 喜八",
+        "url": "https://www.google.com/maps/search/?api=1&query=%E7%84%BC%E8%82%89%20%E5%96%9C%E5%85%AB%20%E5%AE%AE%E5%8F%A4%E5%B3%B6",
+        "price": "8,000〜14,000円",
+        "hint": "宮古牛で予算を使うなら本命。"
+      },
+      {
+        "name": "宮古牛焼肉 玉城",
+        "url": "https://www.google.com/maps/search/?api=1&query=%E5%AE%AE%E5%8F%A4%E7%89%9B%E7%84%BC%E8%82%89%20%E7%8E%89%E5%9F%8E%20%E5%AE%AE%E5%8F%A4%E5%B3%B6",
+        "price": "7,000〜12,000円",
+        "hint": "6名席を早めに確認。"
+      },
+      {
+        "name": "琉球王国 さんご家",
+        "url": "https://www.google.com/maps/search/?api=1&query=%E7%90%89%E7%90%83%E7%8E%8B%E5%9B%BD%20%E3%81%95%E3%82%93%E3%81%94%E5%AE%B6%20%E5%AE%AE%E5%8F%A4%E5%B3%B6",
+        "price": "5,000〜8,000円",
+        "hint": "島料理＋居酒屋。"
+      }
+    ]
+  }
+];
+
+const activities = [
+  {
+    "name": "宮古島ツアーズ（海・星空・SUP）",
+    "url": "https://miyako-tour.com/",
+    "price": "予約サイト",
+    "hint": "ウミガメ/青の洞窟/SUP/星空をまとめて比較。",
+    "tag": "本命",
+    "sns": true
+  },
+  {
+    "name": "VELTRA 宮古島アクティビティ",
+    "url": "https://www.veltra.com/jp/japan/okinawa/miyako_island/",
+    "price": "予約サイト",
+    "hint": "口コミ・空き枠・料金の比較用。",
+    "tag": "比較",
+    "sns": true
+  },
+  {
+    "name": "ウミガメシュノーケリング候補",
+    "url": "https://www.google.com/maps/search/?api=1&query=%E5%AE%AE%E5%8F%A4%E5%B3%B6%20%E3%82%A6%E3%83%9F%E3%82%AC%E3%83%A1%20%E3%82%B7%E3%83%A5%E3%83%8E%E3%83%BC%E3%82%B1%E3%83%AA%E3%83%B3%E3%82%B0",
+    "price": "地図検索",
+    "hint": "集合場所や所要時間を地図で確認。"
+  },
+  {
+    "name": "SUP/クリアカヤック候補",
+    "url": "https://www.google.com/maps/search/?api=1&query=%E5%AE%AE%E5%8F%A4%E5%B3%B6%20SUP%20%E3%82%AF%E3%83%AA%E3%82%A2%E3%82%AB%E3%83%A4%E3%83%83%E3%82%AF",
+    "price": "地図検索",
+    "hint": "初心者向け水上体験の候補確認。"
+  },
+  {
+    "name": "星空フォト/夜体験候補",
+    "url": "https://www.google.com/maps/search/?api=1&query=%E5%AE%AE%E5%8F%A4%E5%B3%B6%20%E6%98%9F%E7%A9%BA%20%E3%83%95%E3%82%A9%E3%83%88%E3%83%84%E3%82%A2%E3%83%BC",
+    "price": "地図検索",
+    "hint": "夜に追加できる体験候補。"
+  }
+];
+
+const other = [
+  {
+    "name": "池間大橋",
+    "url": "https://www.google.com/maps/search/?api=1&query=%E6%B1%A0%E9%96%93%E5%A4%A7%E6%A9%8B%20%E5%AE%AE%E5%8F%A4%E5%B3%B6",
+    "price": "",
+    "hint": "北側の海景色。"
+  },
+  {
+    "name": "通り池",
+    "url": "https://www.google.com/maps/search/?api=1&query=%E9%80%9A%E3%82%8A%E6%B1%A0%20%E4%B8%8B%E5%9C%B0%E5%B3%B6",
+    "price": "",
+    "hint": "下地島の自然スポット。"
+  },
+  {
+    "name": "砂山ビーチ",
+    "url": "https://www.google.com/maps/search/?api=1&query=%E7%A0%82%E5%B1%B1%E3%83%93%E3%83%BC%E3%83%81%20%E5%AE%AE%E5%8F%A4%E5%B3%B6",
+    "price": "",
+    "hint": "短時間で寄れる海景色。"
+  },
+  {
+    "name": "ユートピアファーム宮古島",
+    "url": "https://www.google.com/maps/search/?api=1&query=%E3%83%A6%E3%83%BC%E3%83%88%E3%83%94%E3%82%A2%E3%83%95%E3%82%A1%E3%83%BC%E3%83%A0%E5%AE%AE%E5%8F%A4%E5%B3%B6",
+    "price": "",
+    "hint": "雨天・暑さ回避に。"
+  }
+];
+
+const cars = [
+  {
+    "name": "下地島空港 レンタカー会社一覧",
+    "url": "https://shimojishima.jp/access_top/access_rentacar/",
+    "price": "空港公式",
+    "hint": "下地島着なら本命。空港受取店舗を確認。",
+    "tag": "空港受取"
+  },
+  {
+    "name": "OTSレンタカー",
+    "url": "https://www.otsinternational.jp/otsrentacar/ja/",
+    "price": "公式",
+    "hint": "沖縄系レンタカー。ワゴンクラスを日付で確認。"
+  },
+  {
+    "name": "宮古空港レンタカー地図",
+    "url": "https://www.google.com/maps/search/?api=1&query=%E5%AE%AE%E5%8F%A4%E7%A9%BA%E6%B8%AF%20%E3%83%AC%E3%83%B3%E3%82%BF%E3%82%AB%E3%83%BC%208%E4%BA%BA%E4%B9%97%E3%82%8A",
+    "price": "地図検索",
+    "hint": "宮古空港着に変える場合の候補。"
+  }
+];
+
+const stays = [
+  {
+    "name": "楽天トラベル：沖縄離島（宮古島へ絞り込み）",
+    "url": "https://travel.rakuten.co.jp/yado/okinawa/ritou.html",
+    "price": "エリア検索",
+    "hint": "宮古島・伊良部島方面へ絞り込み。6名/2室はリンク先で指定。"
+  },
+  {
+    "name": "じゃらん検索済み（宮古島・6名/2室）",
+    "url": "https://www.jalan.net/uw/uwp2011/uww2011init.do?keyword=%8B%7B%8C%C3%93%87&dateUndecided=1&adultNum=6&roomCount=2",
+    "price": "検索済み",
+    "hint": "文字化けしないURL。男性3名・女性3名の2室目安。"
+  },
+  {
+    "name": "Agoda：宮古島",
+    "url": "https://www.agoda.com/ja-jp/city/miyakojima-jp.html",
+    "price": "エリア検索",
+    "hint": "ヴィラ/ホテル比較。6名/2室はリンク先で指定。"
+  },
+  {
+    "name": "宿泊エリア地図（平良・伊良部）",
+    "url": "https://www.google.com/maps/search/?api=1&query=%E5%AE%AE%E5%8F%A4%E5%B3%B6%20%E5%B9%B3%E8%89%AF%20%E4%BC%8A%E8%89%AF%E9%83%A8%20%E3%83%9B%E3%83%86%E3%83%AB%20%E3%83%B4%E3%82%A3%E3%83%A9",
+    "price": "地図検索",
+    "hint": "市街/海側の位置関係を確認。"
+  }
+];
+
+const budget = [
+  [
+    "各地→那覇",
+    "東京1.5万〜3.0万／神戸1.2万〜2.5万円",
+    "早割・LCCで変動"
+  ],
+  [
+    "那覇→宮古/下地島",
+    "1.0万〜2.5万円",
+    "共通便に揃える"
+  ],
+  [
+    "宿（2泊）",
+    "4.5万〜9.5万円",
+    "市街ホテルは抑えめ、ヴィラで上振れ"
+  ],
+  [
+    "レンタカー・燃料",
+    "1.5万〜2.5万円",
+    "8人乗り1台を6人で割勘"
+  ],
+  [
+    "食事・カフェ",
+    "3.0万〜5.5万円",
+    "宮古牛で上振れ"
+  ],
+  [
+    "アクティビティ",
+    "0.8万〜2.5万円",
+    "海体験を入れるならここを見る"
+  ],
+  [
+    "合計めやす",
+    "13万〜25万円",
+    "海体験と宿で幅あり"
+  ]
+];
+
+const bookList = [
+  {
+    "label": "那覇→宮古/下地島の共通便",
+    "url": "https://www.google.com/travel/flights?q=OKA%20to%20SHI%20MMY%202026-09-12%20return%202026-09-14"
+  },
+  {
+    "label": "レンタカー1台（8人乗り・空港受取）",
+    "url": "https://www.google.com/maps/search/?api=1&query=%E4%B8%8B%E5%9C%B0%E5%B3%B6%E7%A9%BA%E6%B8%AF%20%E5%AE%AE%E5%8F%A4%E7%A9%BA%E6%B8%AF%20%E3%83%AC%E3%83%B3%E3%82%BF%E3%82%AB%E3%83%BC%208%E4%BA%BA%E4%B9%97%E3%82%8A"
+  },
+  {
+    "label": "宿（男女別2室目安・個室希望なら6室）",
+    "url": "https://travel.rakuten.co.jp/yado/okinawa/ritou.html"
+  },
+  {
+    "label": "マリン体験候補",
+    "url": "https://miyako-tour.com/"
+  },
+  {
+    "label": "本命ディナー（宮古牛/島料理）",
+    "url": "https://www.google.com/maps/search/?api=1&query=%E5%AE%AE%E5%8F%A4%E5%B3%B6%20%E5%AE%AE%E5%8F%A4%E7%89%9B%206%E5%90%8D%20%E4%BA%88%E7%B4%84"
+  }
+];
+
+const decideList = [
+  "那覇集合で共通便に揃えるか、直行便優先で現地集合にするか",
+  "海体験をシュノーケリングにするか、SUP/カヤックにするか",
+  "宿を平良市街にするか、伊良部・下地島側にするか",
+  "2日目夜を宮古牛にするか、島料理にするか"
+];
+/* =================== /DATA =================== */
+
+
+/* =================== 描画（触らない） =================== */
+function colorOf(k){return k==="hub"?"#16354a":"#d23b2c";}
+function pinIcon(n,color){return L.divIcon({className:"",iconSize:[22,22],iconAnchor:[11,11],
+  html:`<div class="pin" style="background:${color}">${n}</div>`});}
+
+// ピンは実在地に置く。完全同座標の地点だけ約400m離す（拡大時に2つと分かるため）。
+function spread(items,thr=0.0015,r=0.004){
+  const placed=[];
+  return items.map(s=>{
+    let lat=s.lat,lng=s.lng,k=0;
+    while(placed.some(p=>Math.hypot(p[0]-lat,p[1]-lng)<thr)&&k<8){
+      const a=k*Math.PI/3; lat=s.lat+r*Math.sin(a); lng=s.lng+r*Math.cos(a); k++;
+    }
+    placed.push([lat,lng]);
+    return Object.assign({},s,{dlat:lat,dlng:lng});
+  });
+}
+const spots = spread(mapSpots);
+const markers={};
+let routeMap=null;
+
+function initMap(){
+  const mapEl=document.getElementById("map");
+  if(!window.L){
+    mapEl.innerHTML='<div class="mapfallback">地図を読み込み中です。表示されない場合は通信環境を確認してください。</div>';
+    return;
+  }
+  routeMap = L.map("map",{scrollWheelZoom:false});
+  L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",{maxZoom:18,attribution:'&copy; OpenStreetMap contributors'}).addTo(routeMap);
+  const latlngs = spots.map(s=>[s.dlat,s.dlng]);
+  L.polyline(latlngs,{color:"#d23b2c",weight:4,opacity:.9,lineJoin:"round"}).addTo(routeMap);
+  spots.forEach(s=>{ markers[s.n]=L.marker([s.dlat,s.dlng],{icon:pinIcon(s.n,colorOf(s.kind))}).addTo(routeMap).bindPopup(`<b>${s.n}. ${s.name}</b><br>${s.time}`); });
+  foodTowns.forEach(f=>{ L.marker([f.lat,f.lng],{icon:L.divIcon({className:"",iconSize:[14,14],iconAnchor:[7,7],
+    html:`<div style="width:14px;height:14px;border-radius:50%;background:#b07d24;border:2px solid #fff;box-shadow:0 1px 4px rgba(0,0,0,.3)"></div>`})}).addTo(routeMap).bindPopup(`<b>🍽 ${f.name}</b>`); });
+  if(latlngs.length) routeMap.fitBounds(L.latLngBounds(latlngs).pad(0.2)); else routeMap.setView([36,138],5);
+}
+
+window.focusPin=(n)=>{ const s=spots.find(x=>x.n===n); if(!s)return;
+  if(routeMap&&markers[n]){ routeMap.setView([s.dlat,s.dlng],14,{animate:true}); markers[n].openPopup(); }
+  document.querySelectorAll(".pinbtn").forEach(b=>b.classList.toggle("active",Number(b.dataset.n)===n)); };
+document.getElementById("pinindex").innerHTML = spots.map(s=>
+  `<button class="pinbtn" data-n="${s.n}" onclick="focusPin(${s.n})"><span class="num ${s.kind==='hub'?'hub':''}">${s.n}</span>${s.short}</button>`).join("");
+initMap();
+
+function legRow(l){ const pills=(l.pills||[]).map(p=>`<a class="pill ${p.cls}" href="${p.url}" target="_blank" rel="noopener">${p.label}</a>`).join("");
+  return `<div class="leg"><div class="ic">${l.ic}</div><div><div class="ttl">${l.ttl}</div><div class="meta">${l.meta}</div><div class="pillrow">${pills}</div></div></div>`; }
+document.getElementById("acc-a").innerHTML = (access.a||[]).map(legRow).join("");
+document.getElementById("acc-b").innerHTML = (access.b||[]).map(legRow).join("");
+
+document.getElementById("days").innerHTML = days.map(d=>`
+  <div class="card day"><h3>${d.label}</h3>
+  ${d.stops.map(s=>`<div class="stop"><div class="top">
+    ${s.num?`<span class="num ${s.kind==='hub'?'hub':''}">${s.num}</span>`:`<span style="width:22px;flex:0 0 auto"></span>`}
+    <div class="t">${s.t}</div>
+    <div class="p">${s.url?`<a href="${s.url}" target="_blank" rel="noopener">${s.p}</a>`:s.p}</div></div>
+    ${s.hint?`<div class="hint">${s.hint}</div>`:""}
+    ${s.move?`<a class="movelink" href="${s.move.url}" target="_blank" rel="noopener">${s.move.ic} ${s.move.label}</a>`:""}
+  </div>`).join("")}</div>`).join("");
+
+const itemCard=(o)=>`<div class="item">${o.tag?`<span class="tag ${o.sns?'sns':''}">${o.tag}</span>`:""}
+  <div class="name"><a href="${o.url}" target="_blank" rel="noopener">${o.name}</a></div>
+  ${o.price?`<div class="price">${o.price}</div>`:""}${o.hint?`<div class="hint">${o.hint}</div>`:""}</div>`;
+document.getElementById("meal-list").innerHTML = meals.map(g=>`<div class="mealgroup"><div class="when">${g.when}</div><div class="grid2">${g.items.map(itemCard).join("")}</div></div>`).join("");
+document.getElementById("activity-list").innerHTML = activities.map(itemCard).join("");
+document.getElementById("other-list").innerHTML = other.map(itemCard).join("");
+document.getElementById("car-list").innerHTML   = cars.map(itemCard).join("");
+document.getElementById("stay-list").innerHTML  = stays.map(itemCard).join("");
+document.getElementById("budget-table").innerHTML = `<thead><tr><th>項目</th><th>1人あたり</th><th>メモ</th></tr></thead><tbody>`+
+  budget.map(r=>`<tr><td>${r[0]}</td><td class="r">${r[1]}</td><td>${r[2]}</td></tr>`).join("")+`</tbody>`;
+document.getElementById("book-list").innerHTML = bookList.map(c=>`<li><a href="${c.url}" target="_blank" rel="noopener">${c.label}</a></li>`).join("");
+document.getElementById("decide-list").innerHTML = decideList.map(d=>`<li>${d}</li>`).join("");
+</script>
+</body>
+</html>

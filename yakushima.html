@@ -1,0 +1,810 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>屋久島 2泊3日</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+  integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="">
+<style>
+  :root{
+    --ink:#1b2733; --muted:#64727f; --line:#e3e8ec; --paper:#f7f5ef; --panel:#ffffff;
+    --blue:#1f6f8b; --green:#3d7a5c; --gold:#b07d24; --red:#d23b2c; --shadow:0 10px 30px rgba(20,40,55,.10);
+  }
+  *{box-sizing:border-box}
+  body{margin:0;color:var(--ink);background:var(--paper);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Hiragino Kaku Gothic ProN","Yu Gothic",Meiryo,sans-serif;
+    line-height:1.7;-webkit-text-size-adjust:100%}
+  a{color:#155f80;text-underline-offset:.16em}
+  .wrap{max-width:760px;margin:0 auto;padding:18px 14px 64px}
+  header.hero{background:linear-gradient(160deg,#e7f2f3,#fbf7ef);border:1px solid var(--line);
+    border-radius:20px;padding:20px 18px;box-shadow:var(--shadow)}
+  .kicker{font-size:12px;font-weight:800;color:var(--blue);letter-spacing:.06em}
+  h1{margin:4px 0 6px;font-size:clamp(26px,7vw,38px);line-height:1.15}
+  .lead{color:#33424f;margin:0 0 12px}
+  .badges{display:flex;gap:7px;flex-wrap:wrap}
+  .badge{display:inline-flex;align-items:center;gap:5px;border:1px solid #cdd9dd;background:#fff;
+    border-radius:999px;padding:6px 11px;font-size:13px;font-weight:800}
+  section{margin-top:30px}
+  h2{font-size:20px;margin:0 0 4px;display:flex;align-items:center;gap:8px}
+  h2 .dot{width:10px;height:10px;border-radius:3px;background:var(--red)}
+  .sub{color:var(--muted);font-size:13px;margin:0 0 14px}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:14px;
+    box-shadow:0 6px 18px rgba(25,45,58,.05);margin-bottom:12px}
+  #map{height:62vh;min-height:380px;max-height:560px;width:100%;border-radius:16px;border:1px solid var(--line);z-index:0}
+  .mapfallback{height:100%;display:flex;align-items:center;justify-content:center;text-align:center;padding:24px;color:#566675;background:#eef4f2}
+  .legend{display:flex;gap:14px;flex-wrap:wrap;margin-top:10px;font-size:13px;color:#445}
+  .legend span{display:inline-flex;align-items:center;gap:6px}
+  .swatch{width:14px;height:14px;border-radius:50%;display:inline-block}
+  .routeline{width:22px;height:0;border-top:3px solid var(--red);display:inline-block}
+  .pinindex{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+  .pinbtn{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line);background:#fff;
+    border-radius:999px;padding:5px 11px 5px 6px;font-size:13px;font-weight:700;color:#26323d;cursor:pointer}
+  .pinbtn:hover,.pinbtn.active{border-color:var(--red);background:#fff4f2}
+  .pinbtn .num{width:20px;height:20px;border-radius:50%;background:var(--red);color:#fff;font-size:12px;font-weight:800;
+    display:inline-flex;align-items:center;justify-content:center}
+  .pinbtn .num.hub{background:#16354a}
+  .pin{width:22px;height:22px;border-radius:50%;color:#fff;font-weight:800;font-size:12px;
+    display:flex;align-items:center;justify-content:center;border:2px solid #fff;box-shadow:0 2px 6px rgba(0,0,0,.35)}
+  .access{display:grid;gap:10px}
+  .leg{display:grid;grid-template-columns:30px 1fr;gap:10px;padding:10px 0;border-bottom:1px dashed #e6ebee}
+  .leg:last-child{border-bottom:0}
+  .leg .ic{font-size:20px;text-align:center}
+  .leg .ttl{font-weight:800}
+  .leg .meta{font-size:13px;color:#475663}
+  .pillrow{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
+  .pill{font-size:12px;font-weight:700;border-radius:999px;padding:4px 10px;text-decoration:none;background:#eef4f2;color:#27514a}
+  .pill.book{background:#eaf1f7;color:#1c537a}
+  .day{margin-bottom:14px}
+  .day h3{margin:0 0 8px;font-size:16px;color:#234}
+  .stop{padding:11px 0;border-bottom:1px solid #eef2f4}
+  .stop:last-child{border-bottom:0}
+  .stop .top{display:flex;gap:9px;align-items:baseline}
+  .stop .num{flex:0 0 auto;width:22px;height:22px;border-radius:50%;background:var(--red);color:#fff;
+    font-size:12px;font-weight:800;display:inline-flex;align-items:center;justify-content:center;align-self:center}
+  .stop .num.hub{background:#16354a}
+  .stop .t{color:var(--blue);font-weight:800;font-variant-numeric:tabular-nums;min-width:46px}
+  .stop .p{font-weight:800}
+  .stop .hint{color:var(--muted);font-size:13px;margin-left:31px}
+  .movelink{margin:8px 0 2px 31px;display:inline-flex;align-items:center;gap:7px;font-size:13px;font-weight:700;
+    background:#f3f7f5;border:1px solid #e2ebe6;border-radius:10px;padding:5px 11px;color:#2f5a4c;text-decoration:none}
+  .grid2{display:grid;grid-template-columns:1fr;gap:10px}
+  .mealgroup{margin-bottom:8px}
+  .mealgroup .when{font-weight:800;font-size:14px;color:#234;margin:6px 2px 8px}
+  .item{border:1px solid var(--line);border-radius:13px;padding:12px;background:#fff}
+  .item .name{font-weight:800}
+  .item .price{font-weight:800;color:#123e5b;font-size:14px}
+  .item .hint{color:var(--muted);font-size:13px}
+  .tag{display:inline-block;font-size:11px;font-weight:800;color:#6a4a14;background:#fdf0d6;border-radius:6px;padding:2px 7px;margin-right:6px}
+  .tag.sns{color:#8a2b6b;background:#fbe4f1}
+  table{width:100%;border-collapse:collapse;font-size:14px}
+  th,td{padding:9px 8px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top}
+  th{background:#eef4f6;color:#39525f;font-size:12px}
+  td.r{text-align:right;font-variant-numeric:tabular-nums}
+  .todo{list-style:none;padding:0;margin:0}
+  .todo li{padding:8px 0;border-bottom:1px solid #eef2f4}
+  .todo.book li:before{content:"☐ ";color:var(--blue);font-weight:800}
+  .todo.decide li:before{content:"・";color:var(--gold);font-weight:800;margin-right:4px}
+  .twohead{font-weight:800;margin:2px 0 6px;font-size:14px}
+  footer{margin-top:34px;color:var(--muted);font-size:12px;text-align:center}
+  @media(min-width:640px){.grid2{grid-template-columns:1fr 1fr}}
+</style>
+</head>
+<body>
+<main class="wrap">
+  <header class="hero">
+    <div class="kicker">6人旅行・候補E</div>
+    <h1>屋久島 2泊3日</h1>
+    <p class="lead">鹿児島空港で合流して屋久島へ入る、森・滝・水辺体験の自然旅。縄文杉は外し、体力差が出にくいコースにします。</p>
+    <div class="badges"><span class="badge">🗓 2泊3日</span><span class="badge">👥 6人（東京4・神戸2）</span><span class="badge">✈️ 共通区間: 鹿児島→屋久島</span><span class="badge">🚐 レンタカー1台</span><span class="badge">🌲 森・滝</span></div>
+  </header>
+
+  <section id="route">
+    <h2><span class="dot"></span>ルート地図</h2>
+    <p class="sub">番号順に巡るルート。赤い線が実際の移動経路です。</p>
+    <div id="map"></div>
+    <div class="legend">
+      <span><i class="routeline"></i>順路</span>
+      <span><i class="swatch" style="background:#16354a"></i>集合・拠点</span>
+      <span><i class="swatch" style="background:#d23b2c"></i>観光スポット</span>
+      <span><i class="swatch" style="background:#b07d24"></i>食事の街</span>
+    </div>
+    <div class="pinindex" id="pinindex"></div>
+    <p class="sub" style="margin-top:8px">番号をタップすると、地図のその場所に移動します。</p>
+  </section>
+
+  <section id="access">
+    <h2><span class="dot"></span>行き帰りのアクセス</h2>
+    <p class="sub">東京組・神戸組は鹿児島空港で合流し、鹿児島→屋久島の同じ便または高速船から共通行程に入ります。</p>
+    <div class="card"><div class="twohead">東京発（4人）</div><div class="access" id="acc-a"></div></div>
+    <div class="card"><div class="twohead">神戸発（2人）</div><div class="access" id="acc-b"></div></div>
+  </section>
+
+  <section id="itinerary">
+    <h2><span class="dot"></span>行程</h2>
+    <p class="sub">番号は上の地図のピンと同じ順番です。スポット名は地図リンク、区間の「🚗 ◯分」は経路に飛びます。</p>
+    <div id="days"></div>
+  </section>
+
+  <section id="meals">
+    <h2><span class="dot"></span>食事候補</h2>
+    <p class="sub">タイミング別の候補。気分と予約状況で選べます。</p>
+    <div id="meal-list"></div>
+  </section>
+
+  <section id="activities">
+    <h2><span class="dot"></span>アクティビティ候補</h2>
+    <p class="sub">行程に入れるかを相談しやすい体験候補です。天気・体力・予約状況で選べます。</p>
+    <div class="grid2" id="activity-list"></div>
+  </section>
+
+  <section id="other">
+    <h2><span class="dot"></span>他にもおすすめのスポット</h2>
+    <p class="sub">天気や気分で順路に足せる候補です。</p>
+    <div class="grid2" id="other-list"></div>
+  </section>
+
+  <section id="car">
+    <h2><span class="dot"></span>レンタカー</h2>
+    <p class="sub">屋久島空港または宮之浦港で8人乗りワゴン1台を受取。雨具と荷物が増えやすいので車内余裕を重視します。</p>
+    <div class="grid2" id="car-list"></div>
+  </section>
+
+  <section id="stay">
+    <h2><span class="dot"></span>宿</h2>
+    <p class="sub">男女3:3のため宿検索は6名/2室（男性3名・女性3名）目安。個室重視なら6室で再検索。</p>
+    <div class="grid2" id="stay-list"></div>
+  </section>
+
+  <section id="budget">
+    <h2><span class="dot"></span>費用のめやす（1人あたり）</h2>
+    <div class="card" style="overflow-x:auto"><table id="budget-table"></table></div>
+  </section>
+
+  <section id="next">
+    <h2><span class="dot"></span>これから決める・予約すること</h2>
+    <div class="card"><div class="twohead">予約するもの</div><ul class="todo book" id="book-list"></ul></div>
+    <div class="card"><div class="twohead">グループで決めること（まだ未確定）</div><ul class="todo decide" id="decide-list"></ul></div>
+  </section>
+
+  <footer>所要時間・便は作成時点の各社公式時刻表・地図経路に基づくめやすです。</footer>
+</main>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+  integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+<script>
+/* =================== DATA（ここだけ案件ごとに差し替える） =================== */
+const mapSpots = [
+  {
+    "n": 1,
+    "name": "鹿児島空港（合流）",
+    "short": "鹿児島空港",
+    "lat": 31.8034,
+    "lng": 130.7194,
+    "kind": "hub",
+    "time": "Day1 10:30"
+  },
+  {
+    "n": 2,
+    "name": "屋久島空港（レンタカー受取）",
+    "short": "屋久島空港",
+    "lat": 30.385,
+    "lng": 130.659,
+    "kind": "hub",
+    "time": "Day1 13:30"
+  },
+  {
+    "n": 3,
+    "name": "千尋滝",
+    "short": "千尋滝",
+    "lat": 30.275,
+    "lng": 130.526,
+    "kind": "spot",
+    "time": "Day1 15:00"
+  },
+  {
+    "n": 4,
+    "name": "宮之浦（宿・夕食）",
+    "short": "宮之浦",
+    "lat": 30.427,
+    "lng": 130.571,
+    "kind": "hub",
+    "time": "Day1 17:00"
+  },
+  {
+    "n": 5,
+    "name": "白谷雲水峡",
+    "short": "白谷雲水峡",
+    "lat": 30.378,
+    "lng": 130.559,
+    "kind": "spot",
+    "time": "Day2 09:00"
+  },
+  {
+    "n": 6,
+    "name": "ヤクスギランド",
+    "short": "ヤクスギ",
+    "lat": 30.306,
+    "lng": 130.585,
+    "kind": "spot",
+    "time": "Day2 15:00"
+  },
+  {
+    "n": 7,
+    "name": "大川の滝",
+    "short": "大川の滝",
+    "lat": 30.309,
+    "lng": 130.408,
+    "kind": "spot",
+    "time": "Day3 09:00"
+  },
+  {
+    "n": 8,
+    "name": "屋久島空港（帰り）",
+    "short": "空港",
+    "lat": 30.385,
+    "lng": 130.659,
+    "kind": "hub",
+    "time": "Day3 13:00"
+  }
+];
+
+const foodTowns = [
+  {
+    "name": "宮之浦",
+    "lat": 30.427,
+    "lng": 130.571
+  },
+  {
+    "name": "安房",
+    "lat": 30.316,
+    "lng": 130.654
+  }
+];
+
+const access = {
+  "a": [
+    {
+      "ic": "✈️",
+      "ttl": "羽田 → 鹿児島",
+      "meta": "午前便で鹿児島 10:00前後着を目安（約2時間／片道めやす 1.2万〜2.8万円）",
+      "pills": [
+        {
+          "cls": "book",
+          "label": "便・料金",
+          "url": "https://www.google.com/travel/flights?q=HND%20to%20KOJ%202026-09-12%20return%202026-09-14"
+        }
+      ]
+    },
+    {
+      "ic": "✈️",
+      "ttl": "鹿児島 → 屋久島（共通区間）",
+      "meta": "JAL/JAC空路は約40分。高速船の場合は鹿児島港から約1時間50分。",
+      "pills": [
+        {
+          "cls": "book",
+          "label": "JAL時刻表",
+          "url": "https://www.jal.co.jp/jp/ja/dom/route/time/"
+        },
+        {
+          "cls": "",
+          "label": "高速船",
+          "url": "https://www.tykousoku.jp/"
+        }
+      ]
+    },
+    {
+      "ic": "✈️",
+      "ttl": "帰り",
+      "meta": "屋久島→鹿児島後、鹿児島→羽田。羽田着は夕方〜夜目安。",
+      "pills": [
+        {
+          "cls": "book",
+          "label": "帰り便",
+          "url": "https://www.google.com/travel/flights?q=KUM%20to%20HND%20via%20KOJ%202026-09-14"
+        }
+      ]
+    }
+  ],
+  "b": [
+    {
+      "ic": "✈️",
+      "ttl": "神戸 → 鹿児島",
+      "meta": "午前便で鹿児島 10:00前後着を目安（約1時間10分／片道めやす 0.8万〜2.0万円）",
+      "pills": [
+        {
+          "cls": "book",
+          "label": "便・料金",
+          "url": "https://www.google.com/travel/flights?q=UKB%20to%20KOJ%202026-09-12%20return%202026-09-14"
+        }
+      ]
+    },
+    {
+      "ic": "✈️",
+      "ttl": "鹿児島 → 屋久島（共通区間）",
+      "meta": "東京組と同じ空路または高速船で屋久島へ。",
+      "pills": [
+        {
+          "cls": "book",
+          "label": "JAL時刻表",
+          "url": "https://www.jal.co.jp/jp/ja/dom/route/time/"
+        },
+        {
+          "cls": "",
+          "label": "高速船",
+          "url": "https://www.tykousoku.jp/"
+        }
+      ]
+    },
+    {
+      "ic": "✈️",
+      "ttl": "帰り",
+      "meta": "屋久島→鹿児島後、鹿児島→神戸。神戸着は夕方目安。",
+      "pills": [
+        {
+          "cls": "book",
+          "label": "帰り便",
+          "url": "https://www.google.com/travel/flights?q=KUM%20to%20UKB%20via%20KOJ%202026-09-14"
+        }
+      ]
+    }
+  ]
+};
+
+const days = [
+  {
+    "label": "Day1 鹿児島合流 → 屋久島",
+    "stops": [
+      {
+        "num": 1,
+        "kind": "hub",
+        "t": "10:30",
+        "p": "鹿児島空港 集合",
+        "url": "https://www.google.com/maps/search/?api=1&query=%E9%B9%BF%E5%85%90%E5%B3%B6%E7%A9%BA%E6%B8%AF",
+        "hint": "ここから全員同じ便または高速船で屋久島へ。",
+        "move": {
+          "ic": "✈️",
+          "label": "空路約40分",
+          "url": "https://www.jal.co.jp/jp/ja/dom/route/time/"
+        }
+      },
+      {
+        "num": 2,
+        "kind": "hub",
+        "t": "13:30",
+        "p": "屋久島空港・レンタカー受取",
+        "url": "https://www.google.com/maps/search/?api=1&query=%E5%B1%8B%E4%B9%85%E5%B3%B6%E7%A9%BA%E6%B8%AF",
+        "hint": "港着にする場合は宮之浦港受取へ調整。",
+        "move": {
+          "ic": "🚗",
+          "label": "約45分",
+          "url": "https://www.google.com/maps/dir/?api=1&origin=%E5%B1%8B%E4%B9%85%E5%B3%B6%E7%A9%BA%E6%B8%AF&destination=%E5%8D%83%E5%B0%8B%E6%BB%9D&travelmode=driving"
+        }
+      },
+      {
+        "num": 3,
+        "t": "15:00",
+        "p": "千尋滝",
+        "url": "https://www.google.com/maps/search/?api=1&query=%E5%8D%83%E5%B0%8B%E6%BB%9D%20%E5%B1%8B%E4%B9%85%E5%B3%B6",
+        "hint": "到着日の軽め絶景。雨でも迫力が出る。",
+        "move": {
+          "ic": "🚗",
+          "label": "約70分",
+          "url": "https://www.google.com/maps/dir/?api=1&origin=%E5%8D%83%E5%B0%8B%E6%BB%9D&destination=%E5%AE%AE%E4%B9%8B%E6%B5%A6%20%E5%B1%8B%E4%B9%85%E5%B3%B6&travelmode=driving"
+        }
+      },
+      {
+        "num": 4,
+        "kind": "hub",
+        "t": "17:00",
+        "p": "宮之浦チェックイン",
+        "url": "https://www.google.com/maps/search/?api=1&query=%E5%AE%AE%E4%B9%8B%E6%B5%A6%20%E5%B1%8B%E4%B9%85%E5%B3%B6%20%E3%83%9B%E3%83%86%E3%83%AB",
+        "hint": "白谷雲水峡と夕食に便利。"
+      },
+      {
+        "t": "18:30",
+        "p": "夕食",
+        "url": "#meals",
+        "hint": "魚系を中心に。"
+      }
+    ]
+  },
+  {
+    "label": "Day2 白谷雲水峡・森歩き",
+    "stops": [
+      {
+        "num": 5,
+        "t": "09:00",
+        "p": "白谷雲水峡",
+        "url": "https://www.google.com/maps/search/?api=1&query=%E7%99%BD%E8%B0%B7%E9%9B%B2%E6%B0%B4%E5%B3%A1",
+        "hint": "自然の本命。太鼓岩まで行くかは天候と体力で判断。",
+        "move": {
+          "ic": "🚗",
+          "label": "約80分",
+          "url": "https://www.google.com/maps/dir/?api=1&origin=%E7%99%BD%E8%B0%B7%E9%9B%B2%E6%B0%B4%E5%B3%A1&destination=%E3%83%A4%E3%82%AF%E3%82%B9%E3%82%AE%E3%83%A9%E3%83%B3%E3%83%89&travelmode=driving"
+        }
+      },
+      {
+        "t": "13:00",
+        "p": "昼食",
+        "url": "#meals",
+        "hint": "宮之浦または安房で軽め。"
+      },
+      {
+        "t": "14:00",
+        "p": "自然アクティビティ候補",
+        "url": "#activities",
+        "hint": "ガイド/カヤック/ナイトツアーから希望で選択。"
+      },
+      {
+        "num": 6,
+        "t": "15:00",
+        "p": "ヤクスギランド",
+        "url": "https://www.google.com/maps/search/?api=1&query=%E3%83%A4%E3%82%AF%E3%82%B9%E3%82%AE%E3%83%A9%E3%83%B3%E3%83%89",
+        "hint": "白谷の疲れ具合で短めコースに調整。"
+      },
+      {
+        "t": "18:30",
+        "p": "夕食",
+        "url": "#meals",
+        "hint": "翌朝に備えて早め。"
+      }
+    ]
+  },
+  {
+    "label": "Day3 滝 → 空港",
+    "stops": [
+      {
+        "num": 7,
+        "t": "09:00",
+        "p": "大川の滝",
+        "url": "https://www.google.com/maps/search/?api=1&query=%E5%A4%A7%E5%B7%9D%E3%81%AE%E6%BB%9D%20%E5%B1%8B%E4%B9%85%E5%B3%B6",
+        "hint": "島西部の大きな滝。",
+        "move": {
+          "ic": "🚗",
+          "label": "約75分",
+          "url": "https://www.google.com/maps/dir/?api=1&origin=%E5%A4%A7%E5%B7%9D%E3%81%AE%E6%BB%9D%20%E5%B1%8B%E4%B9%85%E5%B3%B6&destination=%E5%B1%8B%E4%B9%85%E5%B3%B6%E7%A9%BA%E6%B8%AF&travelmode=driving"
+        }
+      },
+      {
+        "num": 8,
+        "kind": "hub",
+        "t": "13:00",
+        "p": "屋久島空港・返却",
+        "url": "https://www.google.com/maps/search/?api=1&query=%E5%B1%8B%E4%B9%85%E5%B3%B6%E7%A9%BA%E6%B8%AF",
+        "hint": "鹿児島経由で各出発地へ。"
+      }
+    ]
+  }
+];
+
+const meals = [
+  {
+    "when": "1日目の夜｜魚・島料理",
+    "items": [
+      {
+        "name": "潮騒",
+        "url": "https://www.google.com/maps/search/?api=1&query=%E6%BD%AE%E9%A8%92%20%E5%B1%8B%E4%B9%85%E5%B3%B6",
+        "price": "4,000〜8,000円",
+        "hint": "魚系の本命候補。"
+      },
+      {
+        "name": "若大将",
+        "url": "https://www.google.com/maps/search/?api=1&query=%E8%8B%A5%E5%A4%A7%E5%B0%86%20%E5%B1%8B%E4%B9%85%E5%B3%B6",
+        "price": "4,000〜8,000円",
+        "hint": "島料理・居酒屋候補。"
+      },
+      {
+        "name": "屋久どん",
+        "url": "https://www.google.com/maps/search/?api=1&query=%E5%B1%8B%E4%B9%85%E3%81%A9%E3%82%93%20%E5%B1%8B%E4%B9%85%E5%B3%B6",
+        "price": "2,000〜5,000円",
+        "hint": "気軽な島料理。"
+      }
+    ]
+  },
+  {
+    "when": "2日目の昼｜森歩き後",
+    "items": [
+      {
+        "name": "一湊珈琲焙煎所",
+        "url": "https://www.google.com/maps/search/?api=1&query=%E4%B8%80%E6%B9%8A%E7%8F%88%E7%90%B2%E7%84%99%E7%85%8E%E6%89%80%20%E5%B1%8B%E4%B9%85%E5%B3%B6",
+        "price": "〜2,000円",
+        "hint": "北側ドライブのカフェ休憩。",
+        "tag": "雰囲気",
+        "sns": true
+      },
+      {
+        "name": "散歩亭",
+        "url": "https://www.google.com/maps/search/?api=1&query=%E6%95%A3%E6%AD%A9%E4%BA%AD%20%E5%B1%8B%E4%B9%85%E5%B3%B6",
+        "price": "1,500〜3,000円",
+        "hint": "宮之浦周辺の食事候補。"
+      },
+      {
+        "name": "いその香り",
+        "url": "https://www.google.com/maps/search/?api=1&query=%E3%81%84%E3%81%9D%E3%81%AE%E9%A6%99%E3%82%8A%20%E5%B1%8B%E4%B9%85%E5%B3%B6",
+        "price": "2,000〜5,000円",
+        "hint": "寿司・魚系。安房方面なら候補。"
+      }
+    ]
+  },
+  {
+    "when": "2日目の夜｜早めディナー",
+    "items": [
+      {
+        "name": "PANORAMA",
+        "url": "https://www.google.com/maps/search/?api=1&query=PANORAMA%20%E5%B1%8B%E4%B9%85%E5%B3%B6",
+        "price": "3,000〜6,000円",
+        "hint": "少し軽めにしたい場合。"
+      },
+      {
+        "name": "潮騒",
+        "url": "https://www.google.com/maps/search/?api=1&query=%E6%BD%AE%E9%A8%92%20%E5%B1%8B%E4%B9%85%E5%B3%B6",
+        "price": "4,000〜8,000円",
+        "hint": "魚を厚めにするなら。"
+      },
+      {
+        "name": "宮之浦の居酒屋",
+        "url": "https://www.google.com/maps/search/?api=1&query=%E5%AE%AE%E4%B9%8B%E6%B5%A6%20%E5%B1%85%E9%85%92%E5%B1%8B%20%E5%B1%8B%E4%B9%85%E5%B3%B6",
+        "price": "4,000〜7,000円",
+        "hint": "予約状況で調整。"
+      }
+    ]
+  }
+];
+
+const activities = [
+  {
+    "name": "VELTRA 屋久島アクティビティ",
+    "url": "https://www.veltra.com/jp/japan/kagoshima/yakushima/",
+    "price": "予約サイト",
+    "hint": "白谷雲水峡・カヤック・ナイトツアーの比較用。",
+    "tag": "本命",
+    "sns": true
+  },
+  {
+    "name": "屋久島ファン ツアー解説",
+    "url": "https://yakushima.fun/tour/",
+    "price": "現地情報",
+    "hint": "白谷雲水峡/縄文杉以外/水辺体験の検討用。"
+  },
+  {
+    "name": "白谷雲水峡ガイド候補",
+    "url": "https://www.google.com/maps/search/?api=1&query=%E5%B1%8B%E4%B9%85%E5%B3%B6%20%E7%99%BD%E8%B0%B7%E9%9B%B2%E6%B0%B4%E5%B3%A1%20%E3%82%AC%E3%82%A4%E3%83%89",
+    "price": "地図検索",
+    "hint": "説明込みで安心感がある半日〜1日候補。"
+  },
+  {
+    "name": "安房川カヤック/SUP候補",
+    "url": "https://www.google.com/maps/search/?api=1&query=%E5%B1%8B%E4%B9%85%E5%B3%B6%20%E5%AE%89%E6%88%BF%E5%B7%9D%20%E3%82%AB%E3%83%A4%E3%83%83%E3%82%AF%20SUP",
+    "price": "地図検索",
+    "hint": "森と水の体験。体力負荷を調整しやすい。"
+  },
+  {
+    "name": "ナイトツアー/星空候補",
+    "url": "https://www.google.com/maps/search/?api=1&query=%E5%B1%8B%E4%B9%85%E5%B3%B6%20%E3%83%8A%E3%82%A4%E3%83%88%E3%83%84%E3%82%A2%E3%83%BC%20%E6%98%9F%E7%A9%BA",
+    "price": "地図検索",
+    "hint": "夜の生き物や星空。天候次第。"
+  }
+];
+
+const other = [
+  {
+    "name": "西部林道",
+    "url": "https://www.google.com/maps/search/?api=1&query=%E8%A5%BF%E9%83%A8%E6%9E%97%E9%81%93%20%E5%B1%8B%E4%B9%85%E5%B3%B6",
+    "price": "",
+    "hint": "野生動物と海岸線。運転に慣れている場合。"
+  },
+  {
+    "name": "永田いなか浜",
+    "url": "https://www.google.com/maps/search/?api=1&query=%E6%B0%B8%E7%94%B0%E3%81%84%E3%81%AA%E3%81%8B%E6%B5%9C%20%E5%B1%8B%E4%B9%85%E5%B3%B6",
+    "price": "",
+    "hint": "海の景色。"
+  },
+  {
+    "name": "屋久杉自然館",
+    "url": "https://www.google.com/maps/search/?api=1&query=%E5%B1%8B%E4%B9%85%E6%9D%89%E8%87%AA%E7%84%B6%E9%A4%A8",
+    "price": "",
+    "hint": "雨天時や体力温存日に。"
+  },
+  {
+    "name": "平内海中温泉",
+    "url": "https://www.google.com/maps/search/?api=1&query=%E5%B9%B3%E5%86%85%E6%B5%B7%E4%B8%AD%E6%B8%A9%E6%B3%89%20%E5%B1%8B%E4%B9%85%E5%B3%B6",
+    "price": "",
+    "hint": "潮位と天候次第。話題性は高い。"
+  }
+];
+
+const cars = [
+  {
+    "name": "屋久島空港 レンタカー地図",
+    "url": "https://www.google.com/maps/search/?api=1&query=%E5%B1%8B%E4%B9%85%E5%B3%B6%E7%A9%BA%E6%B8%AF%20%E3%83%AC%E3%83%B3%E3%82%BF%E3%82%AB%E3%83%BC%208%E4%BA%BA%E4%B9%97%E3%82%8A",
+    "price": "地図検索",
+    "hint": "空港受取/返却。8人乗りワゴンを確認。",
+    "tag": "空港受取"
+  },
+  {
+    "name": "屋久島ワゴンレンタカー地図",
+    "url": "https://www.google.com/maps/search/?api=1&query=%E5%B1%8B%E4%B9%85%E5%B3%B6%20%E3%83%AF%E3%82%B4%E3%83%B3%20%E3%83%AC%E3%83%B3%E3%82%BF%E3%82%AB%E3%83%BC%208%E4%BA%BA%E4%B9%97%E3%82%8A",
+    "price": "地図検索",
+    "hint": "港/空港受取の大型車候補を確認。"
+  },
+  {
+    "name": "まつばんだレンタカー候補",
+    "url": "https://www.google.com/maps/search/?api=1&query=%E3%81%BE%E3%81%A4%E3%81%B0%E3%82%93%E3%81%A0%E3%83%AC%E3%83%B3%E3%82%BF%E3%82%AB%E3%83%BC%20%E5%B1%8B%E4%B9%85%E5%B3%B6",
+    "price": "地図検索",
+    "hint": "屋久島で候補に上がりやすい現地系。"
+  }
+];
+
+const stays = [
+  {
+    "name": "楽天トラベル：屋久島",
+    "url": "https://travel.rakuten.co.jp/yado/kagoshima/yakushima.html",
+    "price": "エリア検索",
+    "hint": "宮之浦/安房/リゾートを比較。6名/2室はリンク先で指定。"
+  },
+  {
+    "name": "じゃらん検索済み（屋久島・6名/2室）",
+    "url": "https://www.jalan.net/uw/uwp2011/uww2011init.do?keyword=%89%AE%8Bv%93%87&dateUndecided=1&adultNum=6&roomCount=2",
+    "price": "検索済み",
+    "hint": "文字化けしないURL。男性3名・女性3名の2室目安。"
+  },
+  {
+    "name": "Agoda：屋久島",
+    "url": "https://www.agoda.com/ja-jp/city/yakushima-jp.html",
+    "price": "エリア検索",
+    "hint": "ホテル/ヴィラ系の比較。6名/2室はリンク先で指定。"
+  },
+  {
+    "name": "宿泊エリア地図（宮之浦・安房）",
+    "url": "https://www.google.com/maps/search/?api=1&query=%E5%B1%8B%E4%B9%85%E5%B3%B6%20%E5%AE%AE%E4%B9%8B%E6%B5%A6%20%E5%AE%89%E6%88%BF%20%E3%83%9B%E3%83%86%E3%83%AB%20%E6%97%85%E9%A4%A8",
+    "price": "地図検索",
+    "hint": "港・空港・夕食エリアとの距離を確認。"
+  }
+];
+
+const budget = [
+  [
+    "各地→鹿児島",
+    "東京1.2万〜2.8万／神戸0.8万〜2.0万円",
+    "早割・航空会社で変動"
+  ],
+  [
+    "鹿児島→屋久島",
+    "1.5万〜4.0万円",
+    "空路/高速船で変動"
+  ],
+  [
+    "宿（2泊）",
+    "4.5万〜9.0万円",
+    "宮之浦/安房。良宿で上振れ"
+  ],
+  [
+    "レンタカー・燃料",
+    "1.2万〜2.5万円",
+    "8人乗り1台を6人で割勘"
+  ],
+  [
+    "食事・酒",
+    "3.0万〜5.0万円",
+    "魚・島料理中心"
+  ],
+  [
+    "アクティビティ",
+    "0.8万〜2.5万円",
+    "ガイドやカヤックで変動"
+  ],
+  [
+    "合計めやす",
+    "12万〜25万円",
+    "天候対策費も見たい"
+  ]
+];
+
+const bookList = [
+  {
+    "label": "鹿児島→屋久島の共通便/高速船",
+    "url": "https://www.jal.co.jp/jp/ja/dom/route/time/"
+  },
+  {
+    "label": "レンタカー1台（8人乗り・空港または港受取）",
+    "url": "https://www.google.com/maps/search/?api=1&query=%E5%B1%8B%E4%B9%85%E5%B3%B6%208%E4%BA%BA%E4%B9%97%E3%82%8A%20%E3%83%AC%E3%83%B3%E3%82%BF%E3%82%AB%E3%83%BC"
+  },
+  {
+    "label": "宿（男女別2室目安・個室希望なら6室）",
+    "url": "https://travel.rakuten.co.jp/yado/kagoshima/yakushima.html"
+  },
+  {
+    "label": "白谷雲水峡ガイド/水辺体験",
+    "url": "https://www.veltra.com/jp/japan/kagoshima/yakushima/"
+  },
+  {
+    "label": "夕食（宮之浦・魚料理）",
+    "url": "https://www.google.com/maps/search/?api=1&query=%E5%AE%AE%E4%B9%8B%E6%B5%A6%20%E5%B1%8B%E4%B9%85%E5%B3%B6%20%E5%A4%95%E9%A3%9F%20%E4%BA%88%E7%B4%84"
+  }
+];
+
+const decideList = [
+  "鹿児島→屋久島を空路にするか、高速船にするか",
+  "白谷雲水峡をガイド付きにするか、自由散策にするか",
+  "安房川カヤック/SUPを入れるか、森と滝だけにするか",
+  "宿を宮之浦にするか、安房にするか",
+  "雨天時に屋久杉自然館へ寄せるか"
+];
+/* =================== /DATA =================== */
+
+
+/* =================== 描画（触らない） =================== */
+function colorOf(k){return k==="hub"?"#16354a":"#d23b2c";}
+function pinIcon(n,color){return L.divIcon({className:"",iconSize:[22,22],iconAnchor:[11,11],
+  html:`<div class="pin" style="background:${color}">${n}</div>`});}
+
+// ピンは実在地に置く。完全同座標の地点だけ約400m離す（拡大時に2つと分かるため）。
+function spread(items,thr=0.0015,r=0.004){
+  const placed=[];
+  return items.map(s=>{
+    let lat=s.lat,lng=s.lng,k=0;
+    while(placed.some(p=>Math.hypot(p[0]-lat,p[1]-lng)<thr)&&k<8){
+      const a=k*Math.PI/3; lat=s.lat+r*Math.sin(a); lng=s.lng+r*Math.cos(a); k++;
+    }
+    placed.push([lat,lng]);
+    return Object.assign({},s,{dlat:lat,dlng:lng});
+  });
+}
+const spots = spread(mapSpots);
+const markers={};
+let routeMap=null;
+
+function initMap(){
+  const mapEl=document.getElementById("map");
+  if(!window.L){
+    mapEl.innerHTML='<div class="mapfallback">地図を読み込み中です。表示されない場合は通信環境を確認してください。</div>';
+    return;
+  }
+  routeMap = L.map("map",{scrollWheelZoom:false});
+  L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",{maxZoom:18,attribution:'&copy; OpenStreetMap contributors'}).addTo(routeMap);
+  const latlngs = spots.map(s=>[s.dlat,s.dlng]);
+  L.polyline(latlngs,{color:"#d23b2c",weight:4,opacity:.9,lineJoin:"round"}).addTo(routeMap);
+  spots.forEach(s=>{ markers[s.n]=L.marker([s.dlat,s.dlng],{icon:pinIcon(s.n,colorOf(s.kind))}).addTo(routeMap).bindPopup(`<b>${s.n}. ${s.name}</b><br>${s.time}`); });
+  foodTowns.forEach(f=>{ L.marker([f.lat,f.lng],{icon:L.divIcon({className:"",iconSize:[14,14],iconAnchor:[7,7],
+    html:`<div style="width:14px;height:14px;border-radius:50%;background:#b07d24;border:2px solid #fff;box-shadow:0 1px 4px rgba(0,0,0,.3)"></div>`})}).addTo(routeMap).bindPopup(`<b>🍽 ${f.name}</b>`); });
+  if(latlngs.length) routeMap.fitBounds(L.latLngBounds(latlngs).pad(0.2)); else routeMap.setView([36,138],5);
+}
+
+window.focusPin=(n)=>{ const s=spots.find(x=>x.n===n); if(!s)return;
+  if(routeMap&&markers[n]){ routeMap.setView([s.dlat,s.dlng],14,{animate:true}); markers[n].openPopup(); }
+  document.querySelectorAll(".pinbtn").forEach(b=>b.classList.toggle("active",Number(b.dataset.n)===n)); };
+document.getElementById("pinindex").innerHTML = spots.map(s=>
+  `<button class="pinbtn" data-n="${s.n}" onclick="focusPin(${s.n})"><span class="num ${s.kind==='hub'?'hub':''}">${s.n}</span>${s.short}</button>`).join("");
+initMap();
+
+function legRow(l){ const pills=(l.pills||[]).map(p=>`<a class="pill ${p.cls}" href="${p.url}" target="_blank" rel="noopener">${p.label}</a>`).join("");
+  return `<div class="leg"><div class="ic">${l.ic}</div><div><div class="ttl">${l.ttl}</div><div class="meta">${l.meta}</div><div class="pillrow">${pills}</div></div></div>`; }
+document.getElementById("acc-a").innerHTML = (access.a||[]).map(legRow).join("");
+document.getElementById("acc-b").innerHTML = (access.b||[]).map(legRow).join("");
+
+document.getElementById("days").innerHTML = days.map(d=>`
+  <div class="card day"><h3>${d.label}</h3>
+  ${d.stops.map(s=>`<div class="stop"><div class="top">
+    ${s.num?`<span class="num ${s.kind==='hub'?'hub':''}">${s.num}</span>`:`<span style="width:22px;flex:0 0 auto"></span>`}
+    <div class="t">${s.t}</div>
+    <div class="p">${s.url?`<a href="${s.url}" target="_blank" rel="noopener">${s.p}</a>`:s.p}</div></div>
+    ${s.hint?`<div class="hint">${s.hint}</div>`:""}
+    ${s.move?`<a class="movelink" href="${s.move.url}" target="_blank" rel="noopener">${s.move.ic} ${s.move.label}</a>`:""}
+  </div>`).join("")}</div>`).join("");
+
+const itemCard=(o)=>`<div class="item">${o.tag?`<span class="tag ${o.sns?'sns':''}">${o.tag}</span>`:""}
+  <div class="name"><a href="${o.url}" target="_blank" rel="noopener">${o.name}</a></div>
+  ${o.price?`<div class="price">${o.price}</div>`:""}${o.hint?`<div class="hint">${o.hint}</div>`:""}</div>`;
+document.getElementById("meal-list").innerHTML = meals.map(g=>`<div class="mealgroup"><div class="when">${g.when}</div><div class="grid2">${g.items.map(itemCard).join("")}</div></div>`).join("");
+document.getElementById("activity-list").innerHTML = activities.map(itemCard).join("");
+document.getElementById("other-list").innerHTML = other.map(itemCard).join("");
+document.getElementById("car-list").innerHTML   = cars.map(itemCard).join("");
+document.getElementById("stay-list").innerHTML  = stays.map(itemCard).join("");
+document.getElementById("budget-table").innerHTML = `<thead><tr><th>項目</th><th>1人あたり</th><th>メモ</th></tr></thead><tbody>`+
+  budget.map(r=>`<tr><td>${r[0]}</td><td class="r">${r[1]}</td><td>${r[2]}</td></tr>`).join("")+`</tbody>`;
+document.getElementById("book-list").innerHTML = bookList.map(c=>`<li><a href="${c.url}" target="_blank" rel="noopener">${c.label}</a></li>`).join("");
+document.getElementById("decide-list").innerHTML = decideList.map(d=>`<li>${d}</li>`).join("");
+</script>
+</body>
+</html>

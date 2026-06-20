@@ -1,0 +1,803 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>佐渡島 2泊3日</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+  integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="">
+<style>
+  :root{
+    --ink:#1b2733; --muted:#64727f; --line:#e3e8ec; --paper:#f7f5ef; --panel:#ffffff;
+    --blue:#1f6f8b; --green:#3d7a5c; --gold:#b07d24; --red:#d23b2c; --shadow:0 10px 30px rgba(20,40,55,.10);
+  }
+  *{box-sizing:border-box}
+  body{margin:0;color:var(--ink);background:var(--paper);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Hiragino Kaku Gothic ProN","Yu Gothic",Meiryo,sans-serif;
+    line-height:1.7;-webkit-text-size-adjust:100%}
+  a{color:#155f80;text-underline-offset:.16em}
+  .wrap{max-width:760px;margin:0 auto;padding:18px 14px 64px}
+  header.hero{background:linear-gradient(160deg,#e7f2f3,#fbf7ef);border:1px solid var(--line);
+    border-radius:20px;padding:20px 18px;box-shadow:var(--shadow)}
+  .kicker{font-size:12px;font-weight:800;color:var(--blue);letter-spacing:.06em}
+  h1{margin:4px 0 6px;font-size:clamp(26px,7vw,38px);line-height:1.15}
+  .lead{color:#33424f;margin:0 0 12px}
+  .badges{display:flex;gap:7px;flex-wrap:wrap}
+  .badge{display:inline-flex;align-items:center;gap:5px;border:1px solid #cdd9dd;background:#fff;
+    border-radius:999px;padding:6px 11px;font-size:13px;font-weight:800}
+  section{margin-top:30px}
+  h2{font-size:20px;margin:0 0 4px;display:flex;align-items:center;gap:8px}
+  h2 .dot{width:10px;height:10px;border-radius:3px;background:var(--red)}
+  .sub{color:var(--muted);font-size:13px;margin:0 0 14px}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:14px;
+    box-shadow:0 6px 18px rgba(25,45,58,.05);margin-bottom:12px}
+  #map{height:62vh;min-height:380px;max-height:560px;width:100%;border-radius:16px;border:1px solid var(--line);z-index:0}
+  .mapfallback{height:100%;display:flex;align-items:center;justify-content:center;text-align:center;padding:24px;color:#566675;background:#eef4f2}
+  .legend{display:flex;gap:14px;flex-wrap:wrap;margin-top:10px;font-size:13px;color:#445}
+  .legend span{display:inline-flex;align-items:center;gap:6px}
+  .swatch{width:14px;height:14px;border-radius:50%;display:inline-block}
+  .routeline{width:22px;height:0;border-top:3px solid var(--red);display:inline-block}
+  .pinindex{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+  .pinbtn{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line);background:#fff;
+    border-radius:999px;padding:5px 11px 5px 6px;font-size:13px;font-weight:700;color:#26323d;cursor:pointer}
+  .pinbtn:hover,.pinbtn.active{border-color:var(--red);background:#fff4f2}
+  .pinbtn .num{width:20px;height:20px;border-radius:50%;background:var(--red);color:#fff;font-size:12px;font-weight:800;
+    display:inline-flex;align-items:center;justify-content:center}
+  .pinbtn .num.hub{background:#16354a}
+  .pin{width:22px;height:22px;border-radius:50%;color:#fff;font-weight:800;font-size:12px;
+    display:flex;align-items:center;justify-content:center;border:2px solid #fff;box-shadow:0 2px 6px rgba(0,0,0,.35)}
+  .access{display:grid;gap:10px}
+  .leg{display:grid;grid-template-columns:30px 1fr;gap:10px;padding:10px 0;border-bottom:1px dashed #e6ebee}
+  .leg:last-child{border-bottom:0}
+  .leg .ic{font-size:20px;text-align:center}
+  .leg .ttl{font-weight:800}
+  .leg .meta{font-size:13px;color:#475663}
+  .pillrow{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
+  .pill{font-size:12px;font-weight:700;border-radius:999px;padding:4px 10px;text-decoration:none;background:#eef4f2;color:#27514a}
+  .pill.book{background:#eaf1f7;color:#1c537a}
+  .day{margin-bottom:14px}
+  .day h3{margin:0 0 8px;font-size:16px;color:#234}
+  .stop{padding:11px 0;border-bottom:1px solid #eef2f4}
+  .stop:last-child{border-bottom:0}
+  .stop .top{display:flex;gap:9px;align-items:baseline}
+  .stop .num{flex:0 0 auto;width:22px;height:22px;border-radius:50%;background:var(--red);color:#fff;
+    font-size:12px;font-weight:800;display:inline-flex;align-items:center;justify-content:center;align-self:center}
+  .stop .num.hub{background:#16354a}
+  .stop .t{color:var(--blue);font-weight:800;font-variant-numeric:tabular-nums;min-width:46px}
+  .stop .p{font-weight:800}
+  .stop .hint{color:var(--muted);font-size:13px;margin-left:31px}
+  .movelink{margin:8px 0 2px 31px;display:inline-flex;align-items:center;gap:7px;font-size:13px;font-weight:700;
+    background:#f3f7f5;border:1px solid #e2ebe6;border-radius:10px;padding:5px 11px;color:#2f5a4c;text-decoration:none}
+  .grid2{display:grid;grid-template-columns:1fr;gap:10px}
+  .mealgroup{margin-bottom:8px}
+  .mealgroup .when{font-weight:800;font-size:14px;color:#234;margin:6px 2px 8px}
+  .item{border:1px solid var(--line);border-radius:13px;padding:12px;background:#fff}
+  .item .name{font-weight:800}
+  .item .price{font-weight:800;color:#123e5b;font-size:14px}
+  .item .hint{color:var(--muted);font-size:13px}
+  .tag{display:inline-block;font-size:11px;font-weight:800;color:#6a4a14;background:#fdf0d6;border-radius:6px;padding:2px 7px;margin-right:6px}
+  .tag.sns{color:#8a2b6b;background:#fbe4f1}
+  table{width:100%;border-collapse:collapse;font-size:14px}
+  th,td{padding:9px 8px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top}
+  th{background:#eef4f6;color:#39525f;font-size:12px}
+  td.r{text-align:right;font-variant-numeric:tabular-nums}
+  .todo{list-style:none;padding:0;margin:0}
+  .todo li{padding:8px 0;border-bottom:1px solid #eef2f4}
+  .todo.book li:before{content:"☐ ";color:var(--blue);font-weight:800}
+  .todo.decide li:before{content:"・";color:var(--gold);font-weight:800;margin-right:4px}
+  .twohead{font-weight:800;margin:2px 0 6px;font-size:14px}
+  footer{margin-top:34px;color:var(--muted);font-size:12px;text-align:center}
+  @media(min-width:640px){.grid2{grid-template-columns:1fr 1fr}}
+</style>
+</head>
+<body>
+<main class="wrap">
+  <header class="hero">
+    <div class="kicker">6人旅行・候補A</div>
+    <h1>佐渡島 2泊3日</h1>
+    <p class="lead">新潟港から同じ船に乗って佐渡へ入る、海鮮・金山・海岸線・たらい舟のバランス型。現地は8〜10人乗りワゴン1台で動きます。</p>
+    <div class="badges"><span class="badge">🗓 2泊3日</span><span class="badge">👥 6人（東京4・神戸2）</span><span class="badge">🚢 共通区間: 新潟港→両津港</span><span class="badge">🚐 レンタカー1台</span><span class="badge">🐟 海鮮・金山</span></div>
+  </header>
+
+  <section id="route">
+    <h2><span class="dot"></span>ルート地図</h2>
+    <p class="sub">番号順に巡るルート。赤い線が実際の移動経路です。</p>
+    <div id="map"></div>
+    <div class="legend">
+      <span><i class="routeline"></i>順路</span>
+      <span><i class="swatch" style="background:#16354a"></i>集合・拠点</span>
+      <span><i class="swatch" style="background:#d23b2c"></i>観光スポット</span>
+      <span><i class="swatch" style="background:#b07d24"></i>食事の街</span>
+    </div>
+    <div class="pinindex" id="pinindex"></div>
+    <p class="sub" style="margin-top:8px">番号をタップすると、地図のその場所に移動します。</p>
+  </section>
+
+  <section id="access">
+    <h2><span class="dot"></span>行き帰りのアクセス</h2>
+    <p class="sub">東京組・神戸組は新潟港で合流し、新潟港→両津港の同じ船から共通行程に入ります。</p>
+    <div class="card"><div class="twohead">東京発（4人）</div><div class="access" id="acc-a"></div></div>
+    <div class="card"><div class="twohead">神戸発（2人）</div><div class="access" id="acc-b"></div></div>
+  </section>
+
+  <section id="itinerary">
+    <h2><span class="dot"></span>行程</h2>
+    <p class="sub">番号は上の地図のピンと同じ順番です。スポット名は地図リンク、区間の「🚗 ◯分」は経路に飛びます。</p>
+    <div id="days"></div>
+  </section>
+
+  <section id="meals">
+    <h2><span class="dot"></span>食事候補</h2>
+    <p class="sub">タイミング別の候補。気分と予約状況で選べます。</p>
+    <div id="meal-list"></div>
+  </section>
+
+  <section id="activities">
+    <h2><span class="dot"></span>アクティビティ候補</h2>
+    <p class="sub">行程に入れるかを相談しやすい体験候補です。天気・体力・予約状況で選べます。</p>
+    <div class="grid2" id="activity-list"></div>
+  </section>
+
+  <section id="other">
+    <h2><span class="dot"></span>他にもおすすめのスポット</h2>
+    <p class="sub">天気や気分で順路に足せる候補です。</p>
+    <div class="grid2" id="other-list"></div>
+  </section>
+
+  <section id="car">
+    <h2><span class="dot"></span>レンタカー</h2>
+    <p class="sub">両津港で8〜10人乗りワゴン1台を受取。島内移動は距離が出るため、運転担当は2名以上が安心です。</p>
+    <div class="grid2" id="car-list"></div>
+  </section>
+
+  <section id="stay">
+    <h2><span class="dot"></span>宿</h2>
+    <p class="sub">男女3:3のため宿検索は6名/2室（男性3名・女性3名）目安。個室重視なら6室で再検索。</p>
+    <div class="grid2" id="stay-list"></div>
+  </section>
+
+  <section id="budget">
+    <h2><span class="dot"></span>費用のめやす（1人あたり）</h2>
+    <div class="card" style="overflow-x:auto"><table id="budget-table"></table></div>
+  </section>
+
+  <section id="next">
+    <h2><span class="dot"></span>これから決める・予約すること</h2>
+    <div class="card"><div class="twohead">予約するもの</div><ul class="todo book" id="book-list"></ul></div>
+    <div class="card"><div class="twohead">グループで決めること（まだ未確定）</div><ul class="todo decide" id="decide-list"></ul></div>
+  </section>
+
+  <footer>所要時間・便は作成時点の各社公式時刻表・地図経路に基づくめやすです。</footer>
+</main>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+  integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+<script>
+/* =================== DATA（ここだけ案件ごとに差し替える） =================== */
+const mapSpots = [
+  {
+    "n": 1,
+    "name": "新潟港（集合）",
+    "short": "新潟港",
+    "lat": 37.926,
+    "lng": 139.064,
+    "kind": "hub",
+    "time": "Day1 11:00"
+  },
+  {
+    "n": 2,
+    "name": "両津港（レンタカー受取）",
+    "short": "両津港",
+    "lat": 38.083,
+    "lng": 138.439,
+    "kind": "hub",
+    "time": "Day1 12:50"
+  },
+  {
+    "n": 3,
+    "name": "トキの森公園",
+    "short": "トキ",
+    "lat": 38.042,
+    "lng": 138.414,
+    "kind": "spot",
+    "time": "Day1 14:00"
+  },
+  {
+    "n": 4,
+    "name": "北沢浮遊選鉱場",
+    "short": "北沢",
+    "lat": 38.031,
+    "lng": 138.242,
+    "kind": "spot",
+    "time": "Day1 16:20"
+  },
+  {
+    "n": 5,
+    "name": "佐渡金山",
+    "short": "金山",
+    "lat": 38.04,
+    "lng": 138.255,
+    "kind": "spot",
+    "time": "Day2 09:30"
+  },
+  {
+    "n": 6,
+    "name": "尖閣湾揚島遊園",
+    "short": "尖閣湾",
+    "lat": 38.207,
+    "lng": 138.321,
+    "kind": "spot",
+    "time": "Day2 11:30"
+  },
+  {
+    "n": 7,
+    "name": "小木たらい舟",
+    "short": "小木",
+    "lat": 37.814,
+    "lng": 138.283,
+    "kind": "spot",
+    "time": "Day2 15:20"
+  },
+  {
+    "n": 8,
+    "name": "宿根木",
+    "short": "宿根木",
+    "lat": 37.802,
+    "lng": 138.247,
+    "kind": "spot",
+    "time": "Day2 16:20"
+  },
+  {
+    "n": 9,
+    "name": "両津港（帰り）",
+    "short": "両津港",
+    "lat": 38.083,
+    "lng": 138.439,
+    "kind": "hub",
+    "time": "Day3 13:00"
+  }
+];
+
+const foodTowns = [
+  {
+    "name": "相川・佐和田",
+    "lat": 38.01,
+    "lng": 138.272
+  },
+  {
+    "name": "両津港周辺",
+    "lat": 38.083,
+    "lng": 138.439
+  }
+];
+
+const access = {
+  "a": [
+    {
+      "ic": "🚄",
+      "ttl": "東京 → 新潟駅",
+      "meta": "上越新幹線 8:24頃発 → 10:30頃着（約2時間／片道めやす 1.1万〜1.4万円）",
+      "pills": [
+        {
+          "cls": "book",
+          "label": "JR東日本",
+          "url": "https://www.jreast.co.jp/"
+        },
+        {
+          "cls": "",
+          "label": "経路を見る",
+          "url": "https://www.google.com/maps/dir/?api=1&origin=%E6%9D%B1%E4%BA%AC%E9%A7%85&destination=%E6%96%B0%E6%BD%9F%E9%A7%85&travelmode=transit"
+        }
+      ]
+    },
+    {
+      "ic": "🚕",
+      "ttl": "新潟駅 → 新潟港",
+      "meta": "タクシー/バスで約15〜25分。11:00目安で新潟港集合。",
+      "pills": [
+        {
+          "cls": "",
+          "label": "地図",
+          "url": "https://www.google.com/maps/dir/?api=1&origin=%E6%96%B0%E6%BD%9F%E9%A7%85&destination=%E6%96%B0%E6%BD%9F%E6%B8%AF&travelmode=transit"
+        }
+      ]
+    },
+    {
+      "ic": "🚢",
+      "ttl": "新潟港 → 両津港（共通区間）",
+      "meta": "ジェットフォイル候補 11:30頃発 → 12:40頃着（約67分／往復めやす 1.5万円前後）",
+      "pills": [
+        {
+          "cls": "book",
+          "label": "佐渡汽船",
+          "url": "https://www.sadokisen.co.jp/"
+        }
+      ]
+    }
+  ],
+  "b": [
+    {
+      "ic": "✈️",
+      "ttl": "神戸・伊丹圏 → 新潟空港",
+      "meta": "伊丹発の新潟便を使い、10:30前後に新潟港へ移動する想定。",
+      "pills": [
+        {
+          "cls": "book",
+          "label": "便・料金",
+          "url": "https://www.google.com/travel/flights?q=ITM%20to%20KIJ%202026-09-12%20return%202026-09-14"
+        }
+      ]
+    },
+    {
+      "ic": "🚕",
+      "ttl": "新潟空港 → 新潟港",
+      "meta": "タクシー/バスで約25〜35分。新潟港11:00集合に合わせます。",
+      "pills": [
+        {
+          "cls": "",
+          "label": "地図",
+          "url": "https://www.google.com/maps/dir/?api=1&origin=%E6%96%B0%E6%BD%9F%E7%A9%BA%E6%B8%AF&destination=%E6%96%B0%E6%BD%9F%E6%B8%AF&travelmode=transit"
+        }
+      ]
+    },
+    {
+      "ic": "🚢",
+      "ttl": "新潟港 → 両津港（共通区間）",
+      "meta": "東京組と同じ船で両津港へ。",
+      "pills": [
+        {
+          "cls": "book",
+          "label": "佐渡汽船",
+          "url": "https://www.sadokisen.co.jp/"
+        }
+      ]
+    }
+  ]
+};
+
+const days = [
+  {
+    "label": "Day1 新潟港合流 → 両津 → 相川",
+    "stops": [
+      {
+        "num": 1,
+        "kind": "hub",
+        "t": "11:00",
+        "p": "新潟港 集合",
+        "url": "https://www.google.com/maps/search/?api=1&query=%E6%96%B0%E6%BD%9F%E6%B8%AF%20%E4%BD%90%E6%B8%A1%E6%B1%BD%E8%88%B9",
+        "hint": "ここから全員同じ船・同じ行程。",
+        "move": {
+          "ic": "🚢",
+          "label": "約67分",
+          "url": "https://www.sadokisen.co.jp/"
+        }
+      },
+      {
+        "num": 2,
+        "kind": "hub",
+        "t": "12:50",
+        "p": "両津港・レンタカー受取",
+        "url": "https://www.google.com/maps/search/?api=1&query=%E4%B8%A1%E6%B4%A5%E6%B8%AF",
+        "hint": "8〜10人乗りワゴン1台を受取。",
+        "move": {
+          "ic": "🚗",
+          "label": "約20分",
+          "url": "https://www.google.com/maps/dir/?api=1&origin=%E4%B8%A1%E6%B4%A5%E6%B8%AF&destination=%E3%83%88%E3%82%AD%E3%81%AE%E6%A3%AE%E5%85%AC%E5%9C%92&travelmode=driving"
+        }
+      },
+      {
+        "num": 3,
+        "t": "14:00",
+        "p": "トキの森公園",
+        "url": "https://www.google.com/maps/search/?api=1&query=%E3%83%88%E3%82%AD%E3%81%AE%E6%A3%AE%E5%85%AC%E5%9C%92",
+        "hint": "到着日の軽めスポット。",
+        "move": {
+          "ic": "🚗",
+          "label": "約45分",
+          "url": "https://www.google.com/maps/dir/?api=1&origin=%E3%83%88%E3%82%AD%E3%81%AE%E6%A3%AE%E5%85%AC%E5%9C%92&destination=%E5%8C%97%E6%B2%A2%E6%B5%AE%E9%81%8A%E9%81%B8%E9%89%B1%E5%A0%B4&travelmode=driving"
+        }
+      },
+      {
+        "num": 4,
+        "t": "16:20",
+        "p": "北沢浮遊選鉱場",
+        "url": "https://www.google.com/maps/search/?api=1&query=%E5%8C%97%E6%B2%A2%E6%B5%AE%E9%81%8A%E9%81%B8%E9%89%B1%E5%A0%B4",
+        "hint": "写真映えの強い産業遺産。"
+      },
+      {
+        "t": "18:30",
+        "p": "夕食",
+        "url": "#meals",
+        "hint": "寿司・地魚から選択。"
+      }
+    ]
+  },
+  {
+    "label": "Day2 金山・海岸線・小木",
+    "stops": [
+      {
+        "num": 5,
+        "t": "09:30",
+        "p": "佐渡金山",
+        "url": "https://www.google.com/maps/search/?api=1&query=%E4%BD%90%E6%B8%A1%E9%87%91%E5%B1%B1",
+        "hint": "歴史スポットの本命。",
+        "move": {
+          "ic": "🚗",
+          "label": "約35分",
+          "url": "https://www.google.com/maps/dir/?api=1&origin=%E4%BD%90%E6%B8%A1%E9%87%91%E5%B1%B1&destination=%E5%B0%96%E9%96%A3%E6%B9%BE%E6%8F%9A%E5%B3%B6%E9%81%8A%E5%9C%92&travelmode=driving"
+        }
+      },
+      {
+        "num": 6,
+        "t": "11:30",
+        "p": "尖閣湾揚島遊園",
+        "url": "https://www.google.com/maps/search/?api=1&query=%E5%B0%96%E9%96%A3%E6%B9%BE%E6%8F%9A%E5%B3%B6%E9%81%8A%E5%9C%92",
+        "hint": "海岸絶景。グラスボートは天候次第。",
+        "move": {
+          "ic": "🚗",
+          "label": "約80分",
+          "url": "https://www.google.com/maps/dir/?api=1&origin=%E5%B0%96%E9%96%A3%E6%B9%BE%E6%8F%9A%E5%B3%B6%E9%81%8A%E5%9C%92&destination=%E5%B0%8F%E6%9C%A8%E6%B8%AF%20%E3%81%9F%E3%82%89%E3%81%84%E8%88%9F&travelmode=driving"
+        }
+      },
+      {
+        "t": "13:10",
+        "p": "昼食",
+        "url": "#meals",
+        "hint": "移動途中で軽め。"
+      },
+      {
+        "num": 7,
+        "t": "15:20",
+        "p": "小木たらい舟",
+        "url": "https://www.google.com/maps/search/?api=1&query=%E5%B0%8F%E6%9C%A8%20%E3%81%9F%E3%82%89%E3%81%84%E8%88%9F",
+        "hint": "佐渡らしい体験。",
+        "move": {
+          "ic": "🚗",
+          "label": "約10分",
+          "url": "https://www.google.com/maps/dir/?api=1&origin=%E5%B0%8F%E6%9C%A8%E6%B8%AF%20%E3%81%9F%E3%82%89%E3%81%84%E8%88%9F&destination=%E5%AE%BF%E6%A0%B9%E6%9C%A8&travelmode=driving"
+        }
+      },
+      {
+        "num": 8,
+        "t": "16:20",
+        "p": "宿根木",
+        "url": "https://www.google.com/maps/search/?api=1&query=%E5%AE%BF%E6%A0%B9%E6%9C%A8",
+        "hint": "古い町並みを散策。"
+      },
+      {
+        "t": "19:00",
+        "p": "夕食",
+        "url": "#meals",
+        "hint": "2日目は地魚・居酒屋を厚めに。"
+      }
+    ]
+  },
+  {
+    "label": "Day3 両津港 → 新潟港",
+    "stops": [
+      {
+        "t": "10:00",
+        "p": "土産・軽め散策",
+        "url": "https://www.google.com/maps/search/?api=1&query=%E4%B8%A1%E6%B4%A5%E6%B8%AF%20%E5%9C%9F%E7%94%A3",
+        "hint": "帰りの船に合わせて余裕を残す。",
+        "move": {
+          "ic": "🚗",
+          "label": "約15分",
+          "url": "https://www.google.com/maps/dir/?api=1&origin=%E4%BD%90%E6%B8%A1%E5%B8%82&destination=%E4%B8%A1%E6%B4%A5%E6%B8%AF&travelmode=driving"
+        }
+      },
+      {
+        "num": 9,
+        "kind": "hub",
+        "t": "13:00",
+        "p": "両津港・返却",
+        "url": "https://www.google.com/maps/search/?api=1&query=%E4%B8%A1%E6%B4%A5%E6%B8%AF",
+        "hint": "新潟港へ戻り、各出発地へ。"
+      }
+    ]
+  }
+];
+
+const meals = [
+  {
+    "when": "1日目の夜｜寿司・地魚",
+    "items": [
+      {
+        "name": "弁慶 佐渡本店",
+        "url": "https://www.google.com/maps/search/?api=1&query=%E5%BC%81%E6%85%B6%20%E4%BD%90%E6%B8%A1%E6%9C%AC%E5%BA%97",
+        "price": "4,000〜8,000円",
+        "hint": "寿司の定番候補。6名は予約優先。",
+        "tag": "定番",
+        "sns": true
+      },
+      {
+        "name": "すしや まるいし",
+        "url": "https://www.google.com/maps/search/?api=1&query=%E3%81%99%E3%81%97%E3%82%84%20%E3%81%BE%E3%82%8B%E3%81%84%E3%81%97%20%E4%BD%90%E6%B8%A1",
+        "price": "4,000〜8,000円",
+        "hint": "両津寄りの寿司候補。"
+      },
+      {
+        "name": "長三郎鮨",
+        "url": "https://www.google.com/maps/search/?api=1&query=%E9%95%B7%E4%B8%89%E9%83%8E%E9%AE%A8%20%E4%BD%90%E6%B8%A1",
+        "price": "3,000〜7,000円",
+        "hint": "寿司とラーメンで有名。カジュアル寄り。"
+      }
+    ]
+  },
+  {
+    "when": "2日目の夜｜居酒屋・地酒",
+    "items": [
+      {
+        "name": "味彩",
+        "url": "https://www.google.com/maps/search/?api=1&query=%E5%91%B3%E5%BD%A9%20%E4%BD%90%E6%B8%A1",
+        "price": "4,000〜7,000円",
+        "hint": "地魚と居酒屋利用に。"
+      },
+      {
+        "name": "割烹 ふじわら",
+        "url": "https://www.google.com/maps/search/?api=1&query=%E5%89%B2%E7%83%B9%20%E3%81%B5%E3%81%98%E3%82%8F%E3%82%89%20%E4%BD%90%E6%B8%A1",
+        "price": "6,000〜10,000円",
+        "hint": "落ち着いて食べる候補。"
+      },
+      {
+        "name": "佐渡の酒と肴 だっちゃ",
+        "url": "https://www.google.com/maps/search/?api=1&query=%E4%BD%90%E6%B8%A1%20%E3%81%A0%E3%81%A3%E3%81%A1%E3%82%83",
+        "price": "4,000〜8,000円",
+        "hint": "佐渡地酒を入れたい場合。"
+      }
+    ]
+  }
+];
+
+const activities = [
+  {
+    "name": "小木たらい舟",
+    "url": "https://www.google.com/maps/search/?api=1&query=%E5%B0%8F%E6%9C%A8%20%E3%81%9F%E3%82%89%E3%81%84%E8%88%9F",
+    "price": "1,000円台〜",
+    "hint": "地図で乗り場確認。20〜40分の軽い体験。",
+    "tag": "体験",
+    "sns": true
+  },
+  {
+    "name": "尖閣湾グラスボート",
+    "url": "https://www.google.com/maps/search/?api=1&query=%E5%B0%96%E9%96%A3%E6%B9%BE%E6%8F%9A%E5%B3%B6%E9%81%8A%E5%9C%92%20%E3%82%B0%E3%83%A9%E3%82%B9%E3%83%9C%E3%83%BC%E3%83%88",
+    "price": "1,000円台〜",
+    "hint": "地図で場所確認。海況が良ければ海岸線を船から見られる。",
+    "tag": "海"
+  },
+  {
+    "name": "さど観光ナビ（体験・観光確認）",
+    "url": "https://www.visitsado.com/",
+    "price": "公式観光",
+    "hint": "たらい舟・金山・太鼓など佐渡側の公式情報確認用。"
+  },
+  {
+    "name": "佐渡日和（現地観光・イベント確認）",
+    "url": "https://sado-biyori.com/",
+    "price": "観光情報",
+    "hint": "季節イベントや現地情報の確認用。"
+  },
+  {
+    "name": "VELTRA 新潟/佐渡周辺アクティビティ",
+    "url": "https://www.veltra.com/jp/japan/niigata/",
+    "price": "予約サイト",
+    "hint": "予約できる体験候補を横断確認。"
+  }
+];
+
+const other = [
+  {
+    "name": "大野亀",
+    "url": "https://www.google.com/maps/search/?api=1&query=%E5%A4%A7%E9%87%8E%E4%BA%80%20%E4%BD%90%E6%B8%A1",
+    "price": "",
+    "hint": "北端の絶景。移動が重いので時間がある場合。"
+  },
+  {
+    "name": "二ツ亀",
+    "url": "https://www.google.com/maps/search/?api=1&query=%E4%BA%8C%E3%83%84%E4%BA%80%20%E4%BD%90%E6%B8%A1",
+    "price": "",
+    "hint": "海景色の差し替え候補。"
+  },
+  {
+    "name": "佐渡西三川ゴールドパーク",
+    "url": "https://www.google.com/maps/search/?api=1&query=%E4%BD%90%E6%B8%A1%E8%A5%BF%E4%B8%89%E5%B7%9D%E3%82%B4%E3%83%BC%E3%83%AB%E3%83%89%E3%83%91%E3%83%BC%E3%82%AF",
+    "price": "",
+    "hint": "砂金採り体験。雨天にも。"
+  },
+  {
+    "name": "尾畑酒造",
+    "url": "https://www.google.com/maps/search/?api=1&query=%E5%B0%BE%E7%95%91%E9%85%92%E9%80%A0%20%E4%BD%90%E6%B8%A1",
+    "price": "",
+    "hint": "地酒好きなら寄り道候補。"
+  }
+];
+
+const cars = [
+  {
+    "name": "佐渡汽船レンタカー",
+    "url": "https://www.sadokisen.co.jp/rentacar/",
+    "price": "公式",
+    "hint": "両津港受取の本命。大型車は日付で要確認。",
+    "tag": "港受取"
+  },
+  {
+    "name": "両津港周辺レンタカー地図",
+    "url": "https://www.google.com/maps/search/?api=1&query=%E4%B8%A1%E6%B4%A5%E6%B8%AF%20%E3%83%AC%E3%83%B3%E3%82%BF%E3%82%AB%E3%83%BC%208%E4%BA%BA%E4%B9%97%E3%82%8A%2010%E4%BA%BA%E4%B9%97%E3%82%8A",
+    "price": "地図検索",
+    "hint": "港周辺の店舗位置と大型車対応を確認。"
+  },
+  {
+    "name": "佐渡市内ワゴンレンタカー地図",
+    "url": "https://www.google.com/maps/search/?api=1&query=%E4%BD%90%E6%B8%A1%20%E3%83%AC%E3%83%B3%E3%82%BF%E3%82%AB%E3%83%BC%20%E3%83%AF%E3%82%B4%E3%83%B3%208%E4%BA%BA%E4%B9%97%E3%82%8A",
+    "price": "地図検索",
+    "hint": "両津以外の店舗も含めて確認。"
+  }
+];
+
+const stays = [
+  {
+    "name": "楽天トラベル：佐渡",
+    "url": "https://travel.rakuten.co.jp/yado/niigata/sado.html",
+    "price": "エリア検索",
+    "hint": "相川・佐和田・両津を比較。6名/2室はリンク先で指定。"
+  },
+  {
+    "name": "じゃらん検索済み（佐渡・6名/2室）",
+    "url": "https://www.jalan.net/uw/uwp2011/uww2011init.do?keyword=%8D%B2%93n&dateUndecided=1&adultNum=6&roomCount=2",
+    "price": "検索済み",
+    "hint": "文字化けしないURL。男性3名・女性3名の2室目安。"
+  },
+  {
+    "name": "Agoda：佐渡",
+    "url": "https://www.agoda.com/ja-jp/city/sado-jp.html",
+    "price": "エリア検索",
+    "hint": "ホテル/旅館系の比較。6名/2室はリンク先で指定。"
+  },
+  {
+    "name": "宿泊エリア地図（相川・佐和田・両津）",
+    "url": "https://www.google.com/maps/search/?api=1&query=%E4%BD%90%E6%B8%A1%20%E7%9B%B8%E5%B7%9D%20%E4%BD%90%E5%92%8C%E7%94%B0%20%E4%B8%A1%E6%B4%A5%20%E3%83%9B%E3%83%86%E3%83%AB%20%E6%97%85%E9%A4%A8",
+    "price": "地図検索",
+    "hint": "宿の位置関係を確認。"
+  }
+];
+
+const budget = [
+  [
+    "東京/神戸→新潟港",
+    "1.5万〜3.5万円",
+    "新幹線・航空券で差が出る"
+  ],
+  [
+    "新潟港→両津港",
+    "1.2万〜1.8万円",
+    "ジェットフォイル/フェリーで変動"
+  ],
+  [
+    "宿（2泊）",
+    "4.0万〜8.0万円",
+    "相川・佐和田の良宿で上振れ"
+  ],
+  [
+    "レンタカー・燃料",
+    "1.2万〜2.2万円",
+    "8〜10人乗り1台を6人で割勘"
+  ],
+  [
+    "食事・酒",
+    "3.0万〜5.5万円",
+    "寿司・地酒で調整"
+  ],
+  [
+    "アクティビティ・観光",
+    "0.8万〜2.0万円",
+    "金山・たらい舟・船系"
+  ],
+  [
+    "合計めやす",
+    "12万〜23万円",
+    "新潟までの移動手段で幅あり"
+  ]
+];
+
+const bookList = [
+  {
+    "label": "新潟港→両津港の船",
+    "url": "https://www.sadokisen.co.jp/"
+  },
+  {
+    "label": "レンタカー1台（8〜10人乗り・両津港受取）",
+    "url": "https://www.google.com/maps/search/?api=1&query=%E4%B8%A1%E6%B4%A5%E6%B8%AF%20%E3%83%AC%E3%83%B3%E3%82%BF%E3%82%AB%E3%83%BC%208%E4%BA%BA%E4%B9%97%E3%82%8A%2010%E4%BA%BA%E4%B9%97%E3%82%8A"
+  },
+  {
+    "label": "宿（男女別2室目安・個室希望なら6室）",
+    "url": "https://travel.rakuten.co.jp/yado/niigata/sado.html"
+  },
+  {
+    "label": "寿司・地魚の夕食",
+    "url": "https://www.google.com/maps/search/?api=1&query=%E4%BD%90%E6%B8%A1%20%E5%AF%BF%E5%8F%B8%206%E5%90%8D%20%E4%BA%88%E7%B4%84"
+  }
+];
+
+const decideList = [
+  "新潟港までを東京組・神戸組それぞれ最安優先にするか、集合余裕優先にするか",
+  "宿を相川・佐和田寄りにするか、両津寄りにするか",
+  "たらい舟・グラスボートを両方入れるか、片方に絞るか",
+  "帰りをジェットフォイルにするか、安いカーフェリーにするか"
+];
+/* =================== /DATA =================== */
+
+
+/* =================== 描画（触らない） =================== */
+function colorOf(k){return k==="hub"?"#16354a":"#d23b2c";}
+function pinIcon(n,color){return L.divIcon({className:"",iconSize:[22,22],iconAnchor:[11,11],
+  html:`<div class="pin" style="background:${color}">${n}</div>`});}
+
+// ピンは実在地に置く。完全同座標の地点だけ約400m離す（拡大時に2つと分かるため）。
+function spread(items,thr=0.0015,r=0.004){
+  const placed=[];
+  return items.map(s=>{
+    let lat=s.lat,lng=s.lng,k=0;
+    while(placed.some(p=>Math.hypot(p[0]-lat,p[1]-lng)<thr)&&k<8){
+      const a=k*Math.PI/3; lat=s.lat+r*Math.sin(a); lng=s.lng+r*Math.cos(a); k++;
+    }
+    placed.push([lat,lng]);
+    return Object.assign({},s,{dlat:lat,dlng:lng});
+  });
+}
+const spots = spread(mapSpots);
+const markers={};
+let routeMap=null;
+
+function initMap(){
+  const mapEl=document.getElementById("map");
+  if(!window.L){
+    mapEl.innerHTML='<div class="mapfallback">地図を読み込み中です。表示されない場合は通信環境を確認してください。</div>';
+    return;
+  }
+  routeMap = L.map("map",{scrollWheelZoom:false});
+  L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",{maxZoom:18,attribution:'&copy; OpenStreetMap contributors'}).addTo(routeMap);
+  const latlngs = spots.map(s=>[s.dlat,s.dlng]);
+  L.polyline(latlngs,{color:"#d23b2c",weight:4,opacity:.9,lineJoin:"round"}).addTo(routeMap);
+  spots.forEach(s=>{ markers[s.n]=L.marker([s.dlat,s.dlng],{icon:pinIcon(s.n,colorOf(s.kind))}).addTo(routeMap).bindPopup(`<b>${s.n}. ${s.name}</b><br>${s.time}`); });
+  foodTowns.forEach(f=>{ L.marker([f.lat,f.lng],{icon:L.divIcon({className:"",iconSize:[14,14],iconAnchor:[7,7],
+    html:`<div style="width:14px;height:14px;border-radius:50%;background:#b07d24;border:2px solid #fff;box-shadow:0 1px 4px rgba(0,0,0,.3)"></div>`})}).addTo(routeMap).bindPopup(`<b>🍽 ${f.name}</b>`); });
+  if(latlngs.length) routeMap.fitBounds(L.latLngBounds(latlngs).pad(0.2)); else routeMap.setView([36,138],5);
+}
+
+window.focusPin=(n)=>{ const s=spots.find(x=>x.n===n); if(!s)return;
+  if(routeMap&&markers[n]){ routeMap.setView([s.dlat,s.dlng],14,{animate:true}); markers[n].openPopup(); }
+  document.querySelectorAll(".pinbtn").forEach(b=>b.classList.toggle("active",Number(b.dataset.n)===n)); };
+document.getElementById("pinindex").innerHTML = spots.map(s=>
+  `<button class="pinbtn" data-n="${s.n}" onclick="focusPin(${s.n})"><span class="num ${s.kind==='hub'?'hub':''}">${s.n}</span>${s.short}</button>`).join("");
+initMap();
+
+function legRow(l){ const pills=(l.pills||[]).map(p=>`<a class="pill ${p.cls}" href="${p.url}" target="_blank" rel="noopener">${p.label}</a>`).join("");
+  return `<div class="leg"><div class="ic">${l.ic}</div><div><div class="ttl">${l.ttl}</div><div class="meta">${l.meta}</div><div class="pillrow">${pills}</div></div></div>`; }
+document.getElementById("acc-a").innerHTML = (access.a||[]).map(legRow).join("");
+document.getElementById("acc-b").innerHTML = (access.b||[]).map(legRow).join("");
+
+document.getElementById("days").innerHTML = days.map(d=>`
+  <div class="card day"><h3>${d.label}</h3>
+  ${d.stops.map(s=>`<div class="stop"><div class="top">
+    ${s.num?`<span class="num ${s.kind==='hub'?'hub':''}">${s.num}</span>`:`<span style="width:22px;flex:0 0 auto"></span>`}
+    <div class="t">${s.t}</div>
+    <div class="p">${s.url?`<a href="${s.url}" target="_blank" rel="noopener">${s.p}</a>`:s.p}</div></div>
+    ${s.hint?`<div class="hint">${s.hint}</div>`:""}
+    ${s.move?`<a class="movelink" href="${s.move.url}" target="_blank" rel="noopener">${s.move.ic} ${s.move.label}</a>`:""}
+  </div>`).join("")}</div>`).join("");
+
+const itemCard=(o)=>`<div class="item">${o.tag?`<span class="tag ${o.sns?'sns':''}">${o.tag}</span>`:""}
+  <div class="name"><a href="${o.url}" target="_blank" rel="noopener">${o.name}</a></div>
+  ${o.price?`<div class="price">${o.price}</div>`:""}${o.hint?`<div class="hint">${o.hint}</div>`:""}</div>`;
+document.getElementById("meal-list").innerHTML = meals.map(g=>`<div class="mealgroup"><div class="when">${g.when}</div><div class="grid2">${g.items.map(itemCard).join("")}</div></div>`).join("");
+document.getElementById("activity-list").innerHTML = activities.map(itemCard).join("");
+document.getElementById("other-list").innerHTML = other.map(itemCard).join("");
+document.getElementById("car-list").innerHTML   = cars.map(itemCard).join("");
+document.getElementById("stay-list").innerHTML  = stays.map(itemCard).join("");
+document.getElementById("budget-table").innerHTML = `<thead><tr><th>項目</th><th>1人あたり</th><th>メモ</th></tr></thead><tbody>`+
+  budget.map(r=>`<tr><td>${r[0]}</td><td class="r">${r[1]}</td><td>${r[2]}</td></tr>`).join("")+`</tbody>`;
+document.getElementById("book-list").innerHTML = bookList.map(c=>`<li><a href="${c.url}" target="_blank" rel="noopener">${c.label}</a></li>`).join("");
+document.getElementById("decide-list").innerHTML = decideList.map(d=>`<li>${d}</li>`).join("");
+</script>
+</body>
+</html>

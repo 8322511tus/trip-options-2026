@@ -1,0 +1,818 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>高知・仁淀ブルー 2泊3日</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+  integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="">
+<style>
+  :root{
+    --ink:#1b2733; --muted:#64727f; --line:#e3e8ec; --paper:#f7f5ef; --panel:#ffffff;
+    --blue:#1f6f8b; --green:#3d7a5c; --gold:#b07d24; --red:#d23b2c; --shadow:0 10px 30px rgba(20,40,55,.10);
+  }
+  *{box-sizing:border-box}
+  body{margin:0;color:var(--ink);background:var(--paper);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Hiragino Kaku Gothic ProN","Yu Gothic",Meiryo,sans-serif;
+    line-height:1.7;-webkit-text-size-adjust:100%}
+  a{color:#155f80;text-underline-offset:.16em}
+  .wrap{max-width:760px;margin:0 auto;padding:18px 14px 64px}
+  header.hero{background:linear-gradient(160deg,#e7f2f3,#fbf7ef);border:1px solid var(--line);
+    border-radius:20px;padding:20px 18px;box-shadow:var(--shadow)}
+  .kicker{font-size:12px;font-weight:800;color:var(--blue);letter-spacing:.06em}
+  h1{margin:4px 0 6px;font-size:clamp(26px,7vw,38px);line-height:1.15}
+  .lead{color:#33424f;margin:0 0 12px}
+  .badges{display:flex;gap:7px;flex-wrap:wrap}
+  .badge{display:inline-flex;align-items:center;gap:5px;border:1px solid #cdd9dd;background:#fff;
+    border-radius:999px;padding:6px 11px;font-size:13px;font-weight:800}
+  section{margin-top:30px}
+  h2{font-size:20px;margin:0 0 4px;display:flex;align-items:center;gap:8px}
+  h2 .dot{width:10px;height:10px;border-radius:3px;background:var(--red)}
+  .sub{color:var(--muted);font-size:13px;margin:0 0 14px}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:14px;
+    box-shadow:0 6px 18px rgba(25,45,58,.05);margin-bottom:12px}
+  #map{height:62vh;min-height:380px;max-height:560px;width:100%;border-radius:16px;border:1px solid var(--line);z-index:0}
+  .mapfallback{height:100%;display:flex;align-items:center;justify-content:center;text-align:center;padding:24px;color:#566675;background:#eef4f2}
+  .legend{display:flex;gap:14px;flex-wrap:wrap;margin-top:10px;font-size:13px;color:#445}
+  .legend span{display:inline-flex;align-items:center;gap:6px}
+  .swatch{width:14px;height:14px;border-radius:50%;display:inline-block}
+  .routeline{width:22px;height:0;border-top:3px solid var(--red);display:inline-block}
+  .pinindex{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+  .pinbtn{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line);background:#fff;
+    border-radius:999px;padding:5px 11px 5px 6px;font-size:13px;font-weight:700;color:#26323d;cursor:pointer}
+  .pinbtn:hover,.pinbtn.active{border-color:var(--red);background:#fff4f2}
+  .pinbtn .num{width:20px;height:20px;border-radius:50%;background:var(--red);color:#fff;font-size:12px;font-weight:800;
+    display:inline-flex;align-items:center;justify-content:center}
+  .pinbtn .num.hub{background:#16354a}
+  .pin{width:22px;height:22px;border-radius:50%;color:#fff;font-weight:800;font-size:12px;
+    display:flex;align-items:center;justify-content:center;border:2px solid #fff;box-shadow:0 2px 6px rgba(0,0,0,.35)}
+  .access{display:grid;gap:10px}
+  .leg{display:grid;grid-template-columns:30px 1fr;gap:10px;padding:10px 0;border-bottom:1px dashed #e6ebee}
+  .leg:last-child{border-bottom:0}
+  .leg .ic{font-size:20px;text-align:center}
+  .leg .ttl{font-weight:800}
+  .leg .meta{font-size:13px;color:#475663}
+  .pillrow{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
+  .pill{font-size:12px;font-weight:700;border-radius:999px;padding:4px 10px;text-decoration:none;background:#eef4f2;color:#27514a}
+  .pill.book{background:#eaf1f7;color:#1c537a}
+  .day{margin-bottom:14px}
+  .day h3{margin:0 0 8px;font-size:16px;color:#234}
+  .stop{padding:11px 0;border-bottom:1px solid #eef2f4}
+  .stop:last-child{border-bottom:0}
+  .stop .top{display:flex;gap:9px;align-items:baseline}
+  .stop .num{flex:0 0 auto;width:22px;height:22px;border-radius:50%;background:var(--red);color:#fff;
+    font-size:12px;font-weight:800;display:inline-flex;align-items:center;justify-content:center;align-self:center}
+  .stop .num.hub{background:#16354a}
+  .stop .t{color:var(--blue);font-weight:800;font-variant-numeric:tabular-nums;min-width:46px}
+  .stop .p{font-weight:800}
+  .stop .hint{color:var(--muted);font-size:13px;margin-left:31px}
+  .movelink{margin:8px 0 2px 31px;display:inline-flex;align-items:center;gap:7px;font-size:13px;font-weight:700;
+    background:#f3f7f5;border:1px solid #e2ebe6;border-radius:10px;padding:5px 11px;color:#2f5a4c;text-decoration:none}
+  .grid2{display:grid;grid-template-columns:1fr;gap:10px}
+  .mealgroup{margin-bottom:8px}
+  .mealgroup .when{font-weight:800;font-size:14px;color:#234;margin:6px 2px 8px}
+  .item{border:1px solid var(--line);border-radius:13px;padding:12px;background:#fff}
+  .item .name{font-weight:800}
+  .item .price{font-weight:800;color:#123e5b;font-size:14px}
+  .item .hint{color:var(--muted);font-size:13px}
+  .tag{display:inline-block;font-size:11px;font-weight:800;color:#6a4a14;background:#fdf0d6;border-radius:6px;padding:2px 7px;margin-right:6px}
+  .tag.sns{color:#8a2b6b;background:#fbe4f1}
+  table{width:100%;border-collapse:collapse;font-size:14px}
+  th,td{padding:9px 8px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top}
+  th{background:#eef4f6;color:#39525f;font-size:12px}
+  td.r{text-align:right;font-variant-numeric:tabular-nums}
+  .todo{list-style:none;padding:0;margin:0}
+  .todo li{padding:8px 0;border-bottom:1px solid #eef2f4}
+  .todo.book li:before{content:"☐ ";color:var(--blue);font-weight:800}
+  .todo.decide li:before{content:"・";color:var(--gold);font-weight:800;margin-right:4px}
+  .twohead{font-weight:800;margin:2px 0 6px;font-size:14px}
+  footer{margin-top:34px;color:var(--muted);font-size:12px;text-align:center}
+  @media(min-width:640px){.grid2{grid-template-columns:1fr 1fr}}
+</style>
+</head>
+<body>
+<main class="wrap">
+  <header class="hero">
+    <div class="kicker">6人旅行・候補C</div>
+    <h1>高知・仁淀ブルー 2泊3日</h1>
+    <p class="lead">岡山駅で合流し、特急南風で高知へ入る食事と清流の旅。カツオ・土佐料理と仁淀川の水辺アクティビティを選べます。</p>
+    <div class="badges"><span class="badge">🗓 2泊3日</span><span class="badge">👥 6人（東京4・神戸2）</span><span class="badge">🚄 共通区間: 岡山→高知</span><span class="badge">🚐 レンタカー1台</span><span class="badge">💧 仁淀ブルー</span></div>
+  </header>
+
+  <section id="route">
+    <h2><span class="dot"></span>ルート地図</h2>
+    <p class="sub">番号順に巡るルート。赤い線が実際の移動経路です。</p>
+    <div id="map"></div>
+    <div class="legend">
+      <span><i class="routeline"></i>順路</span>
+      <span><i class="swatch" style="background:#16354a"></i>集合・拠点</span>
+      <span><i class="swatch" style="background:#d23b2c"></i>観光スポット</span>
+      <span><i class="swatch" style="background:#b07d24"></i>食事の街</span>
+    </div>
+    <div class="pinindex" id="pinindex"></div>
+    <p class="sub" style="margin-top:8px">番号をタップすると、地図のその場所に移動します。</p>
+  </section>
+
+  <section id="access">
+    <h2><span class="dot"></span>行き帰りのアクセス</h2>
+    <p class="sub">東京組・神戸組は岡山駅で合流し、岡山→高知の特急南風から共通行程に入ります。</p>
+    <div class="card"><div class="twohead">東京発（4人）</div><div class="access" id="acc-a"></div></div>
+    <div class="card"><div class="twohead">神戸発（2人）</div><div class="access" id="acc-b"></div></div>
+  </section>
+
+  <section id="itinerary">
+    <h2><span class="dot"></span>行程</h2>
+    <p class="sub">番号は上の地図のピンと同じ順番です。スポット名は地図リンク、区間の「🚗 ◯分」は経路に飛びます。</p>
+    <div id="days"></div>
+  </section>
+
+  <section id="meals">
+    <h2><span class="dot"></span>食事候補</h2>
+    <p class="sub">タイミング別の候補。気分と予約状況で選べます。</p>
+    <div id="meal-list"></div>
+  </section>
+
+  <section id="activities">
+    <h2><span class="dot"></span>アクティビティ候補</h2>
+    <p class="sub">行程に入れるかを相談しやすい体験候補です。天気・体力・予約状況で選べます。</p>
+    <div class="grid2" id="activity-list"></div>
+  </section>
+
+  <section id="other">
+    <h2><span class="dot"></span>他にもおすすめのスポット</h2>
+    <p class="sub">天気や気分で順路に足せる候補です。</p>
+    <div class="grid2" id="other-list"></div>
+  </section>
+
+  <section id="car">
+    <h2><span class="dot"></span>レンタカー</h2>
+    <p class="sub">高知駅で8人乗りワゴン1台を受取。仁淀方面の山道があるため、運転担当は2名以上が安心です。</p>
+    <div class="grid2" id="car-list"></div>
+  </section>
+
+  <section id="stay">
+    <h2><span class="dot"></span>宿</h2>
+    <p class="sub">男女3:3のため宿検索は6名/2室（男性3名・女性3名）目安。個室重視なら6室で再検索。</p>
+    <div class="grid2" id="stay-list"></div>
+  </section>
+
+  <section id="budget">
+    <h2><span class="dot"></span>費用のめやす（1人あたり）</h2>
+    <div class="card" style="overflow-x:auto"><table id="budget-table"></table></div>
+  </section>
+
+  <section id="next">
+    <h2><span class="dot"></span>これから決める・予約すること</h2>
+    <div class="card"><div class="twohead">予約するもの</div><ul class="todo book" id="book-list"></ul></div>
+    <div class="card"><div class="twohead">グループで決めること（まだ未確定）</div><ul class="todo decide" id="decide-list"></ul></div>
+  </section>
+
+  <footer>所要時間・便は作成時点の各社公式時刻表・地図経路に基づくめやすです。</footer>
+</main>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+  integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+<script>
+/* =================== DATA（ここだけ案件ごとに差し替える） =================== */
+const mapSpots = [
+  {
+    "n": 1,
+    "name": "岡山駅（合流）",
+    "short": "岡山駅",
+    "lat": 34.6664,
+    "lng": 133.9186,
+    "kind": "hub",
+    "time": "Day1 11:20"
+  },
+  {
+    "n": 2,
+    "name": "高知駅（レンタカー受取）",
+    "short": "高知駅",
+    "lat": 33.5673,
+    "lng": 133.5435,
+    "kind": "hub",
+    "time": "Day1 14:00"
+  },
+  {
+    "n": 3,
+    "name": "ひろめ市場・帯屋町",
+    "short": "高知市街",
+    "lat": 33.559,
+    "lng": 133.536,
+    "kind": "hub",
+    "time": "Day1 17:30"
+  },
+  {
+    "n": 4,
+    "name": "にこ淵",
+    "short": "にこ淵",
+    "lat": 33.744,
+    "lng": 133.094,
+    "kind": "spot",
+    "time": "Day2 10:00"
+  },
+  {
+    "n": 5,
+    "name": "安居渓谷",
+    "short": "安居渓谷",
+    "lat": 33.776,
+    "lng": 133.05,
+    "kind": "spot",
+    "time": "Day2 11:30"
+  },
+  {
+    "n": 6,
+    "name": "中津渓谷",
+    "short": "中津渓谷",
+    "lat": 33.632,
+    "lng": 133.084,
+    "kind": "spot",
+    "time": "Day2 15:00"
+  },
+  {
+    "n": 7,
+    "name": "桂浜",
+    "short": "桂浜",
+    "lat": 33.496,
+    "lng": 133.575,
+    "kind": "spot",
+    "time": "Day3 09:30"
+  },
+  {
+    "n": 8,
+    "name": "高知駅（帰り）",
+    "short": "高知駅",
+    "lat": 33.5673,
+    "lng": 133.5435,
+    "kind": "hub",
+    "time": "Day3 12:00"
+  }
+];
+
+const foodTowns = [
+  {
+    "name": "ひろめ市場・帯屋町",
+    "lat": 33.559,
+    "lng": 133.536
+  },
+  {
+    "name": "仁淀川町",
+    "lat": 33.647,
+    "lng": 133.137
+  }
+];
+
+const access = {
+  "a": [
+    {
+      "ic": "🚄",
+      "ttl": "東京 → 岡山",
+      "meta": "東海道・山陽新幹線 7:30頃発 → 10:50頃着（約3時間20分／片道めやす 1.7万〜1.9万円）",
+      "pills": [
+        {
+          "cls": "book",
+          "label": "JR東海/JR西日本",
+          "url": "https://www.jr-odekake.net/"
+        },
+        {
+          "cls": "",
+          "label": "経路",
+          "url": "https://www.google.com/maps/dir/?api=1&origin=%E6%9D%B1%E4%BA%AC%E9%A7%85&destination=%E5%B2%A1%E5%B1%B1%E9%A7%85&travelmode=transit"
+        }
+      ]
+    },
+    {
+      "ic": "🚆",
+      "ttl": "岡山 → 高知（共通区間）",
+      "meta": "特急南風 11:30頃発 → 14:00頃着（約2時間30分／片道めやす 6,000円台）",
+      "pills": [
+        {
+          "cls": "book",
+          "label": "JR四国",
+          "url": "https://www.jr-shikoku.co.jp/"
+        }
+      ]
+    },
+    {
+      "ic": "🚆",
+      "ttl": "帰り",
+      "meta": "高知→岡山の特急南風後、新幹線で東京へ。東京着は18〜20時台目安。",
+      "pills": [
+        {
+          "cls": "",
+          "label": "経路",
+          "url": "https://www.google.com/maps/dir/?api=1&origin=%E9%AB%98%E7%9F%A5%E9%A7%85&destination=%E6%9D%B1%E4%BA%AC%E9%A7%85&travelmode=transit"
+        }
+      ]
+    }
+  ],
+  "b": [
+    {
+      "ic": "🚄",
+      "ttl": "新神戸 → 岡山",
+      "meta": "山陽新幹線 10:30頃発 → 11:05頃着（約35分／片道めやす 5,000円台）",
+      "pills": [
+        {
+          "cls": "book",
+          "label": "JR西日本",
+          "url": "https://www.jr-odekake.net/"
+        },
+        {
+          "cls": "",
+          "label": "経路",
+          "url": "https://www.google.com/maps/dir/?api=1&origin=%E6%96%B0%E7%A5%9E%E6%88%B8%E9%A7%85&destination=%E5%B2%A1%E5%B1%B1%E9%A7%85&travelmode=transit"
+        }
+      ]
+    },
+    {
+      "ic": "🚆",
+      "ttl": "岡山 → 高知（共通区間）",
+      "meta": "東京組と同じ特急南風で高知へ。",
+      "pills": [
+        {
+          "cls": "book",
+          "label": "JR四国",
+          "url": "https://www.jr-shikoku.co.jp/"
+        }
+      ]
+    },
+    {
+      "ic": "🚆",
+      "ttl": "帰り",
+      "meta": "高知→岡山の特急南風後、新幹線で新神戸へ。新神戸着は16〜18時台目安。",
+      "pills": [
+        {
+          "cls": "",
+          "label": "経路",
+          "url": "https://www.google.com/maps/dir/?api=1&origin=%E9%AB%98%E7%9F%A5%E9%A7%85&destination=%E6%96%B0%E7%A5%9E%E6%88%B8%E9%A7%85&travelmode=transit"
+        }
+      ]
+    }
+  ]
+};
+
+const days = [
+  {
+    "label": "Day1 岡山合流 → 高知市街",
+    "stops": [
+      {
+        "num": 1,
+        "kind": "hub",
+        "t": "11:20",
+        "p": "岡山駅 集合",
+        "url": "https://www.google.com/maps/search/?api=1&query=%E5%B2%A1%E5%B1%B1%E9%A7%85",
+        "hint": "ここから全員同じ特急南風で高知へ。",
+        "move": {
+          "ic": "🚆",
+          "label": "約2時間30分",
+          "url": "https://www.jr-shikoku.co.jp/"
+        }
+      },
+      {
+        "num": 2,
+        "kind": "hub",
+        "t": "14:00",
+        "p": "高知駅・レンタカー受取",
+        "url": "https://www.google.com/maps/search/?api=1&query=%E9%AB%98%E7%9F%A5%E9%A7%85%20%E3%83%AC%E3%83%B3%E3%82%BF%E3%82%AB%E3%83%BC",
+        "hint": "駅周辺で8人乗りワゴンを受取。",
+        "move": {
+          "ic": "🚗",
+          "label": "約10分",
+          "url": "https://www.google.com/maps/dir/?api=1&origin=%E9%AB%98%E7%9F%A5%E9%A7%85&destination=%E3%81%B2%E3%82%8D%E3%82%81%E5%B8%82%E5%A0%B4&travelmode=driving"
+        }
+      },
+      {
+        "num": 3,
+        "kind": "hub",
+        "t": "15:00",
+        "p": "高知市街チェックイン",
+        "url": "https://www.google.com/maps/search/?api=1&query=%E9%AB%98%E7%9F%A5%E5%B8%82%20%E3%83%9B%E3%83%86%E3%83%AB%20%E5%B8%AF%E5%B1%8B%E7%94%BA",
+        "hint": "夕食まで休憩。"
+      },
+      {
+        "t": "18:00",
+        "p": "夕食",
+        "url": "#meals",
+        "hint": "初日はカツオ・土佐料理。"
+      }
+    ]
+  },
+  {
+    "label": "Day2 仁淀ブルー・水辺体験",
+    "stops": [
+      {
+        "num": 4,
+        "t": "10:00",
+        "p": "にこ淵",
+        "url": "https://www.google.com/maps/search/?api=1&query=%E3%81%AB%E3%81%93%E6%B7%B5",
+        "hint": "青い滝壺。歩きやすい靴で。",
+        "move": {
+          "ic": "🚗",
+          "label": "約35分",
+          "url": "https://www.google.com/maps/dir/?api=1&origin=%E3%81%AB%E3%81%93%E6%B7%B5&destination=%E5%AE%89%E5%B1%85%E6%B8%93%E8%B0%B7&travelmode=driving"
+        }
+      },
+      {
+        "num": 5,
+        "t": "11:30",
+        "p": "安居渓谷",
+        "url": "https://www.google.com/maps/search/?api=1&query=%E5%AE%89%E5%B1%85%E6%B8%93%E8%B0%B7",
+        "hint": "仁淀ブルーの本命。"
+      },
+      {
+        "t": "13:00",
+        "p": "昼食",
+        "url": "#meals",
+        "hint": "池川茶園や道の駅系。"
+      },
+      {
+        "t": "14:00",
+        "p": "水辺アクティビティ候補",
+        "url": "#activities",
+        "hint": "SUP/カヌー/ラフティングは天候と希望者で選択。",
+        "move": {
+          "ic": "🚗",
+          "label": "約40分",
+          "url": "https://www.google.com/maps/dir/?api=1&origin=%E5%AE%89%E5%B1%85%E6%B8%93%E8%B0%B7&destination=%E4%B8%AD%E6%B4%A5%E6%B8%93%E8%B0%B7&travelmode=driving"
+        }
+      },
+      {
+        "num": 6,
+        "t": "15:00",
+        "p": "中津渓谷",
+        "url": "https://www.google.com/maps/search/?api=1&query=%E4%B8%AD%E6%B4%A5%E6%B8%93%E8%B0%B7",
+        "hint": "体験を厚くする日は短縮可。",
+        "move": {
+          "ic": "🚗",
+          "label": "約80分",
+          "url": "https://www.google.com/maps/dir/?api=1&origin=%E4%B8%AD%E6%B4%A5%E6%B8%93%E8%B0%B7&destination=%E9%AB%98%E7%9F%A5%E5%B8%82&travelmode=driving"
+        }
+      },
+      {
+        "t": "19:00",
+        "p": "夕食",
+        "url": "#meals",
+        "hint": "2日目は本命ディナー。"
+      }
+    ]
+  },
+  {
+    "label": "Day3 桂浜 → 高知駅",
+    "stops": [
+      {
+        "num": 7,
+        "t": "09:30",
+        "p": "桂浜",
+        "url": "https://www.google.com/maps/search/?api=1&query=%E6%A1%82%E6%B5%9C",
+        "hint": "海と坂本龍馬像。",
+        "move": {
+          "ic": "🚗",
+          "label": "約35分",
+          "url": "https://www.google.com/maps/dir/?api=1&origin=%E6%A1%82%E6%B5%9C&destination=%E9%AB%98%E7%9F%A5%E9%A7%85&travelmode=driving"
+        }
+      },
+      {
+        "num": 8,
+        "kind": "hub",
+        "t": "12:00",
+        "p": "高知駅・返却",
+        "url": "https://www.google.com/maps/search/?api=1&query=%E9%AB%98%E7%9F%A5%E9%A7%85",
+        "hint": "岡山経由で各出発地へ。"
+      }
+    ]
+  }
+];
+
+const meals = [
+  {
+    "when": "1日目の夜｜カツオ・土佐料理",
+    "items": [
+      {
+        "name": "明神丸 ひろめ市場店",
+        "url": "https://www.google.com/maps/search/?api=1&query=%E6%98%8E%E7%A5%9E%E4%B8%B8%20%E3%81%B2%E3%82%8D%E3%82%81%E5%B8%82%E5%A0%B4%E5%BA%97",
+        "price": "3,000〜6,000円",
+        "hint": "にぎやかに高知らしく始める候補。",
+        "tag": "定番",
+        "sns": true
+      },
+      {
+        "name": "土佐料理 司",
+        "url": "https://www.google.com/maps/search/?api=1&query=%E5%9C%9F%E4%BD%90%E6%96%99%E7%90%86%20%E5%8F%B8%20%E9%AB%98%E7%9F%A5",
+        "price": "6,000〜10,000円",
+        "hint": "落ち着いて土佐料理を食べる候補。"
+      },
+      {
+        "name": "やいろ亭",
+        "url": "https://www.google.com/maps/search/?api=1&query=%E3%82%84%E3%81%84%E3%82%8D%E4%BA%AD%20%E3%81%B2%E3%82%8D%E3%82%81%E5%B8%82%E5%A0%B4",
+        "price": "3,000〜6,000円",
+        "hint": "カツオ候補。市場の雰囲気込み。"
+      }
+    ]
+  },
+  {
+    "when": "2日目の昼｜仁淀方面",
+    "items": [
+      {
+        "name": "池川茶園 工房Cafe",
+        "url": "https://www.google.com/maps/search/?api=1&query=%E6%B1%A0%E5%B7%9D%E8%8C%B6%E5%9C%92%20%E5%B7%A5%E6%88%BFCafe",
+        "price": "1,000〜2,500円",
+        "hint": "お茶スイーツと軽食。",
+        "tag": "寄り道",
+        "sns": true
+      },
+      {
+        "name": "道の駅 633美の里",
+        "url": "https://www.google.com/maps/search/?api=1&query=%E9%81%93%E3%81%AE%E9%A7%85%20633%E7%BE%8E%E3%81%AE%E9%87%8C",
+        "price": "1,000〜2,000円",
+        "hint": "移動途中で使いやすい。"
+      },
+      {
+        "name": "中津渓谷 ゆの森",
+        "url": "https://www.google.com/maps/search/?api=1&query=%E4%B8%AD%E6%B4%A5%E6%B8%93%E8%B0%B7%20%E3%82%86%E3%81%AE%E6%A3%AE%20%E3%83%AC%E3%82%B9%E3%83%88%E3%83%A9%E3%83%B3",
+        "price": "1,500〜3,000円",
+        "hint": "渓谷散策と合わせやすい。"
+      }
+    ]
+  },
+  {
+    "when": "2日目の夜｜本命ディナー",
+    "items": [
+      {
+        "name": "座屋",
+        "url": "https://www.google.com/maps/search/?api=1&query=%E5%BA%A7%E5%B1%8B%20%E9%AB%98%E7%9F%A5",
+        "price": "10,000円〜",
+        "hint": "予算を使う和食候補。"
+      },
+      {
+        "name": "黒尊",
+        "url": "https://www.google.com/maps/search/?api=1&query=%E9%BB%92%E5%B0%8A%20%E9%AB%98%E7%9F%A5",
+        "price": "7,000〜12,000円",
+        "hint": "魚と地酒の候補。"
+      },
+      {
+        "name": "土佐酒バル",
+        "url": "https://www.google.com/maps/search/?api=1&query=%E9%AB%98%E7%9F%A5%20%E5%9C%9F%E4%BD%90%E9%85%92%20%E3%83%90%E3%83%AB",
+        "price": "5,000〜8,000円",
+        "hint": "地酒と会話重視なら。"
+      }
+    ]
+  }
+];
+
+const activities = [
+  {
+    "name": "仁淀川公式観光（SUP/カヌー確認）",
+    "url": "https://niyodogawa.org/",
+    "price": "公式観光",
+    "hint": "仁淀川の水辺体験・スポット確認用。",
+    "tag": "本命",
+    "sns": true
+  },
+  {
+    "name": "VELTRA 高知アクティビティ",
+    "url": "https://www.veltra.com/jp/japan/kochi/",
+    "price": "予約サイト",
+    "hint": "SUP/街歩き/食体験の予約候補を比較。",
+    "tag": "比較"
+  },
+  {
+    "name": "仁淀川SUP/カヌー候補",
+    "url": "https://www.google.com/maps/search/?api=1&query=%E4%BB%81%E6%B7%80%E5%B7%9D%20SUP%20%E3%82%AB%E3%83%8C%E3%83%BC",
+    "price": "地図検索",
+    "hint": "集合場所と移動距離を確認。"
+  },
+  {
+    "name": "吉野川ラフティング候補",
+    "url": "https://www.google.com/maps/search/?api=1&query=%E5%90%89%E9%87%8E%E5%B7%9D%20%E3%83%A9%E3%83%95%E3%83%86%E3%82%A3%E3%83%B3%E3%82%B0%20%E9%AB%98%E7%9F%A5",
+    "price": "地図検索",
+    "hint": "アクティブ派が多い場合の半日候補。"
+  },
+  {
+    "name": "カツオ藁焼き体験候補",
+    "url": "https://www.google.com/maps/search/?api=1&query=%E9%AB%98%E7%9F%A5%20%E3%82%AB%E3%83%84%E3%82%AA%20%E8%97%81%E7%84%BC%E3%81%8D%20%E4%BD%93%E9%A8%93",
+    "price": "地図検索",
+    "hint": "食事重視メンバー向け。雨でも入れやすい。"
+  }
+];
+
+const other = [
+  {
+    "name": "牧野植物園",
+    "url": "https://www.google.com/maps/search/?api=1&query=%E7%89%A7%E9%87%8E%E6%A4%8D%E7%89%A9%E5%9C%92%20%E9%AB%98%E7%9F%A5",
+    "price": "",
+    "hint": "雨天・暑さ回避に。"
+  },
+  {
+    "name": "高知城",
+    "url": "https://www.google.com/maps/search/?api=1&query=%E9%AB%98%E7%9F%A5%E5%9F%8E",
+    "price": "",
+    "hint": "市街で短時間に寄れる。"
+  },
+  {
+    "name": "沈下橋",
+    "url": "https://www.google.com/maps/search/?api=1&query=%E4%BB%81%E6%B7%80%E5%B7%9D%20%E6%B2%88%E4%B8%8B%E6%A9%8B",
+    "price": "",
+    "hint": "ドライブ途中の写真スポット。"
+  },
+  {
+    "name": "日曜市",
+    "url": "https://www.google.com/maps/search/?api=1&query=%E9%AB%98%E7%9F%A5%20%E6%97%A5%E6%9B%9C%E5%B8%82",
+    "price": "",
+    "hint": "日程が合えば朝に。"
+  }
+];
+
+const cars = [
+  {
+    "name": "高知駅 レンタカー地図",
+    "url": "https://www.google.com/maps/search/?api=1&query=%E9%AB%98%E7%9F%A5%E9%A7%85%20%E3%83%AC%E3%83%B3%E3%82%BF%E3%82%AB%E3%83%BC%208%E4%BA%BA%E4%B9%97%E3%82%8A",
+    "price": "地図検索",
+    "hint": "駅受取/返却。8人乗り対応店舗を確認。",
+    "tag": "駅受取"
+  },
+  {
+    "name": "高知駅ワゴンレンタカー地図",
+    "url": "https://www.google.com/maps/search/?api=1&query=%E9%AB%98%E7%9F%A5%E9%A7%85%20%E3%83%AF%E3%82%B4%E3%83%B3%20%E3%83%AC%E3%83%B3%E3%82%BF%E3%82%AB%E3%83%BC",
+    "price": "地図検索",
+    "hint": "大型荷物も見てワゴンクラスを確認。",
+    "tag": "比較"
+  },
+  {
+    "name": "トヨタレンタカー 高知駅候補",
+    "url": "https://www.google.com/maps/search/?api=1&query=%E3%83%88%E3%83%A8%E3%82%BF%E3%83%AC%E3%83%B3%E3%82%BF%E3%82%AB%E3%83%BC%20%E9%AB%98%E7%9F%A5%E9%A7%85%208%E4%BA%BA%E4%B9%97%E3%82%8A",
+    "price": "地図検索",
+    "hint": "ノア/ヴォクシー等のワゴン候補を確認。"
+  }
+];
+
+const stays = [
+  {
+    "name": "楽天トラベル：高知市街",
+    "url": "https://travel.rakuten.co.jp/yado/kochi/kochi.html",
+    "price": "エリア検索",
+    "hint": "帯屋町/はりまや橋周辺を比較。6名/2室はリンク先で指定。"
+  },
+  {
+    "name": "じゃらん検索済み（高知市・6名/2室）",
+    "url": "https://www.jalan.net/uw/uwp2011/uww2011init.do?keyword=%8D%82%92m%8Es&dateUndecided=1&adultNum=6&roomCount=2",
+    "price": "検索済み",
+    "hint": "文字化けしないURL。男性3名・女性3名の2室目安。"
+  },
+  {
+    "name": "Agoda：高知",
+    "url": "https://www.agoda.com/ja-jp/city/kochi-jp.html",
+    "price": "エリア検索",
+    "hint": "市街ホテル比較。6名/2室はリンク先で指定。"
+  },
+  {
+    "name": "宿泊エリア地図（高知市街）",
+    "url": "https://www.google.com/maps/search/?api=1&query=%E9%AB%98%E7%9F%A5%E5%B8%82%20%E5%B8%AF%E5%B1%8B%E7%94%BA%20%E3%81%AF%E3%82%8A%E3%81%BE%E3%82%84%E6%A9%8B%20%E3%83%9B%E3%83%86%E3%83%AB",
+    "price": "地図検索",
+    "hint": "夕食エリアとの距離を確認。"
+  }
+];
+
+const budget = [
+  [
+    "各地→岡山",
+    "東京1.7万〜1.9万／神戸0.5万〜0.7万円",
+    "新幹線"
+  ],
+  [
+    "岡山→高知",
+    "1.2万〜1.4万円",
+    "特急南風往復"
+  ],
+  [
+    "宿（2泊）",
+    "3.5万〜7.5万円",
+    "市街ホテル中心"
+  ],
+  [
+    "レンタカー・燃料",
+    "1.2万〜2.2万円",
+    "8人乗り1台を6人で割勘"
+  ],
+  [
+    "食事・酒",
+    "3.0万〜6.0万円",
+    "カツオ・土佐料理で調整"
+  ],
+  [
+    "アクティビティ",
+    "0.5万〜1.5万円",
+    "SUP/カヌーを入れる場合"
+  ],
+  [
+    "合計めやす",
+    "11万〜20万円",
+    "交通は比較的読みやすい"
+  ]
+];
+
+const bookList = [
+  {
+    "label": "岡山→高知の特急南風",
+    "url": "https://www.jr-shikoku.co.jp/"
+  },
+  {
+    "label": "レンタカー1台（8人乗り・高知駅受取）",
+    "url": "https://www.google.com/maps/search/?api=1&query=%E9%AB%98%E7%9F%A5%E9%A7%85%208%E4%BA%BA%E4%B9%97%E3%82%8A%20%E3%83%AC%E3%83%B3%E3%82%BF%E3%82%AB%E3%83%BC"
+  },
+  {
+    "label": "宿（男女別2室目安・個室希望なら6室）",
+    "url": "https://travel.rakuten.co.jp/yado/kochi/kochi.html"
+  },
+  {
+    "label": "仁淀川アクティビティ",
+    "url": "https://niyodogawa.org/"
+  },
+  {
+    "label": "カツオ・土佐料理の夕食",
+    "url": "https://www.google.com/maps/search/?api=1&query=%E9%AB%98%E7%9F%A5%20%E3%82%AB%E3%83%84%E3%82%AA%206%E5%90%8D%20%E4%BA%88%E7%B4%84"
+  }
+];
+
+const decideList = [
+  "岡山集合の鉄道案にするか、高知空港集合の飛行機案にするか",
+  "仁淀川で水辺体験を入れるか、渓谷散策だけにするか",
+  "夕食を市場系にするか、落ち着いた土佐料理にするか",
+  "雨天時に牧野植物園・高知城へ寄せるか"
+];
+/* =================== /DATA =================== */
+
+
+/* =================== 描画（触らない） =================== */
+function colorOf(k){return k==="hub"?"#16354a":"#d23b2c";}
+function pinIcon(n,color){return L.divIcon({className:"",iconSize:[22,22],iconAnchor:[11,11],
+  html:`<div class="pin" style="background:${color}">${n}</div>`});}
+
+// ピンは実在地に置く。完全同座標の地点だけ約400m離す（拡大時に2つと分かるため）。
+function spread(items,thr=0.0015,r=0.004){
+  const placed=[];
+  return items.map(s=>{
+    let lat=s.lat,lng=s.lng,k=0;
+    while(placed.some(p=>Math.hypot(p[0]-lat,p[1]-lng)<thr)&&k<8){
+      const a=k*Math.PI/3; lat=s.lat+r*Math.sin(a); lng=s.lng+r*Math.cos(a); k++;
+    }
+    placed.push([lat,lng]);
+    return Object.assign({},s,{dlat:lat,dlng:lng});
+  });
+}
+const spots = spread(mapSpots);
+const markers={};
+let routeMap=null;
+
+function initMap(){
+  const mapEl=document.getElementById("map");
+  if(!window.L){
+    mapEl.innerHTML='<div class="mapfallback">地図を読み込み中です。表示されない場合は通信環境を確認してください。</div>';
+    return;
+  }
+  routeMap = L.map("map",{scrollWheelZoom:false});
+  L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",{maxZoom:18,attribution:'&copy; OpenStreetMap contributors'}).addTo(routeMap);
+  const latlngs = spots.map(s=>[s.dlat,s.dlng]);
+  L.polyline(latlngs,{color:"#d23b2c",weight:4,opacity:.9,lineJoin:"round"}).addTo(routeMap);
+  spots.forEach(s=>{ markers[s.n]=L.marker([s.dlat,s.dlng],{icon:pinIcon(s.n,colorOf(s.kind))}).addTo(routeMap).bindPopup(`<b>${s.n}. ${s.name}</b><br>${s.time}`); });
+  foodTowns.forEach(f=>{ L.marker([f.lat,f.lng],{icon:L.divIcon({className:"",iconSize:[14,14],iconAnchor:[7,7],
+    html:`<div style="width:14px;height:14px;border-radius:50%;background:#b07d24;border:2px solid #fff;box-shadow:0 1px 4px rgba(0,0,0,.3)"></div>`})}).addTo(routeMap).bindPopup(`<b>🍽 ${f.name}</b>`); });
+  if(latlngs.length) routeMap.fitBounds(L.latLngBounds(latlngs).pad(0.2)); else routeMap.setView([36,138],5);
+}
+
+window.focusPin=(n)=>{ const s=spots.find(x=>x.n===n); if(!s)return;
+  if(routeMap&&markers[n]){ routeMap.setView([s.dlat,s.dlng],14,{animate:true}); markers[n].openPopup(); }
+  document.querySelectorAll(".pinbtn").forEach(b=>b.classList.toggle("active",Number(b.dataset.n)===n)); };
+document.getElementById("pinindex").innerHTML = spots.map(s=>
+  `<button class="pinbtn" data-n="${s.n}" onclick="focusPin(${s.n})"><span class="num ${s.kind==='hub'?'hub':''}">${s.n}</span>${s.short}</button>`).join("");
+initMap();
+
+function legRow(l){ const pills=(l.pills||[]).map(p=>`<a class="pill ${p.cls}" href="${p.url}" target="_blank" rel="noopener">${p.label}</a>`).join("");
+  return `<div class="leg"><div class="ic">${l.ic}</div><div><div class="ttl">${l.ttl}</div><div class="meta">${l.meta}</div><div class="pillrow">${pills}</div></div></div>`; }
+document.getElementById("acc-a").innerHTML = (access.a||[]).map(legRow).join("");
+document.getElementById("acc-b").innerHTML = (access.b||[]).map(legRow).join("");
+
+document.getElementById("days").innerHTML = days.map(d=>`
+  <div class="card day"><h3>${d.label}</h3>
+  ${d.stops.map(s=>`<div class="stop"><div class="top">
+    ${s.num?`<span class="num ${s.kind==='hub'?'hub':''}">${s.num}</span>`:`<span style="width:22px;flex:0 0 auto"></span>`}
+    <div class="t">${s.t}</div>
+    <div class="p">${s.url?`<a href="${s.url}" target="_blank" rel="noopener">${s.p}</a>`:s.p}</div></div>
+    ${s.hint?`<div class="hint">${s.hint}</div>`:""}
+    ${s.move?`<a class="movelink" href="${s.move.url}" target="_blank" rel="noopener">${s.move.ic} ${s.move.label}</a>`:""}
+  </div>`).join("")}</div>`).join("");
+
+const itemCard=(o)=>`<div class="item">${o.tag?`<span class="tag ${o.sns?'sns':''}">${o.tag}</span>`:""}
+  <div class="name"><a href="${o.url}" target="_blank" rel="noopener">${o.name}</a></div>
+  ${o.price?`<div class="price">${o.price}</div>`:""}${o.hint?`<div class="hint">${o.hint}</div>`:""}</div>`;
+document.getElementById("meal-list").innerHTML = meals.map(g=>`<div class="mealgroup"><div class="when">${g.when}</div><div class="grid2">${g.items.map(itemCard).join("")}</div></div>`).join("");
+document.getElementById("activity-list").innerHTML = activities.map(itemCard).join("");
+document.getElementById("other-list").innerHTML = other.map(itemCard).join("");
+document.getElementById("car-list").innerHTML   = cars.map(itemCard).join("");
+document.getElementById("stay-list").innerHTML  = stays.map(itemCard).join("");
+document.getElementById("budget-table").innerHTML = `<thead><tr><th>項目</th><th>1人あたり</th><th>メモ</th></tr></thead><tbody>`+
+  budget.map(r=>`<tr><td>${r[0]}</td><td class="r">${r[1]}</td><td>${r[2]}</td></tr>`).join("")+`</tbody>`;
+document.getElementById("book-list").innerHTML = bookList.map(c=>`<li><a href="${c.url}" target="_blank" rel="noopener">${c.label}</a></li>`).join("");
+document.getElementById("decide-list").innerHTML = decideList.map(d=>`<li>${d}</li>`).join("");
+</script>
+</body>
+</html>
