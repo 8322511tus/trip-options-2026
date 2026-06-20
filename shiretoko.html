@@ -1,0 +1,408 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>知床・網走 2泊3日（羅臼クルーズと絶景）</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+  integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="">
+<style>
+  :root{
+    --ink:#1b2733; --muted:#64727f; --line:#e3e8ec; --paper:#f7f5ef; --panel:#ffffff;
+    --blue:#1f6f8b; --green:#3d7a5c; --gold:#b07d24; --red:#d23b2c; --shadow:0 10px 30px rgba(20,40,55,.10);
+  }
+  *{box-sizing:border-box}
+  body{margin:0;color:var(--ink);background:var(--paper);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Hiragino Kaku Gothic ProN","Yu Gothic",Meiryo,sans-serif;
+    line-height:1.7;-webkit-text-size-adjust:100%}
+  a{color:#155f80;text-underline-offset:.16em}
+  .wrap{max-width:760px;margin:0 auto;padding:18px 14px 64px}
+  header.hero{background:linear-gradient(160deg,#e7f2f3,#fbf7ef);border:1px solid var(--line);
+    border-radius:20px;padding:20px 18px;box-shadow:var(--shadow)}
+  .kicker{font-size:12px;font-weight:800;color:var(--blue);letter-spacing:.06em}
+  h1{margin:4px 0 6px;font-size:clamp(26px,7vw,38px);line-height:1.15}
+  .lead{color:#33424f;margin:0 0 12px}
+  .badges{display:flex;gap:7px;flex-wrap:wrap}
+  .badge{display:inline-flex;align-items:center;gap:5px;border:1px solid #cdd9dd;background:#fff;
+    border-radius:999px;padding:6px 11px;font-size:13px;font-weight:800}
+  section{margin-top:30px}
+  h2{font-size:20px;margin:0 0 4px;display:flex;align-items:center;gap:8px}
+  h2 .dot{width:10px;height:10px;border-radius:3px;background:var(--red)}
+  .sub{color:var(--muted);font-size:13px;margin:0 0 14px}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:14px;
+    box-shadow:0 6px 18px rgba(25,45,58,.05);margin-bottom:12px}
+  #map{height:62vh;min-height:380px;max-height:560px;width:100%;border-radius:16px;border:1px solid var(--line);z-index:0}
+  .mapfallback{height:100%;display:flex;align-items:center;justify-content:center;text-align:center;padding:24px;color:#566675;background:#eef4f2}
+  .legend{display:flex;gap:14px;flex-wrap:wrap;margin-top:10px;font-size:13px;color:#445}
+  .legend span{display:inline-flex;align-items:center;gap:6px}
+  .swatch{width:14px;height:14px;border-radius:50%;display:inline-block}
+  .routeline{width:22px;height:0;border-top:3px solid var(--red);display:inline-block}
+  .pinindex{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+  .pinbtn{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line);background:#fff;
+    border-radius:999px;padding:5px 11px 5px 6px;font-size:13px;font-weight:700;color:#26323d;cursor:pointer}
+  .pinbtn:hover,.pinbtn.active{border-color:var(--red);background:#fff4f2}
+  .pinbtn .num{width:20px;height:20px;border-radius:50%;background:var(--red);color:#fff;font-size:12px;font-weight:800;
+    display:inline-flex;align-items:center;justify-content:center}
+  .pinbtn .num.hub{background:#16354a}
+  .pin{width:22px;height:22px;border-radius:50%;color:#fff;font-weight:800;font-size:12px;
+    display:flex;align-items:center;justify-content:center;border:2px solid #fff;box-shadow:0 2px 6px rgba(0,0,0,.35)}
+  .access{display:grid;gap:10px}
+  .leg{display:grid;grid-template-columns:30px 1fr;gap:10px;padding:10px 0;border-bottom:1px dashed #e6ebee}
+  .leg:last-child{border-bottom:0}
+  .leg .ic{font-size:20px;text-align:center}
+  .leg .ttl{font-weight:800}
+  .leg .meta{font-size:13px;color:#475663}
+  .pillrow{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
+  .pill{font-size:12px;font-weight:700;border-radius:999px;padding:4px 10px;text-decoration:none;background:#eef4f2;color:#27514a}
+  .pill.book{background:#eaf1f7;color:#1c537a}
+  .day{margin-bottom:14px}
+  .day h3{margin:0 0 8px;font-size:16px;color:#234}
+  .stop{padding:11px 0;border-bottom:1px solid #eef2f4}
+  .stop:last-child{border-bottom:0}
+  .stop .top{display:flex;gap:9px;align-items:baseline}
+  .stop .num{flex:0 0 auto;width:22px;height:22px;border-radius:50%;background:var(--red);color:#fff;
+    font-size:12px;font-weight:800;display:inline-flex;align-items:center;justify-content:center;align-self:center}
+  .stop .num.hub{background:#16354a}
+  .stop .t{color:var(--blue);font-weight:800;font-variant-numeric:tabular-nums;min-width:46px}
+  .stop .p{font-weight:800}
+  .stop .hint{color:var(--muted);font-size:13px;margin-left:31px}
+  .movelink{margin:8px 0 2px 31px;display:inline-flex;align-items:center;gap:7px;font-size:13px;font-weight:700;
+    background:#f3f7f5;border:1px solid #e2ebe6;border-radius:10px;padding:5px 11px;color:#2f5a4c;text-decoration:none}
+  .grid2{display:grid;grid-template-columns:1fr;gap:10px}
+  .mealgroup{margin-bottom:8px}
+  .mealgroup .when{font-weight:800;font-size:14px;color:#234;margin:6px 2px 8px}
+  .item{border:1px solid var(--line);border-radius:13px;padding:12px;background:#fff}
+  .item .name{font-weight:800}
+  .item .price{font-weight:800;color:#123e5b;font-size:14px}
+  .item .hint{color:var(--muted);font-size:13px}
+  .tag{display:inline-block;font-size:11px;font-weight:800;color:#6a4a14;background:#fdf0d6;border-radius:6px;padding:2px 7px;margin-right:6px}
+  .tag.sns{color:#8a2b6b;background:#fbe4f1}
+  table{width:100%;border-collapse:collapse;font-size:14px}
+  th,td{padding:9px 8px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top}
+  th{background:#eef4f6;color:#39525f;font-size:12px}
+  td.r{text-align:right;font-variant-numeric:tabular-nums}
+  .todo{list-style:none;padding:0;margin:0}
+  .todo li{padding:8px 0;border-bottom:1px solid #eef2f4}
+  .todo.book li:before{content:"☐ ";color:var(--blue);font-weight:800}
+  .todo.decide li:before{content:"・";color:var(--gold);font-weight:800;margin-right:4px}
+  .twohead{font-weight:800;margin:2px 0 6px;font-size:14px}
+  footer{margin-top:34px;color:var(--muted);font-size:12px;text-align:center}
+  @media(min-width:640px){.grid2{grid-template-columns:1fr 1fr}}
+</style>
+</head>
+<body>
+<main class="wrap">
+  <header class="hero">
+    <div class="kicker">2人・2泊3日／女満別IN・OUT・知床に2泊</div>
+    <h1>知床・網走 2泊3日（羅臼クルーズと絶景）</h1>
+    <p class="lead">羅臼のクルーズでマッコウクジラやイルカに会いに行く、世界自然遺産・知床の旅。1泊目はウトロの北こぶしでオーシャンビュー、2泊目は羅臼の温泉宿。朝晩は宿のごはんでゆっくり、最終日は網走へ。</p>
+    <div class="badges">
+      <span class="badge">🗓 2泊3日</span>
+      <span class="badge">👥 2人</span>
+      <span class="badge">✈️ 女満別IN/OUT</span>
+      <span class="badge">🚗 レンタカー1台</span>
+      <span class="badge">🐋 羅臼でクジラ・イルカ</span>
+      <span class="badge">♨️ 知床に2泊（1泊2食）</span>
+    </div>
+  </header>
+
+  <section id="route">
+    <h2><span class="dot"></span>ルート地図</h2>
+    <p class="sub">番号順に巡るルート。赤い線が実際の移動経路です。ウトロ（1泊目）→羅臼（2泊目）→最終日に網走。</p>
+    <div id="map"></div>
+    <div class="legend">
+      <span><i class="routeline"></i>順路</span>
+      <span><i class="swatch" style="background:#16354a"></i>空港・宿</span>
+      <span><i class="swatch" style="background:#d23b2c"></i>観光スポット</span>
+      <span><i class="swatch" style="background:#b07d24"></i>食事の街</span>
+    </div>
+    <div class="pinindex" id="pinindex"></div>
+    <p class="sub" style="margin-top:8px">番号をタップすると、地図のその場所に移動します。</p>
+  </section>
+
+  <section id="access">
+    <h2><span class="dot"></span>行き帰りのアクセス</h2>
+    <p class="sub">2人とも同じ便でOK。知床へは女満別空港INが最短です。</p>
+    <div class="card"><div class="twohead">往路：羽田／成田 → 女満別空港 → ウトロ</div><div class="access" id="acc-a"></div></div>
+    <div class="card"><div class="twohead">復路：羅臼 → 網走 → 女満別空港 → 羽田／成田</div><div class="access" id="acc-b"></div></div>
+  </section>
+
+  <section id="itinerary">
+    <h2><span class="dot"></span>行程</h2>
+    <p class="sub">番号は上の地図のピンと同じ順番です。スポット名は地図リンク、区間の「🚗 ◯分」は経路に飛びます。時刻は便が決まる前のめやすです。</p>
+    <div id="days"></div>
+  </section>
+
+  <section id="meals">
+    <h2><span class="dot"></span>食事候補（昼）</h2>
+    <p class="sub">朝・夕は宿（1泊2食）でゆっくり。ここは昼の候補です。気分と予約状況で選べます。</p>
+    <div id="meal-list"></div>
+  </section>
+
+  <section id="activities">
+    <h2><span class="dot"></span>アクティビティ候補</h2>
+    <p class="sub">行程に足せる体験候補です。天気・体力・予約状況で選べます。</p>
+    <div class="grid2" id="activity-list"></div>
+  </section>
+
+  <section id="other">
+    <h2><span class="dot"></span>他にもおすすめのスポット</h2>
+    <p class="sub">天気や気分で順路に足せる候補です。</p>
+    <div class="grid2" id="other-list"></div>
+  </section>
+
+  <section id="car">
+    <h2><span class="dot"></span>レンタカー</h2>
+    <p class="sub">2人＋スーツケースなら、コンパクト〜普通車を1台。受取・返却は女満別空港が便利です。</p>
+    <div class="grid2" id="car-list"></div>
+  </section>
+
+  <section id="stay">
+    <h2><span class="dot"></span>宿</h2>
+    <p class="sub">1泊目はウトロ「北こぶし知床」、2泊目は羅臼の温泉宿。どちらも夕食・朝食付きで。</p>
+    <div class="grid2" id="stay-list"></div>
+  </section>
+
+  <section id="budget">
+    <h2><span class="dot"></span>費用のめやす（1人あたり）</h2>
+    <div class="card" style="overflow-x:auto"><table id="budget-table"></table></div>
+  </section>
+
+  <section id="next">
+    <h2><span class="dot"></span>これから決める・予約すること</h2>
+    <div class="card"><div class="twohead">予約するもの</div><ul class="todo book" id="book-list"></ul></div>
+    <div class="card"><div class="twohead">これから決めること</div><ul class="todo decide" id="decide-list"></ul></div>
+  </section>
+
+  <footer>所要時間・便・料金は作成時点の各社公式時刻表・地図経路に基づくめやすです。最新の運航・空室・価格は各リンク先でご確認ください。</footer>
+</main>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+  integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+<script>
+/* =================== DATA =================== */
+const G  = (from,to)=>`https://www.google.com/maps/dir/?api=1&origin=${encodeURIComponent(from)}&destination=${encodeURIComponent(to)}&travelmode=driving`;
+const Gt = (from,to)=>`https://www.google.com/maps/dir/?api=1&origin=${encodeURIComponent(from)}&destination=${encodeURIComponent(to)}&travelmode=transit`;
+const M  = q => `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(q)}`;
+
+// 地図ピン＝行程番号（1:1）。kind: "hub"(空港/宿) または "spot"
+const mapSpots = [
+  {n:1,  name:"女満別空港", short:"空港IN", lat:43.8806, lng:144.1640, kind:"hub",  time:"Day1 09:40 到着"},
+  {n:2,  name:"オシンコシンの滝", short:"オシンコシン", lat:44.0763, lng:144.9039, kind:"spot", time:"Day1 12:30"},
+  {n:3,  name:"知床五湖", short:"五湖", lat:44.1130, lng:145.0800, kind:"spot", time:"Day1 14:00"},
+  {n:4,  name:"北こぶし知床（ウトロ・1泊目）", short:"北こぶし(泊)", lat:44.0717, lng:145.0233, kind:"hub",  time:"Day1 16:00 チェックイン"},
+  {n:5,  name:"知床峠（知床横断道路）", short:"知床峠", lat:44.0270, lng:145.1486, kind:"spot", time:"Day2 10:00"},
+  {n:6,  name:"羅臼港 ホエール・ウォッチング", short:"羅臼クルーズ", lat:44.0200, lng:145.1900, kind:"spot", time:"Day2 13:00"},
+  {n:7,  name:"羅臼の温泉宿（2泊目）", short:"羅臼(泊)", lat:44.0290, lng:145.1790, kind:"hub",  time:"Day2 16:30 チェックイン"},
+  {n:8,  name:"天に続く道", short:"天に続く道", lat:43.9100, lng:144.7760, kind:"spot", time:"Day3 10:30"},
+  {n:9,  name:"能取岬", short:"能取岬", lat:44.1183, lng:144.2440, kind:"spot", time:"Day3 11:50"},
+  {n:10, name:"博物館 網走監獄", short:"網走監獄", lat:44.0206, lng:144.2227, kind:"spot", time:"Day3 13:00"},
+  {n:11, name:"女満別空港", short:"空港OUT", lat:43.8806, lng:144.1640, kind:"hub",  time:"Day3 15:00 返却"},
+];
+// 食事の街など、経路線に乗せない目印
+const foodTowns = [
+  {name:"羅臼（魚の城下町）", lat:44.0210, lng:145.1880},
+  {name:"網走（オホーツクの海の幸）", lat:44.0210, lng:144.2700},
+];
+
+// アクセス: 区間ごとに具体便（何時発→何時着・所要・運賃）。pillsに価格が見える予約前URL。
+const access = {
+  a:[
+    {ic:"✈️", ttl:"羽田(HND) → 女満別(MMB)", meta:"直行 約1時間45分／代表便 07:55→09:40・09:30→11:15。片道めやす 17,000円〜（夏季は変動大）。",
+      pills:[
+        {cls:"book",label:"価格カレンダー（HND→MMB）",url:"https://www.skyscanner.jp/transport/flights/hnd/mmb/"},
+        {cls:"book",label:"ANA 女満別線",url:"https://www.ana.co.jp/ja-jp/flights-to-memanbetsu/"}
+      ]},
+    {ic:"✈️", ttl:"成田(NRT) → 女満別(MMB)", meta:"季節運航で便数は限られる。便の多い羽田発が取りやすい。",
+      pills:[{cls:"book",label:"価格カレンダー（NRT→MMB）",url:"https://www.skyscanner.jp/transport/flights/nrt/mmb/"}]},
+    {ic:"🚗", ttl:"女満別空港 → ウトロ（1泊目）", meta:"レンタカー 約100km・約1時間50分。網走は最終日に回すので、初日はオシンコシンの滝→知床五湖へ直行。",
+      pills:[
+        {cls:"",label:"🚗 経路（マップ）",url:G("女満別空港","オシンコシンの滝")},
+        {cls:"book",label:"レンタカー比較（女満別）",url:"https://cars.travel.rakuten.co.jp/cars/airport/memanbetsu/"}
+      ]},
+  ],
+  b:[
+    {ic:"🚗", ttl:"羅臼 →（知床峠・網走経由）→ 女満別空港", meta:"レンタカー 約200km。途中で網走観光を挟んで半日。夏の知床峠は終日通行が一般的（天候で通行止めあり）。",
+      pills:[{cls:"",label:"🚗 経路（マップ）",url:G("羅臼 道の駅 知床らうす","女満別空港")}]},
+    {ic:"✈️", ttl:"女満別(MMB) → 羽田(HND)", meta:"直行 約1時間50分／代表便 14:25→16:20・18:30→20:25。最終日は網走観光があるため夕方便が安心。",
+      pills:[{cls:"book",label:"価格カレンダー（MMB→HND）",url:"https://www.skyscanner.jp/transport/flights/mmb/hnd/"}]},
+  ],
+};
+
+// 行程: numのある行が地図ピンと対応。move=次区間の所要。
+const days = [
+  {label:"Day1（女満別IN → 知床ウトロ・北こぶし泊）", stops:[
+    {num:1, kind:"hub", t:"09:40", p:"女満別空港 着・レンタカー受取", url:M("女満別空港"), hint:"羽田/成田から直行で到着。網走は最終日なので素通りで知床へ。", move:{ic:"🚗", label:"約1時間40分", url:G("女満別空港","オシンコシンの滝")}},
+    {t:"11:30", p:"昼食（斜里〜ウトロ方面）", url:"#meals", hint:"下の昼食候補から。"},
+    {num:2, t:"12:30", p:"オシンコシンの滝", url:M("オシンコシンの滝"), hint:"知床八景。駐車場すぐの双瀑で記念写真。", move:{ic:"🚗", label:"約25分", url:G("オシンコシンの滝","知床五湖")}},
+    {num:3, t:"14:00", p:"知床五湖", url:M("知床五湖"), hint:"高架木道は手軽に湖×知床連山。地上遊歩道は時期によりガイド/レクチャー制。", move:{ic:"🚗", label:"約20分", url:G("知床五湖","北こぶし知床 ウトロ")}},
+    {num:4, kind:"hub", t:"16:00", p:"北こぶし知床 チェックイン（夕食・朝食）", url:M("北こぶし知床 ホテル リゾート"), hint:"オーシャンビューと展望露天でゆっくり。夕方はプユニ岬で夕陽も。"},
+  ]},
+  {label:"Day2（知床峠 → 羅臼クルーズ・羅臼泊）", stops:[
+    {num:5, kind:"spot", t:"10:00", p:"知床峠（知床横断道路）", url:M("知床峠"), hint:"朝食のあと出発。羅臼岳・国後島の大パノラマ。夏は終日通行が一般的（天候で通行止めあり）。", move:{ic:"🚗", label:"約30分", url:G("知床峠","羅臼 道の駅 知床らうす")}},
+    {t:"12:00", p:"昼食（羅臼・魚の城下町）", url:"#meals", hint:"クルーズ前に羅臼の海鮮を。"},
+    {num:6, kind:"spot", t:"13:00", p:"羅臼港 ホエール・ウォッチング（約2.5時間）", url:M("羅臼港 知床ネイチャークルーズ"), hint:"この旅の主役。根室海峡でマッコウクジラ・イルカ・クジラを探す（7〜9月はマッコウクジラ中心。シャチは初夏まで）。", move:{ic:"🚗", label:"約10分", url:G("羅臼港","羅臼温泉")}},
+    {num:7, kind:"hub", t:"16:30", p:"羅臼の温泉宿 チェックイン（夕食・朝食）", url:M("リブマックスリゾート知床シーフロント 羅臼"), hint:"羅臼の海の幸の夕食。国後島から昇る朝日も。間欠泉・熊の湯など羅臼の名所も近い。"},
+  ]},
+  {label:"Day3（網走観光 → 女満別OUT）", stops:[
+    {num:8, kind:"spot", t:"10:30", p:"天に続く道", url:M("天に続く道 斜里"), hint:"羅臼を朝に出発（夏の知床峠は終日通行が一般的）。地平線まで一直線に伸びる道。", move:{ic:"🚗", label:"約1時間10分", url:G("天に続く道 斜里","能取岬")}},
+    {num:9, kind:"spot", t:"11:50", p:"能取岬", url:M("能取岬"), hint:"オホーツク海に突き出す断崖と白黒の灯台。", move:{ic:"🚗", label:"約20分", url:G("能取岬","博物館網走監獄")}},
+    {t:"12:30", p:"昼食（網走）", url:"#meals", hint:"網走で海鮮や回転寿しを。"},
+    {num:10, kind:"spot", t:"13:30", p:"博物館 網走監獄", url:M("博物館網走監獄"), hint:"網走のシンボル。監獄をテーマにした野外博物館。", move:{ic:"🚗", label:"約25分", url:G("博物館網走監獄","女満別空港")}},
+    {num:11, kind:"hub", t:"15:00", p:"女満別空港 着・レンタカー返却→搭乗", url:M("女満別空港"), hint:"夕方便で帰路へ。"},
+  ]},
+];
+
+// 食事（昼のみ／朝晩は宿）: タイミングごとに3候補。SNS話題はtag,sns:true。
+const meals = [
+  {when:"1日目の昼｜斜里〜ウトロ方面", items:[
+    {name:"波飛沫（なみしぶき）", url:M("波飛沫 ウトロ"), price:"1,000〜1,800円", hint:"塩ラーメンがミシュランのビブグルマン掲載。", tag:"SNS人気", sns:true},
+    {name:"道の駅うとろ・シリエトク 知床食堂", url:M("道の駅うとろシリエトク 知床食堂"), price:"1,000〜2,000円", hint:"海鮮丼・鉄砲汁。サッと済ませたい時に。", tag:"手軽"},
+    {name:"一休屋", url:M("一休屋 ウトロ"), price:"1,500〜2,500円", hint:"さけ親子丼・海鮮丼・季節のウニ丼。", tag:"定番"},
+  ]},
+  {when:"2日目の昼｜羅臼（魚の城下町）", items:[
+    {name:"道の駅 知床・らうす 食堂", url:M("道の駅 知床らうす 食堂"), price:"1,200〜2,500円", hint:"羅臼産の海鮮丼・羅臼昆布。クルーズ乗り場のすぐ近く。", tag:"近い"},
+    {name:"純の番屋", url:M("純の番屋 羅臼"), price:"1,500〜3,000円", hint:"「北の国から」ゆかりの番屋めし・ほっけ・海鮮。", tag:"SNS人気", sns:true},
+    {name:"羅臼 海鮮工房／濱田商店", url:M("濱田商店 羅臼"), price:"1,500〜3,000円", hint:"水揚げそのままの魚介。ウニ・ボタンエビの時期も。", tag:"地元"},
+  ]},
+  {when:"3日目の昼｜網走", items:[
+    {name:"回転寿し トリトン（北見／網走方面）", url:M("回転寿し トリトン 網走"), price:"1,500〜3,000円", hint:"北海道で人気の回転寿司。ネタが厚い。", tag:"SNS人気", sns:true},
+    {name:"道の駅 流氷街道網走（キネマ館）", url:M("道の駅 流氷街道網走"), price:"1,000〜2,500円", hint:"オホーツクの海の幸。お土産も一緒に。", tag:"道の駅"},
+    {name:"監獄食堂（博物館 網走監獄）", url:M("監獄食堂 博物館網走監獄"), price:"800〜1,300円", hint:"再現された「監獄食」が名物。話のネタに。", tag:"体験"},
+  ]},
+];
+
+const activities = [
+  {name:"ウトロ 知床岬クルーズ（ヒグマ・断崖・滝）", url:"https://kamuiwakka.jp/utoro/", price:"6,800〜15,000円／約3時間", hint:"羅臼のクルーズとは別。ヒグマや滝の景観も見たいなら、Day1午後やDay2朝に追加。大型おーろらは揺れ少なめ。", tag:"クルーズ"},
+  {name:"知床五湖 ガイドツアー", url:"https://www.sno.co.jp/trail-goko.html", price:"約5,000円前後／約3時間", hint:"夏は地上遊歩道がレクチャー受講制。森と湖と知床連山をじっくり。", tag:"予約推奨"},
+  {name:"カムイワッカ湯の滝 沢登り（夏季）", url:M("カムイワッカ湯の滝"), price:"基本無料（夏はシャトルバス期間あり）", hint:"温泉の川を素足で登る夏限定の秘湯体験。滑りにくい靴で。", tag:"夏限定"},
+  {name:"羅臼の名所（間欠泉・熊の湯・羅臼湖）", url:M("羅臼 間欠泉"), price:"無料〜", hint:"羅臼泊の朝夕に。野趣あふれる露天「熊の湯」、時間が合えば間欠泉も。", tag:"羅臼泊おすすめ"},
+  {name:"知床ナイトツアー（野生動物ウォッチング）", url:M("知床 ナイトツアー ウトロ"), price:"約3,500円前後／約1.5〜2時間", hint:"エゾシカ・キタキツネ・満天の星。夜の知床は別世界。", tag:"夜"},
+];
+
+const other = [
+  {name:"プユニ岬", url:M("プユニ岬"), hint:"ウトロを見下ろす夕陽の名所（Day1夕方に）。"},
+  {name:"フレペの滝（知床自然センター）", url:M("フレペの滝 知床自然センター"), hint:"草原から断崖と海へ。手軽な絶景散歩。"},
+  {name:"オロンコ岩／ゴジラ岩（ウトロ港）", url:M("オロンコ岩 ウトロ"), hint:"港の奇岩。階段上は360度の展望。"},
+  {name:"神の子池（清里）", url:M("神の子池 清里"), hint:"吸い込まれそうな青い池。Day3の寄り道に。", tag:"SNS人気", sns:true},
+  {name:"オホーツク流氷館（天都山展望台）", url:M("オホーツク流氷館 網走"), hint:"網走の高台から360度のパノラマ（Day3に余裕があれば）。"},
+];
+
+// レンタカー: 車種・定員・プラン・受取場所。比較サイト＋直営を併記。
+const cars = [
+  {name:"楽天トラベル レンタカー（女満別空港・10社比較）", url:"https://cars.travel.rakuten.co.jp/cars/airport/memanbetsu/", price:"24h 約6,000〜10,000円（夏）", hint:"ヤリス／ノート級（定員5）。日産・オリックス等を横断比較、ポイントも。受取・返却＝女満別空港（送迎）。", tag:"比較"},
+  {name:"トヨタレンタカー（女満別空港）", url:"https://rent.toyota.co.jp/", price:"24h 約8,000円〜", hint:"ヤリス／カローラ級（定員5）。直営の安心感。受取＝女満別空港。", tag:"直営"},
+];
+
+// 宿: 1泊目ウトロ＋2泊目羅臼。各サイトも併記。
+const stays = [
+  {name:"北こぶし知床 ホテル＆リゾート（ウトロ・1泊目）", url:M("北こぶし知床 ホテル リゾート ウトロ"), price:"日付・人数で各サイト比較", hint:"全室30㎡以上・海側多数、最上階に展望露天、露天風呂付き客室も。夕食・朝食付きで予約。", tag:"1泊目"},
+  {name:"リブマックスリゾート知床シーフロント（旧 羅臼の宿 まるみ・羅臼・2泊目）", url:"https://travel.rakuten.co.jp/HOTEL/16748/16748_onsen.html", price:"日付・人数で検索", hint:"自家源泉の天然温泉・海側。国後島から昇る朝日。羅臼の海の幸の夕食。", tag:"2泊目"},
+  {name:"楽天トラベル：ウトロ温泉 一覧", url:"https://travel.rakuten.co.jp/onsen/hokkaido/OK00062.html", price:"日付・人数で検索", hint:"ウトロの宿をまとめて空室・価格比較。"},
+  {name:"じゃらん：知床・ウトロ・羅臼の温泉 一覧", url:"https://www.jalan.net/onsen/OSN_50019/", price:"日付・人数で検索", hint:"ウトロ・羅臼の宿を横断比較。クーポンが強い。"},
+  {name:"agoda：知床・ウトロ／羅臼で検索", url:"https://www.agoda.com/ja-jp/", price:"日付・人数で検索", hint:"「ウトロ温泉」「羅臼」で日付検索。直前割が出ることも。"},
+];
+
+const budget = [
+  ["航空券（羽田⇄女満別 往復）","3.5〜6万円","夏季は変動大。早割で圧縮可"],
+  ["宿（知床2泊・1泊2食／2名1室：北こぶし＋羅臼の宿）","4〜7万円","北こぶしの客室タイプで変動"],
+  ["羅臼ホエール・ウォッチング","0.9〜1.1万円","会社・便で変動"],
+  ["レンタカー＋燃料（2名1台・3日／折半）","1〜1.5万円","コンパクト1台"],
+  ["昼食（3日分）","0.6〜1万円","海鮮ランチ等"],
+  ["体験・入場（知床五湖・網走監獄等）","0.3〜0.6万円","選ぶ体験による"],
+  ["予備費","0.5万円","土産・交通予備"],
+  ["合計めやす","約11〜17万円","宿のグレード次第"],
+];
+
+const bookList = [
+  {label:"航空券（羽田⇄女満別）",url:"https://www.skyscanner.jp/transport/flights/hnd/mmb/"},
+  {label:"レンタカー（女満別空港）",url:"https://cars.travel.rakuten.co.jp/cars/airport/memanbetsu/"},
+  {label:"宿①：北こぶし知床（ウトロ・1泊目）",url:M("北こぶし知床 ホテル リゾート ウトロ")},
+  {label:"宿②：羅臼の温泉宿（2泊目）",url:"https://travel.rakuten.co.jp/HOTEL/16748/16748_onsen.html"},
+  {label:"羅臼 ホエール・ウォッチング（知床ネイチャークルーズ）",url:"https://www.e-shiretoko.com/"},
+  {label:"羅臼クルーズ 比較・予約（VELTRA）",url:"https://www.veltra.com/jp/japan/hokkaido/shiretoko/a/119122"},
+];
+const decideList = [
+  "出発日は7月末〜9月上旬で検討。この時期の羅臼クルーズはマッコウクジラ・イルカが中心（マッコウは7〜9月、イシイルカ5〜10月）。シャチは4〜7月・ベスト5〜6月なので、この時期は遭遇率が下がる点は割り切る。シャチ最優先なら〜7月上中旬に前倒し。2026年の運航は4/25〜10/13。",
+  "知床横断道路（知床峠）：夏（7〜9月）は終日通行が一般的。ただし天候で通行止めの可能性あり。",
+  "羅臼クルーズの会社・便：知床ネイチャークルーズ／観光船はまなす等。午前便のほうが波が穏やかで酔いにくい。乗船時刻で当日の動きが決まる。",
+  "宿のグレード：北こぶしの客室タイプ（海側・露天風呂付き客室など）と、羅臼の宿の選択。",
+  "フライト時間帯：最終日は網走観光があるため夕方便が安心。初日は午前着だと初日からしっかり動ける。",
+  "欠航時の代替：羅臼クルーズが欠航なら翌便・別会社への振替や、ウトロの知床岬クルーズ（ヒグマ・断崖）に切替。",
+];
+/* =================== /DATA =================== */
+
+
+/* =================== 描画（触らない） =================== */
+function colorOf(k){return k==="hub"?"#16354a":"#d23b2c";}
+function pinIcon(n,color){return L.divIcon({className:"",iconSize:[22,22],iconAnchor:[11,11],
+  html:`<div class="pin" style="background:${color}">${n}</div>`});}
+
+function spread(items,thr=0.0015,r=0.004){
+  const placed=[];
+  return items.map(s=>{
+    let lat=s.lat,lng=s.lng,k=0;
+    while(placed.some(p=>Math.hypot(p[0]-lat,p[1]-lng)<thr)&&k<8){
+      const a=k*Math.PI/3; lat=s.lat+r*Math.sin(a); lng=s.lng+r*Math.cos(a); k++;
+    }
+    placed.push([lat,lng]);
+    return Object.assign({},s,{dlat:lat,dlng:lng});
+  });
+}
+const spots = spread(mapSpots);
+const markers={};
+let routeMap=null;
+
+function initMap(){
+  const mapEl=document.getElementById("map");
+  if(!window.L){
+    mapEl.innerHTML='<div class="mapfallback">地図を読み込み中です。表示されない場合は通信環境を確認してください。</div>';
+    return;
+  }
+  routeMap = L.map("map",{scrollWheelZoom:false});
+  L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",{maxZoom:18,attribution:'&copy; OpenStreetMap contributors'}).addTo(routeMap);
+  const latlngs = spots.map(s=>[s.dlat,s.dlng]);
+  L.polyline(latlngs,{color:"#d23b2c",weight:4,opacity:.9,lineJoin:"round"}).addTo(routeMap);
+  spots.forEach(s=>{ markers[s.n]=L.marker([s.dlat,s.dlng],{icon:pinIcon(s.n,colorOf(s.kind))}).addTo(routeMap).bindPopup(`<b>${s.n}. ${s.name}</b><br>${s.time}`); });
+  foodTowns.forEach(f=>{ L.marker([f.lat,f.lng],{icon:L.divIcon({className:"",iconSize:[14,14],iconAnchor:[7,7],
+    html:`<div style="width:14px;height:14px;border-radius:50%;background:#b07d24;border:2px solid #fff;box-shadow:0 1px 4px rgba(0,0,0,.3)"></div>`})}).addTo(routeMap).bindPopup(`<b>🍽 ${f.name}</b>`); });
+  if(latlngs.length) routeMap.fitBounds(L.latLngBounds(latlngs).pad(0.2)); else routeMap.setView([36,138],5);
+}
+
+window.focusPin=(n)=>{ const s=spots.find(x=>x.n===n); if(!s)return;
+  if(routeMap&&markers[n]){ routeMap.setView([s.dlat,s.dlng],14,{animate:true}); markers[n].openPopup(); }
+  document.querySelectorAll(".pinbtn").forEach(b=>b.classList.toggle("active",Number(b.dataset.n)===n)); };
+document.getElementById("pinindex").innerHTML = spots.map(s=>
+  `<button class="pinbtn" data-n="${s.n}" onclick="focusPin(${s.n})"><span class="num ${s.kind==='hub'?'hub':''}">${s.n}</span>${s.short}</button>`).join("");
+initMap();
+
+function legRow(l){ const pills=(l.pills||[]).map(p=>`<a class="pill ${p.cls}" href="${p.url}" target="_blank" rel="noopener">${p.label}</a>`).join("");
+  return `<div class="leg"><div class="ic">${l.ic}</div><div><div class="ttl">${l.ttl}</div><div class="meta">${l.meta}</div><div class="pillrow">${pills}</div></div></div>`; }
+document.getElementById("acc-a").innerHTML = (access.a||[]).map(legRow).join("");
+document.getElementById("acc-b").innerHTML = (access.b||[]).map(legRow).join("");
+
+document.getElementById("days").innerHTML = days.map(d=>`
+  <div class="card day"><h3>${d.label}</h3>
+  ${d.stops.map(s=>`<div class="stop"><div class="top">
+    ${s.num?`<span class="num ${s.kind==='hub'?'hub':''}">${s.num}</span>`:`<span style="width:22px;flex:0 0 auto"></span>`}
+    <div class="t">${s.t}</div>
+    <div class="p">${s.url?`<a href="${s.url}" target="_blank" rel="noopener">${s.p}</a>`:s.p}</div></div>
+    ${s.hint?`<div class="hint">${s.hint}</div>`:""}
+    ${s.move?`<a class="movelink" href="${s.move.url}" target="_blank" rel="noopener">${s.move.ic} ${s.move.label}</a>`:""}
+  </div>`).join("")}</div>`).join("");
+
+const itemCard=(o)=>`<div class="item">${o.tag?`<span class="tag ${o.sns?'sns':''}">${o.tag}</span>`:""}
+  <div class="name"><a href="${o.url}" target="_blank" rel="noopener">${o.name}</a></div>
+  ${o.price?`<div class="price">${o.price}</div>`:""}${o.hint?`<div class="hint">${o.hint}</div>`:""}</div>`;
+document.getElementById("meal-list").innerHTML = meals.map(g=>`<div class="mealgroup"><div class="when">${g.when}</div><div class="grid2">${g.items.map(itemCard).join("")}</div></div>`).join("");
+document.getElementById("activity-list").innerHTML = activities.map(itemCard).join("");
+document.getElementById("other-list").innerHTML = other.map(itemCard).join("");
+document.getElementById("car-list").innerHTML   = cars.map(itemCard).join("");
+document.getElementById("stay-list").innerHTML  = stays.map(itemCard).join("");
+document.getElementById("budget-table").innerHTML = `<thead><tr><th>項目</th><th>1人あたり</th><th>メモ</th></tr></thead><tbody>`+
+  budget.map(r=>`<tr><td>${r[0]}</td><td class="r">${r[1]}</td><td>${r[2]}</td></tr>`).join("")+`</tbody>`;
+document.getElementById("book-list").innerHTML = bookList.map(c=>`<li><a href="${c.url}" target="_blank" rel="noopener">${c.label}</a></li>`).join("");
+document.getElementById("decide-list").innerHTML = decideList.map(d=>`<li>${d}</li>`).join("");
+</script>
+</body>
+</html>
