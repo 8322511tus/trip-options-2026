@@ -1,0 +1,605 @@
+<!doctype html>
+<!--
+  ============================================================================
+  共有用 旅行レポート テンプレート（スマホ最適化・1ファイル自己完結）
+  ----------------------------------------------------------------------------
+  使い方:
+    下の「DATA」ブロックだけを案件に合わせて書き換える。CSS/描画ロジックは触らない。
+    OpenStreetMap + Leaflet で「実地図＋訪問順の赤い経路線＋番号ピン」を描く。
+
+  必守ルール（memory/global_rules.yaml の share_report_rules と一致させること）:
+    - 地図はOSM等の実地図の上に描く。白地図に点だけはNG。
+    - 訪問順に赤い経路線でつなぎ、番号ピン＝行程の番号を1:1で一致させる。
+    - ピンは実在地に置く。完全に同座標の地点だけ約400mずらす。重なりは
+      地図下の番号インデックス（クリックで拡大）で見分けられればよい。
+    - 行程の各スポットはURL（地図/公式）をインラインで持たせる。
+    - 区間ごとに所要時間を書く。バス/フェリー/飛行機/新幹線は「何時発→何時着・
+      所要◯分・運賃」まで具体便で。車はGoogleマップ経路リンク。
+    - 食事は別セクションで、タイミングごとに3候補程度（厚め）。SNSの話題性も加味。
+    - アクティビティは別セクションで、候補ごとに内容・所要・費用感・予約前URLを載せる。
+    - 「他のおすすめスポット」は別セクション。
+    - 飛行機/現地交通・ツアー/宿/フェリー等は価格が見える「予約前のプランページURL」を提示。
+      宿は楽天/じゃらん/agodaを基本。現地交通・ツアーは車種・定員・料金・受取場所まで。
+      現地直営＋（その土地で使えるなら）大手/比較も併記。実際の予約はしない。
+    - 現地交通・ツアー台数は人数で決める（例: 6人なら1台＝8〜10人乗りワゴン）。
+    - 費用・混雑/天候・交通リスク・予約条件・代替案は「先読みチェック」に短くまとめる。
+    - 本人向けの解説・意図・使い方・選定理由のメタ文や「根拠/要確認」等は本文に出さない。
+      常に同行者全員に見せる前提で書く。出典の羅列・LINE貼付文は載せない。
+    - 末尾に「これから決めること（未確定の観点）」を客観的に置く。
+    - 完成したらWeb公開（GitHub Pages等）でURL1本にし、作成側がブラウザで開いて確認。
+  ============================================================================
+-->
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Plan A｜下旬① 黄金カラマツ名所凝縮</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+  integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="">
+<style>
+  :root{
+    --color-brand:#0b5cab;
+    --color-brand-hover:#064a8a;
+    --color-brand-deep:#032d60;
+    --color-brand-soft:#eaf5ff;
+    --color-background:#eef4fb;
+    --color-surface:#ffffff;
+    --color-surface-alt:#f7f9fd;
+    --color-border:#c9d5e8;
+    --color-text-primary:#111827;
+    --color-text-secondary:#3f526d;
+    --color-text-muted:#6b778c;
+    --color-success:#2e844a;
+    --color-warning:#b76100;
+    --color-danger:#ba0517;
+    --color-info:#0176d3;
+    --space-1:4px;
+    --space-2:8px;
+    --space-3:12px;
+    --space-4:16px;
+    --space-6:24px;
+    --space-8:32px;
+    --radius-small:4px;
+    --radius-medium:8px;
+    --radius-large:12px;
+    --shadow-card:0 1px 2px rgba(10,31,68,.10),0 10px 28px rgba(10,31,68,.08);
+    --shadow-popover:0 12px 32px rgba(10,31,68,.20);
+    --shadow-modal:0 24px 60px rgba(10,31,68,.30);
+    --font-stack:"Segoe UI Variable","Segoe UI","Noto Sans JP","Yu Gothic UI","Yu Gothic",Meiryo,sans-serif;
+    --font-page-title:750 30px/1.16 var(--font-stack);
+    --font-section-title:750 18px/1.35 var(--font-stack);
+    --font-body:400 14px/1.65 var(--font-stack);
+    --font-caption:700 12px/1.4 var(--font-stack);
+    --z-header:100;
+    --z-dropdown:200;
+    --z-modal:500;
+    --z-toast:600;
+  }
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{margin:0;color:var(--color-text-primary);
+    background:linear-gradient(180deg,#fff 0,#fff 56px,#0b5cab 56px,#276f9f 172px,#eef4fb 172px,#eef4fb 100%);
+    font:var(--font-body);-webkit-text-size-adjust:100%}
+  a{color:var(--color-brand);text-underline-offset:.16em}
+  a:hover{color:var(--color-brand-hover)}
+  a:focus-visible,button:focus-visible{outline:3px solid rgba(1,118,211,.35);outline-offset:2px}
+  .app-shell{min-height:100vh;position:relative}
+  .app-shell::before{content:"";position:absolute;left:0;right:0;top:56px;height:156px;pointer-events:none;
+    background:
+      repeating-linear-gradient(135deg,rgba(255,255,255,.14) 0 1px,transparent 1px 18px),
+      linear-gradient(120deg,rgba(3,45,96,.92),rgba(11,92,171,.78) 54%,rgba(91,144,184,.52));
+    border-bottom:1px solid rgba(255,255,255,.28)}
+  .global-header{position:sticky;top:0;z-index:var(--z-header);height:56px;background:#fff;color:var(--color-text-primary);
+    border-bottom:1px solid #dfe5ef;display:flex;align-items:center;gap:var(--space-4);padding:0 var(--space-6);
+    box-shadow:0 1px 2px rgba(10,31,68,.08)}
+  .brand-home{display:flex;align-items:center;gap:var(--space-3);min-width:0;color:inherit;text-decoration:none}
+  .brand-home:hover{color:inherit}
+  .brand-mark{width:30px;height:30px;border-radius:var(--radius-medium);background:linear-gradient(135deg,#2b6cb0,#6c7ff2);
+    color:#fff;display:grid;place-items:center;font-weight:900;box-shadow:inset 0 0 0 1px rgba(255,255,255,.35)}
+  .brand-title{font-weight:800;letter-spacing:0}
+  .global-actions{margin-left:auto;display:flex;align-items:center;gap:var(--space-1);overflow:auto}
+  .global-actions a{display:inline-flex;align-items:center;min-height:32px;padding:0 10px;border-radius:var(--radius-small);
+    color:var(--color-text-secondary);font-size:13px;font-weight:750;text-decoration:none;white-space:nowrap}
+  .global-actions a:hover{background:var(--color-brand-soft);color:var(--color-brand)}
+  .global-actions .back-link{border:1px solid var(--color-border);background:var(--color-surface-alt);color:var(--color-brand-deep)}
+  .shell-body{position:relative;z-index:1;max-width:1440px;margin:0 auto;display:grid;grid-template-columns:220px minmax(0,1fr) 300px;gap:var(--space-4);padding:var(--space-4)}
+  .side-nav,.summary-panel{position:sticky;top:72px;align-self:start}
+  .side-nav,.summary-panel,.card{background:var(--color-surface);border:1px solid var(--color-border);border-radius:var(--radius-medium);box-shadow:var(--shadow-card)}
+  .side-nav{padding:var(--space-3);box-shadow:0 1px 2px rgba(10,31,68,.10),0 10px 22px rgba(10,31,68,.08)}
+  .side-nav-title,.summary-title{font:var(--font-caption);color:var(--color-text-muted);margin:0 0 var(--space-2)}
+  .side-nav a{display:flex;align-items:center;gap:var(--space-2);min-height:36px;padding:0 var(--space-3);border-radius:var(--radius-small);
+    color:var(--color-text-secondary);font-weight:700;text-decoration:none}
+  .side-nav a:hover,.side-nav a.active{background:var(--color-brand-soft);color:var(--color-brand)}
+  .main-content{min-width:0;display:grid;gap:var(--space-4)}
+  .summary-panel{padding:var(--space-4);display:grid;gap:var(--space-4)}
+  .summary-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:var(--space-2)}
+  .summary-metric{min-height:76px;display:grid;align-content:space-between;gap:var(--space-1);padding:var(--space-3);
+    border:1px solid #d7e3f5;border-radius:var(--radius-medium);background:linear-gradient(180deg,#fff,#f8fbff)}
+  .summary-metric span{color:var(--color-text-muted);font-size:11px;font-weight:750}
+  .summary-metric b{font-size:21px;line-height:1.1;color:var(--color-brand-deep);font-weight:750}
+  .summary-metric::after{content:"";display:block;width:100%;height:6px;border-radius:999px;background:linear-gradient(90deg,#2b6cb0,#6c7ff2)}
+  .utility-links{display:grid;gap:var(--space-2)}
+  .utility-links a{display:flex;justify-content:space-between;align-items:center;min-height:36px;padding:0 var(--space-3);
+    border:1px solid var(--color-border);border-radius:var(--radius-small);background:var(--color-surface-alt);
+    color:var(--color-text-primary);font-weight:750;text-decoration:none}
+  .utility-links a::after{content:"›";color:var(--color-brand);font-size:18px}
+  .utility-links a:hover{border-color:#9bbde6;background:var(--color-brand-soft);color:var(--color-brand)}
+  .hero{position:relative;overflow:hidden;background:linear-gradient(180deg,#fff,#f9fbff);border:1px solid #c4d4ea;
+    border-radius:var(--radius-medium);padding:0;box-shadow:0 2px 4px rgba(10,31,68,.10),0 16px 42px rgba(10,31,68,.12)}
+  .hero::before{content:"";position:absolute;left:0;right:0;top:0;height:6px;background:linear-gradient(90deg,#2b6cb0,#706eeb,#20a0d8)}
+  .hero-main{padding:var(--space-6)}
+  .title-cluster{display:flex;align-items:flex-start;gap:var(--space-3)}
+  .record-icon{width:42px;height:42px;border-radius:var(--radius-medium);display:grid;place-items:center;flex:0 0 auto;
+    background:linear-gradient(135deg,#5f7feb,#2b6cb0);color:#fff;font-weight:900;box-shadow:inset 0 0 0 1px rgba(255,255,255,.35)}
+  .kicker{font:var(--font-caption);color:var(--color-brand);margin-bottom:var(--space-1)}
+  .page-title-row{display:flex;align-items:flex-start;justify-content:space-between;gap:var(--space-4)}
+  h1{margin:0;font:var(--font-page-title)}
+  .lead{color:var(--color-text-secondary);margin:var(--space-2) 0 var(--space-4);max-width:74ch}
+  .badges{display:flex;gap:var(--space-2);flex-wrap:wrap}
+  .badge,.pill,.tag{display:inline-flex;align-items:center;gap:5px;border:1px solid var(--color-border);background:var(--color-surface-alt);
+    border-radius:999px;padding:5px 10px;font-size:12px;font-weight:800;color:var(--color-text-secondary)}
+  .badge.status-info{background:#eaf5ff;border-color:#b9dcff;color:#095da0}
+  .badge.status-success{background:#eaf7ee;border-color:#b7e1c1;color:#22683e}
+  .action-bar{display:flex;gap:var(--space-2);flex-wrap:wrap;margin-top:var(--space-4)}
+  .btn{display:inline-flex;align-items:center;justify-content:center;gap:var(--space-2);min-height:36px;border:1px solid var(--color-border);
+    border-radius:var(--radius-small);padding:0 var(--space-3);background:var(--color-surface);color:var(--color-text-primary);
+    text-decoration:none;font-weight:800;cursor:pointer;box-shadow:0 1px 1px rgba(10,31,68,.06)}
+  .btn:hover{border-color:#9bbde6;color:var(--color-brand);background:#f7fbff;box-shadow:0 2px 8px rgba(10,31,68,.10)}
+  .btn.primary{background:linear-gradient(180deg,#1677d2,#0b5cab);border-color:#084f99;color:#fff}
+  .btn.primary:hover{background:var(--color-brand-hover);color:#fff}
+  .btn.subtle{background:var(--color-surface-alt)}
+  .tabset{position:sticky;top:72px;z-index:50;background:var(--color-surface);border:1px solid var(--color-border);
+    border-radius:var(--radius-medium);box-shadow:var(--shadow-card);display:flex;gap:var(--space-1);padding:var(--space-1);overflow:auto}
+  .tabset a{white-space:nowrap;text-decoration:none;color:var(--color-text-secondary);font-weight:800;border-radius:var(--radius-small);padding:9px 12px}
+  .tabset a:hover{background:var(--color-brand-soft);color:var(--color-brand)}
+  section{scroll-margin-top:128px;margin-top:var(--space-4)}
+  .section-head{display:flex;align-items:flex-end;justify-content:space-between;gap:var(--space-4);margin-bottom:var(--space-3)}
+  h2{font:var(--font-section-title);margin:0;display:flex;align-items:center;gap:var(--space-2)}
+  h2 .dot{width:4px;height:18px;border-radius:999px;background:var(--color-brand)}
+  .sub{color:var(--color-text-muted);font-size:13px;margin:4px 0 0}
+  .card{padding:var(--space-4);margin-bottom:var(--space-3)}
+  .card:hover{box-shadow:0 2px 4px rgba(10,31,68,.10),0 12px 30px rgba(10,31,68,.08)}
+  #map{height:62vh;min-height:380px;max-height:560px;width:100%;border-radius:var(--radius-medium);border:1px solid var(--color-border);z-index:0;
+    background:linear-gradient(90deg,#eef2f7 25%,#f7f9fc 37%,#eef2f7 63%);background-size:400% 100%;animation:skeleton 1.25s ease-in-out infinite}
+  .mapfallback{height:100%;display:flex;align-items:center;justify-content:center;text-align:center;padding:24px;color:var(--color-text-secondary);background:#eef4f8}
+  .legend{display:flex;gap:14px;flex-wrap:wrap;margin-top:10px;font-size:13px;color:var(--color-text-secondary)}
+  .legend span{display:inline-flex;align-items:center;gap:6px}
+  .swatch{width:14px;height:14px;border-radius:50%;display:inline-block}
+  .routeline{width:22px;height:0;border-top:3px solid var(--color-danger);display:inline-block}
+  .pinindex{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+  .pinbtn{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--color-border);background:#fff;
+    border-radius:999px;padding:5px 11px 5px 6px;font-size:13px;font-weight:800;color:var(--color-text-primary);cursor:pointer}
+  .pinbtn:hover,.pinbtn.active{border-color:var(--color-danger);background:#fff4f2}
+  .pinbtn .num{width:20px;height:20px;border-radius:50%;background:var(--color-danger);color:#fff;font-size:12px;font-weight:800;
+    display:inline-flex;align-items:center;justify-content:center}
+  .pinbtn .num.hub{background:#16354a}
+  .pin{width:22px;height:22px;border-radius:50%;color:#fff;font-weight:800;font-size:12px;
+    display:flex;align-items:center;justify-content:center;border:2px solid #fff;box-shadow:0 2px 6px rgba(0,0,0,.35)}
+  .responsive-grid,.grid2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:var(--space-3)}
+  .access{display:grid;gap:10px}
+  .leg{display:grid;grid-template-columns:30px 1fr;gap:10px;padding:10px 0;border-bottom:1px dashed #e6ebee}
+  .leg:last-child{border-bottom:0}
+  .leg .ic{font-size:20px;text-align:center}
+  .leg .ttl{font-weight:800}
+  .leg .meta{font-size:13px;color:var(--color-text-secondary)}
+  .pillrow{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
+  .pill{text-decoration:none;background:#eef4f2;color:#27514a}
+  .pill.book{background:#eaf1f7;color:#1c537a}
+  .day{margin-bottom:14px}
+  .day h3{margin:0 0 12px;font-size:16px;color:var(--color-text-primary)}
+  .timeline{position:relative}
+  .stop{position:relative;padding:12px 0;border-bottom:1px solid #eef2f4}
+  .stop:last-child{border-bottom:0}
+  .stop .top{display:flex;gap:9px;align-items:baseline}
+  .stop .num{flex:0 0 auto;width:22px;height:22px;border-radius:50%;background:var(--color-danger);color:#fff;
+    font-size:12px;font-weight:800;display:inline-flex;align-items:center;justify-content:center;align-self:center}
+  .stop .num.hub{background:#16354a}
+  .stop .t{color:var(--color-brand);font-weight:800;font-variant-numeric:tabular-nums;min-width:46px}
+  .stop .p{font-weight:800}
+  .stop .hint{color:var(--color-text-muted);font-size:13px;margin-left:31px}
+  .movelink{margin:8px 0 2px 31px;display:inline-flex;align-items:center;gap:7px;font-size:13px;font-weight:700;
+    background:#f3f7f5;border:1px solid #e2ebe6;border-radius:10px;padding:5px 11px;color:#2f5a4c;text-decoration:none}
+  .mealgroup{margin-bottom:8px}
+  .mealgroup .when{font-weight:800;font-size:14px;color:var(--color-text-primary);margin:6px 2px 8px}
+  .item{border:1px solid var(--color-border);border-radius:var(--radius-medium);padding:var(--space-4);background:linear-gradient(180deg,#fff,#fbfdff);box-shadow:0 1px 1px rgba(10,31,68,.05)}
+  .item:hover{border-color:#9bbde6;box-shadow:var(--shadow-card);transform:translateY(-1px)}
+  .item .name{font-weight:800}
+  .item .price{font-weight:800;color:#123e5b;font-size:14px}
+  .item .hint{color:var(--color-text-muted);font-size:13px}
+  .tag{border-radius:var(--radius-small);padding:2px 7px;margin:0 6px 6px 0;color:#6a4a14;background:#fdf0d6}
+  .tag.sns{color:#8a2b6b;background:#fbe4f1}
+  .check-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:var(--space-3)}
+  .check-card{position:relative;border:1px solid #c7d8ea;border-radius:var(--radius-medium);padding:var(--space-4);
+    background:linear-gradient(180deg,#fff,#f8fbff);box-shadow:0 1px 1px rgba(10,31,68,.05)}
+  .check-card::before{content:"";position:absolute;left:0;top:0;bottom:0;width:4px;border-radius:var(--radius-medium) 0 0 var(--radius-medium);background:var(--color-warning)}
+  .check-label{font-size:12px;font-weight:850;color:var(--color-warning);margin-bottom:var(--space-1)}
+  .check-title{font-weight:850;color:var(--color-text-primary)}
+  .check-note{color:var(--color-text-muted);font-size:13px;margin-top:4px}
+  .check-status{display:inline-flex;margin-top:8px;border:1px solid #d9c6a0;background:#fff8ed;color:#7a4b00;border-radius:999px;padding:3px 8px;font-size:12px;font-weight:800}
+  .budget-card{padding:0;overflow:hidden}
+  .budget-head{display:flex;justify-content:space-between;gap:var(--space-4);align-items:flex-start;padding:var(--space-4);
+    background:linear-gradient(180deg,#f7fbff,#eef5ff);border-bottom:1px solid var(--color-border)}
+  .budget-head h3{margin:2px 0 0;font:var(--font-section-title)}
+  .budget-total{min-width:180px;border:1px solid #b9d6f4;background:#fff;border-radius:var(--radius-medium);padding:var(--space-3);text-align:right;
+    box-shadow:0 1px 2px rgba(10,31,68,.06)}
+  .budget-total span{display:block;color:var(--color-text-muted);font-size:11px;font-weight:750}
+  .budget-total b{display:block;color:var(--color-brand-deep);font-size:20px;line-height:1.2;margin-top:2px}
+  .budget-table-wrap{padding:var(--space-3);overflow-x:auto}
+  table{width:100%;border-collapse:separate;border-spacing:0;font-size:14px}
+  th,td{padding:12px 12px;border-bottom:1px solid #e3eaf5;text-align:left;vertical-align:top}
+  th{background:#f4f8fd;color:#314763;font-size:12px;font-weight:800}
+  th:first-child{border-top-left-radius:var(--radius-small)}
+  th:last-child{border-top-right-radius:var(--radius-small)}
+  tbody tr:hover td{background:#f8fbff}
+  td.r{text-align:right;font-variant-numeric:tabular-nums;font-weight:800;color:var(--color-brand-deep)}
+  .total-row td{background:#edf5ff!important;border-top:2px solid #9bbde6;border-bottom:0;font-weight:900}
+  .total-row td:first-child{border-bottom-left-radius:var(--radius-small)}
+  .total-row td:last-child{border-bottom-right-radius:var(--radius-small)}
+  .todo{list-style:none;padding:0;margin:0}
+  .todo li{padding:8px 0;border-bottom:1px solid #eef2f4}
+  .todo.book li:before{content:"□";color:var(--color-brand);font-weight:800;margin-right:6px}
+  .todo.decide li:before{content:"•";color:var(--color-warning);font-weight:800;margin-right:6px}
+  .twohead{font-weight:800;margin:2px 0 6px;font-size:14px}
+  .empty-state{border:1px dashed var(--color-border);border-radius:var(--radius-medium);background:var(--color-surface-alt);padding:var(--space-6);color:var(--color-text-muted);text-align:center}
+  .toast{position:fixed;right:var(--space-4);bottom:var(--space-4);z-index:var(--z-toast);background:#17324d;color:#fff;border-radius:var(--radius-medium);
+    box-shadow:var(--shadow-popover);padding:var(--space-3) var(--space-4);font-weight:800;opacity:0;transform:translateY(10px);pointer-events:none;transition:.18s ease}
+  .toast.show{opacity:1;transform:translateY(0)}
+  footer{margin-top:34px;color:var(--color-text-muted);font-size:12px;text-align:center}
+  @keyframes skeleton{0%{background-position:100% 0}100%{background-position:0 0}}
+  @media(max-width:1120px){
+    .shell-body{grid-template-columns:190px minmax(0,1fr)}
+    .summary-panel{position:static;grid-column:2}
+  }
+  @media(max-width:760px){
+    body{background:linear-gradient(180deg,#fff 0,#fff 56px,#0b5cab 56px,#276f9f 170px,#eef4fb 170px,#eef4fb 100%)}
+    .app-shell::before{top:56px;height:132px}
+    .global-header{position:relative;height:56px;min-height:56px;padding:0 12px;gap:8px}
+    .brand-home{gap:8px;min-width:0}
+    .brand-title{font-size:14px;line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .global-actions{margin-left:auto;flex:0 0 auto;max-width:44%;overflow:visible}
+    .global-actions a:not(.back-link){display:none}
+    .global-actions .back-link{min-height:34px;padding:0 9px;font-size:12px}
+    .shell-body{display:block;padding:14px 12px 12px}
+    .side-nav{display:none}
+    .summary-panel{margin-top:var(--space-3)}
+    .hero-main{padding:var(--space-4)}
+    .title-cluster{gap:var(--space-2)}
+    .record-icon{width:36px;height:36px}
+    .page-title-row{display:block}
+    .tabset{top:0}
+    .responsive-grid,.grid2,.check-grid{grid-template-columns:1fr}
+    table,thead,tbody,tr,th,td{display:block}
+    thead{display:none}
+    .budget-head{display:grid}
+    .budget-total{text-align:left;min-width:0}
+    tr{border:1px solid var(--color-border);border-radius:var(--radius-medium);padding:var(--space-2);margin-bottom:var(--space-2);background:#fff}
+    td{border:0;display:grid;grid-template-columns:96px 1fr;gap:var(--space-2)}
+    td:before{content:attr(data-label);font-weight:800;color:var(--color-text-muted)}
+    td.r{text-align:left}
+    #map{min-height:320px;height:52vh}
+  }
+  @media(prefers-reduced-motion:reduce){
+    html{scroll-behavior:auto}
+    *,*::before,*::after{animation:none!important;transition:none!important}
+  }
+</style>
+</head>
+<body>
+<div class="app-shell">
+  <header class="global-header">
+    <a class="brand-home" href="share_report.html" aria-label="共有レポートトップへ">
+      <div class="brand-mark" aria-hidden="true">T</div>
+      <div class="brand-title">Travel Planning Console</div>
+    </a>
+    <nav class="global-actions" aria-label="クイックリンク">
+      <a class="back-link" href="share_report.html">共有レポート</a>
+      <a href="#route">地図</a>
+      <a href="#itinerary">行程</a>
+      <a href="#checks">先読み</a>
+      <a href="#budget">費用</a>
+      <a href="#next">予約</a>
+    </nav>
+  </header>
+
+  <div class="shell-body">
+    <nav class="side-nav" aria-label="セクションナビ">
+      <p class="side-nav-title">ページ内ナビ</p>
+      <a href="#route">ルート</a>
+      <a href="#access">アクセス</a>
+      <a href="#itinerary">行程</a>
+      <a href="#meals">食事</a>
+      <a href="#activities">アクティビティ</a>
+      <a href="#checks">先読みチェック</a>
+      <a href="#budget">費用</a>
+      <a href="#next">予約ToDo</a>
+    </nav>
+
+<main class="main-content" id="main-content">
+  <header class="hero">
+    <div class="hero-main">
+    <div class="page-title-row">
+      <div class="title-cluster">
+        <div class="record-icon" aria-hidden="true">旅</div>
+        <div>
+          <div class="kicker">9/21-9/27・5泊7日</div>
+          <h1>Plan A｜下旬① 黄金カラマツ名所凝縮</h1>
+        </div>
+      </div>
+    </div>
+    <p class="lead">短めの日程で、レイクルイーズ、モレーンレイク、Icefields Parkway、ヨーホー、バンフ展望を一気に回る黄葉狙いの凝縮プランです。</p>
+    <div class="badges"><span class="badge">🗓 5泊7日</span><span class="badge">🍁 黄葉狙い</span><span class="badge">🏨 Banff中心部5泊</span><span class="badge">💰 約120〜165万円/2名</span></div>
+    <div class="action-bar" aria-label="主要アクション">
+      <a class="btn subtle" href="share_report.html">共有レポートへ戻る</a>
+      <a class="btn primary" href="#next">予約前チェックを見る</a>
+      <a class="btn" href="#map">地図を確認</a>
+      <a class="btn" href="#checks">先読みチェック</a>
+      <a class="btn" href="#budget">費用を見る</a>
+    </div>
+    </div>
+  </header>
+
+  <nav class="tabset" aria-label="レポートタブ">
+    <a href="#route">概要</a>
+    <a href="#itinerary">行程</a>
+    <a href="#meals">食事</a>
+    <a href="#activities">体験</a>
+    <a href="#stay">宿</a>
+    <a href="#checks">先読み</a>
+    <a href="#budget">費用</a>
+    <a href="#next">予約</a>
+  </nav>
+
+  <section id="route">
+    <h2><span class="dot"></span>ルート地図</h2>
+    <p class="sub">番号順に巡るルート。赤い線が実際の移動経路です。</p>
+    <div id="map"></div>
+    <div class="legend">
+      <span><i class="routeline"></i>順路</span>
+      <span><i class="swatch" style="background:#16354a"></i>集合・拠点</span>
+      <span><i class="swatch" style="background:#d23b2c"></i>観光スポット</span>
+      <span><i class="swatch" style="background:#b07d24"></i>食事の街</span>
+    </div>
+    <div class="pinindex" id="pinindex"></div>
+    <p class="sub" style="margin-top:8px">番号をタップすると、地図のその場所に移動します。</p>
+  </section>
+
+  <section id="access">
+    <h2><span class="dot"></span>行き帰りのアクセス</h2>
+    <p class="sub">東京から成田発の直行便でカルガリーへ。到着後は空港シャトルでバンフに入り、湖・氷原方面はシャトルまたは現地発ツアーを使います。</p>
+    <div class="card"><div class="twohead">往路・現地移動</div><div class="access" id="acc-a"></div></div>
+    <div class="card"><div class="twohead">復路</div><div class="access" id="acc-b"></div></div>
+  </section>
+
+  <section id="itinerary">
+    <h2><span class="dot"></span>行程</h2>
+    <p class="sub">番号は上の地図のピンと同じ順番です。スポット名は地図リンク、区間の「🚗 ◯分」は経路に飛びます。</p>
+    <div id="days"></div>
+  </section>
+
+  <section id="meals">
+    <h2><span class="dot"></span>食事候補</h2>
+    <p class="sub">タイミング別の候補。気分と予約状況で選べます。</p>
+    <div id="meal-list"></div>
+  </section>
+
+  <section id="activities">
+    <h2><span class="dot"></span>アクティビティ候補</h2>
+    <p class="sub">行程に入れるかを相談しやすい体験候補です。天気・体力・予約状況で選べます。</p>
+    <div class="grid2" id="activity-list"></div>
+  </section>
+
+  <section id="other">
+    <h2><span class="dot"></span>他にもおすすめのスポット</h2>
+    <p class="sub">天気や気分で順路に足せる候補です。</p>
+    <div class="grid2" id="other-list"></div>
+  </section>
+
+  <section id="car">
+    <h2><span class="dot"></span>現地交通・ツアー</h2>
+    <p class="sub">今回はレンタカーなし。YYC〜Banffは空港シャトル、湖・氷原・ヨーホー方面はシャトルまたは現地発ツアーで組みます。</p>
+    <div class="grid2" id="car-list"></div>
+  </section>
+
+  <section id="stay">
+    <h2><span class="dot"></span>宿</h2>
+    <p class="sub">基本はバンフ中心部泊が便利。費用を抑える場合だけCanmoreも比較しますが、レンタカーなしでは移動負荷に注意です。</p>
+    <div class="grid2" id="stay-list"></div>
+  </section>
+
+  <section id="checks">
+    <h2><span class="dot"></span>先読みチェック</h2>
+    <p class="sub">予約前に見落としやすい費用・リスク・代替案です。</p>
+    <div class="check-grid" id="check-list"></div>
+  </section>
+
+  <section id="budget">
+    <h2><span class="dot"></span>費用のめやす（2名合計）</h2>
+    <div class="card budget-card">
+      <div class="budget-head">
+        <div>
+          <p class="summary-title">費用サマリー</p>
+          <h3>2名合計の概算</h3>
+        </div>
+        <div class="budget-total">
+          <span>合計めやす</span>
+          <b id="budget-total-pill">-</b>
+        </div>
+      </div>
+      <div class="budget-table-wrap"><table id="budget-table"></table></div>
+    </div>
+  </section>
+
+  <section id="next">
+    <h2><span class="dot"></span>これから決める・予約すること</h2>
+    <div class="card"><div class="twohead">予約するもの</div><ul class="todo book" id="book-list"></ul></div>
+    <div class="card"><div class="twohead">グループで決めること（まだ未確定）</div><ul class="todo decide" id="decide-list"></ul></div>
+  </section>
+
+  <footer>所要時間・便は作成時点の各社公式時刻表・地図経路に基づくめやすです。</footer>
+</main>
+
+    <aside class="summary-panel" aria-label="旅の要点">
+      <div>
+        <p class="summary-title">旅の要点</p>
+        <div class="summary-grid">
+          <div class="summary-metric"><span>日数</span><b id="summary-days">-</b></div>
+          <div class="summary-metric"><span>訪問地</span><b id="summary-spots">-</b></div>
+          <div class="summary-metric"><span>食事候補</span><b id="summary-meals">-</b></div>
+          <div class="summary-metric"><span>確認項目</span><b id="summary-checks">-</b></div>
+          <div class="summary-metric"><span>予約項目</span><b id="summary-todos">-</b></div>
+        </div>
+      </div>
+      <div class="utility-links">
+        <p class="summary-title">すぐ確認</p>
+        <a href="share_report.html">レポートトップへ</a>
+        <a href="#route">ルート地図</a>
+        <a href="#itinerary">当日の流れ</a>
+        <a href="#checks">先読みチェック</a>
+        <a href="#budget">費用のめやす</a>
+        <a href="#next">これから決めること</a>
+      </div>
+    </aside>
+  </div>
+</div>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+  integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+<script>
+/* =================== DATA（ここだけ案件ごとに差し替える） =================== */
+const G  = (from,to)=>`https://www.google.com/maps/dir/?api=1&origin=${encodeURIComponent(from)}&destination=${encodeURIComponent(to)}&travelmode=driving`;
+const Gt = (from,to)=>`https://www.google.com/maps/dir/?api=1&origin=${encodeURIComponent(from)}&destination=${encodeURIComponent(to)}&travelmode=transit`;
+const M  = q => `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(q)}`;
+const mapSpots = [{"n":1,"name":"成田空港 NRT","short":"成田","lat":35.772,"lng":140.3929,"kind":"hub","time":"WS81/WS80"},{"n":2,"name":"カルガリー国際空港 YYC","short":"YYC","lat":51.1215,"lng":-114.0076,"kind":"hub","time":"空港シャトル接続"},{"n":3,"name":"バンフ中心部 / Banff Avenue","short":"バンフ","lat":51.1784,"lng":-115.5708,"kind":"hub","time":"宿泊・食事拠点"},{"n":4,"name":"レイクルイーズ湖畔","short":"Lake Louise","lat":51.4165,"lng":-116.2127,"kind":"spot","time":"湖畔散策"},{"n":5,"name":"モレーンレイク / Rockpile","short":"Moraine","lat":51.3275,"lng":-116.1818,"kind":"spot","time":"湖畔・黄葉"},{"n":6,"name":"Bow Lake / Peyto Lake","short":"Bow/Peyto","lat":51.7171,"lng":-116.5153,"kind":"spot","time":"Icefields Parkway"},{"n":7,"name":"Columbia Icefield","short":"Icefield","lat":52.2203,"lng":-117.2248,"kind":"spot","time":"氷原ツアー"},{"n":8,"name":"Emerald Lake / Yoho National Park","short":"Yoho","lat":51.4392,"lng":-116.5414,"kind":"spot","time":"日帰り候補"},{"n":9,"name":"Banff Gondola / Upper Hot Springs","short":"Gondola","lat":51.148,"lng":-115.5555,"kind":"spot","time":"展望・温泉"}];
+const foodTowns = [{"name":"Banff Avenue 飲食エリア","lat":51.1767,"lng":-115.5716},{"name":"Lake Louise Village","lat":51.4254,"lng":-116.1773}];
+const access = {"a":[{"ic":"✈️","ttl":"成田 -> カルガリー","meta":"WestJet WS81 成田18:30発 -> カルガリー12:40着。同日着・直行約9時間10分。受託手荷物・座席指定込みの総額で確認。","pills":[{"cls":"book","label":"WestJet","url":"https://www.westjet.com/"}]},{"ic":"🚌","ttl":"YYC -> バンフ","meta":"Banff Airporter目安: 往復CAD169.80/人。2人往復は約CAD339.60+税等。到着後は14:00〜15:00台を候補。","pills":[{"cls":"book","label":"Banff Airporter","url":"https://banffairporter.com/rates/"}]},{"ic":"🚌","ttl":"湖・氷原・ヨーホー方面","meta":"レイクルイーズ/モレーンレイクはRoam・Parks Canadaシャトルか現地発ツアー。氷原・ヨーホー・カナナスキスは日帰りツアーが現実的。","pills":[{"cls":"book","label":"Roam Transit","url":"https://roamtransit.com/fares/"},{"cls":"book","label":"Parks Canada Shuttle","url":"https://parks.canada.ca/pn-np/ab/banff/visit/parkbus/louise"}]}],"b":[{"ic":"🚌","ttl":"バンフ -> YYC","meta":"復路WS80は14:00発。9:30前後バンフ発、11:30前後YYC着を目安にして遅延余白を確保。","pills":[{"cls":"book","label":"Banff Airporter","url":"https://banffairporter.com/"}]},{"ic":"✈️","ttl":"カルガリー -> 成田","meta":"WestJet WS80 カルガリー14:00発 -> 成田翌16:30着。帰国日は日本到着のみ。","pills":[{"cls":"book","label":"WestJet","url":"https://www.westjet.com/"}]}]};
+const days = [{"label":"Day 1｜9/21(月)｜成田からカルガリー、バンフ入り","stops":[{"t":"16:00","p":"成田空港に到着","hint":"チェックイン、受託手荷物、夕方便前の軽食。","num":1,"kind":"hub","url":"https://www.google.com/maps/search/?api=1&query=Narita+Airport"},{"t":"18:30","p":"WS81 成田発","hint":"直行約9時間10分。機内で到着後のシャトル予約を再確認。","move":{"ic":"✈️","label":"NRT -> YYC","url":"https://www.westjet.com/"}},{"t":"12:40","p":"カルガリー到着","hint":"入国・荷物で60〜90分を見る。","num":2,"kind":"hub","url":"https://www.google.com/maps/search/?api=1&query=Calgary+International+Airport"},{"t":"14:30","p":"Banff Airporterでバンフへ","hint":"2人往復目安CAD339.60+税等。","move":{"ic":"🚌","label":"約2h","url":"https://banffairporter.com/rates/"}},{"t":"16:30","p":"Banff Avenue徒歩圏ホテルにチェックイン","hint":"5泊。ツアー集合・夕食の負荷を減らすため中心部優先。","num":3,"kind":"hub","url":"https://www.google.com/maps/search/?api=1&query=Banff+Avenue"},{"t":"18:30","p":"夕食: Farm & Fire","hint":"初日は時差があるのでホテル近場。CAD90〜150/2人目安。","url":"https://www.google.com/maps/search/?api=1&query=Farm+and+Fire+Banff"}]},{"label":"Day 2｜9/22(火)｜レイクルイーズとモレーンレイク黄葉","stops":[{"t":"06:45","p":"朝食: Wild Flour Bakery","hint":"CAD20〜35/2人。ツアー前に軽く。","url":"https://www.google.com/maps/search/?api=1&query=Wild+Flour+Bakery+Banff"},{"t":"07:45","p":"Banff発ツアーまたはRoam/Parksシャトル","hint":"下旬は予約枠が重要。ツアーならCAD280〜440/2人目安。","move":{"ic":"🚌","label":"約1.5h","url":"https://parks.canada.ca/pn-np/ab/banff/visit/parkbus/louise"}},{"t":"09:30","p":"レイクルイーズ湖畔","hint":"湖畔散策30〜60分。朝は冷えるので防寒。","num":4,"url":"https://www.google.com/maps/search/?api=1&query=Lake+Louise+Lakeshore"},{"t":"11:30","p":"モレーンレイク / Rockpile","hint":"黄葉本命。Rockpileは短時間でも満足度が高い。","num":5,"url":"https://www.google.com/maps/search/?api=1&query=Moraine+Lake+Rockpile"},{"t":"13:00","p":"昼食: Lakeview Loungeまたは軽食","hint":"予約が難しければThe Guide's Pantryや持参軽食。CAD40〜140/2人。","url":"https://www.google.com/maps/search/?api=1&query=Lakeview+Lounge+Lake+Louise"},{"t":"16:30","p":"バンフ帰着、休憩","hint":"夜に詰め込みすぎない。"},{"t":"18:30","p":"夕食: Block Kitchen + Bar","hint":"CAD90〜150/2人。予約推奨。","url":"https://www.google.com/maps/search/?api=1&query=Block+Kitchen+Bar+Banff"}]},{"label":"Day 3｜9/23(水)｜Icefields ParkwayとColumbia Icefield","stops":[{"t":"06:30","p":"ホテル発 / 日帰りツアー集合","hint":"長距離日。朝食は前日購入でも良い。"},{"t":"09:00","p":"Bow Lake","hint":"写真ストップ。天候で滞在短縮あり。","num":6,"url":"https://www.google.com/maps/search/?api=1&query=Bow+Lake"},{"t":"10:00","p":"Peyto Lake Viewpoint","hint":"青い湖の俯瞰。防寒・風対策。","url":"https://www.google.com/maps/search/?api=1&query=Peyto+Lake+Viewpoint"},{"t":"12:30","p":"Columbia Icefield","hint":"Banff発ツアーはCAD600〜900/2人目安。氷河上体験は天候次第。","num":7,"url":"https://www.google.com/maps/search/?api=1&query=Columbia+Icefield+Adventure"},{"t":"13:30","p":"昼食: Icefield Centre","hint":"CAD45〜80/2人。混雑するので軽食持参も安全。"},{"t":"19:00","p":"バンフ帰着","hint":"かなり疲れる日。夕食はホテル近くで軽め。"}]},{"label":"Day 4｜9/24(木)｜ヨーホー国立公園","stops":[{"t":"08:00","p":"Banff発 Yoho日帰りツアー","hint":"公共交通だけでは組みにくい。CAD360〜560/2人目安。"},{"t":"09:30","p":"Natural Bridge","hint":"短時間で見やすいスポット。","url":"https://www.google.com/maps/search/?api=1&query=Natural+Bridge+Yoho"},{"t":"10:30","p":"Emerald Lake","hint":"小雨でも雰囲気が出る湖。散策45〜90分。","num":8,"url":"https://www.google.com/maps/search/?api=1&query=Emerald+Lake+Yoho"},{"t":"12:30","p":"昼食: Fieldまたはツアー軽食","hint":"CAD45〜80/2人目安。"},{"t":"14:00","p":"Takakkaw Falls","hint":"道路・積雪状況で差し替えあり。","url":"https://www.google.com/maps/search/?api=1&query=Takakkaw+Falls"},{"t":"18:30","p":"夕食: Tooloulou'sまたはFarm & Fire","hint":"翌日に備えて近場。CAD80〜150/2人。"}]},{"label":"Day 5｜9/25(金)｜Banff展望・温泉・街歩き","stops":[{"t":"08:30","p":"朝食: Tooloulou's","hint":"CAD45〜70/2人。"},{"t":"10:00","p":"Banff Gondola","hint":"動的料金CAD150〜220/2人目安。晴天日に回す。","num":9,"url":"https://www.google.com/maps/search/?api=1&query=Banff+Gondola"},{"t":"12:00","p":"昼食: Sky Bistro","hint":"眺望重視。CAD150〜240/2人。","url":"https://www.google.com/maps/search/?api=1&query=Sky+Bistro+Banff"},{"t":"14:30","p":"Upper Hot Springs","hint":"CAD39.50/2人目安。水着・タオル確認。","url":"https://www.google.com/maps/search/?api=1&query=Banff+Upper+Hot+Springs"},{"t":"16:30","p":"Bow FallsまたはBanff Avenue","hint":"最後の買い物・散歩。","url":"https://www.google.com/maps/search/?api=1&query=Bow+Falls+Banff"},{"t":"19:00","p":"夕食: 予約済みの近場店","hint":"Block / Farm & Fire / Bridgette Bar Calgary系から体調に合わせる。"}]},{"label":"Day 6｜9/26(土)｜帰国便へ","stops":[{"t":"08:00","p":"朝食・チェックアウト","hint":"シャトル時刻に合わせて余裕を作る。"},{"t":"09:30","p":"Banff AirporterでYYCへ","hint":"11:30前後着目安。遅延余白あり。","move":{"ic":"🚌","label":"約2h","url":"https://banffairporter.com/"}},{"t":"14:00","p":"WS80 カルガリー発","hint":"成田へ翌日着。","num":2,"kind":"hub","url":"https://www.google.com/maps/search/?api=1&query=Calgary+International+Airport"}]},{"label":"Day 7｜9/27(日)｜成田着","stops":[{"t":"16:30","p":"成田到着","hint":"日本到着日。","num":1,"kind":"hub","url":"https://www.google.com/maps/search/?api=1&query=Narita+Airport"}]}];
+const meals = [{"when":"バンフ朝食・ツアー前","items":[{"name":"Wild Flour Bakery","url":"https://www.google.com/maps/search/?api=1&query=Wild+Flour+Bakery+Banff","price":"CAD20〜35/2人","hint":"ツアー前にパン・コーヒーを拾いやすい。"},{"name":"Tooloulou's","url":"https://www.google.com/maps/search/?api=1&query=Tooloulou%27s+Banff","price":"CAD45〜70/2人","hint":"ブランチ寄り。移動の少ない日に向く。"},{"name":"Good Earth Coffeehouse","url":"https://www.google.com/maps/search/?api=1&query=Good+Earth+Coffeehouse+Banff","price":"CAD25〜45/2人","hint":"早朝の軽食候補。"}]},{"when":"湖・長距離ツアー日の昼","items":[{"name":"The Guide's Pantry","url":"https://www.google.com/maps/search/?api=1&query=The+Guide%27s+Pantry+Lake+Louise","price":"CAD35〜60/2人","hint":"湖畔で軽く済ませる候補。"},{"name":"Lakeview Lounge","url":"https://www.google.com/maps/search/?api=1&query=Lakeview+Lounge+Lake+Louise","price":"CAD80〜140/2人","hint":"景色優先。予約・混雑は要確認。"},{"name":"ツアー昼食 / Icefield Centre","url":"https://www.google.com/maps/search/?api=1&query=Columbia+Icefield+Discovery+Centre+food","price":"CAD45〜80/2人","hint":"氷原日は時間固定になりやすいので軽食で崩さない。"}]},{"when":"バンフ夕食","items":[{"name":"Farm & Fire","url":"https://www.google.com/maps/search/?api=1&query=Farm+and+Fire+Banff","price":"CAD90〜150/2人","hint":"初日・最終夜に使いやすい中心部候補。"},{"name":"Block Kitchen + Bar","url":"https://www.google.com/maps/search/?api=1&query=Block+Kitchen+Bar+Banff","price":"CAD90〜150/2人","hint":"2名で小皿シェアしやすい。予約推奨。","tag":"予約推奨"},{"name":"Sky Bistro","url":"https://www.google.com/maps/search/?api=1&query=Sky+Bistro+Banff+Gondola","price":"CAD150〜240/2人","hint":"ゴンドラ日と合わせる特別枠。天気が良い日に。"}]}];
+const activities = [{"name":"Lake Louise + Moraine Lake","url":"https://parks.canada.ca/pn-np/ab/banff/visit/parkbus/louise","price":"公共交通なら約CAD50〜90/2人、Banff発ツアーなら約CAD280〜440/2人","hint":"全プランの核。下旬は黄葉、上旬は湖色と山岳景色。","tag":"必須級"},{"name":"Columbia Icefield / Icefields Parkway","url":"https://www.banffjaspercollection.com/attractions/columbia-icefield-adventure/","price":"Banff発日帰り目安CAD600〜900/2人","hint":"Bow Lake、Peyto Lake、氷原をまとめる大物日。"},{"name":"Banff Gondola","url":"https://www.banffjaspercollection.com/attractions/banff-gondola/","price":"動的料金目安CAD150〜220/2人","hint":"天気が良い日の展望枠。低雲なら温泉や街歩きへ変更。"},{"name":"Banff Upper Hot Springs","url":"https://parks.canada.ca/voyage-travel/promotion/sources-springs/banff","price":"CAD39.50/2人目安","hint":"寒い日・長距離ツアー後の回復枠。"},{"name":"Yoho National Park day tour","url":"https://parks.canada.ca/pn-np/bc/yoho","price":"CAD360〜560/2人目安","hint":"Plan Aでは4日目に固定。悪天候ならBanff近場へ差し替え。"}];
+const other = [{"name":"Cave and Basin","url":"https://www.google.com/maps/search/?api=1&query=Cave+and+Basin+Banff","hint":"雨天時の差し替え。"},{"name":"Banff Avenue","url":"https://www.google.com/maps/search/?api=1&query=Banff+Avenue","hint":"夕食・買い物・カフェ。"},{"name":"Lake Agnes Tea House","url":"https://www.google.com/maps/search/?api=1&query=Lake+Agnes+Tea+House","hint":"体力があり天候が良ければLake Louise日に追加。営業要確認。"}];
+const cars = [{"name":"Banff Airporter 往復","url":"https://banffairporter.com/rates/","price":"CAD339.60/2人往復+税等","hint":"YYC〜Banffの基本線。復路はWS80に合わせて朝便。","tag":"空港シャトル"},{"name":"Roam Transit","url":"https://roamtransit.com/fares/","price":"町内CAD2/人、Lake Louise方面は路線別","hint":"バンフ町内、レイクルイーズ方面、ゴンドラ接続で利用。","tag":"路線バス"},{"name":"Parks Canada Lake Louise / Moraine Shuttle","url":"https://parks.canada.ca/pn-np/ab/banff/visit/parkbus/louise","price":"成人CAD12.75/人+予約料目安","hint":"モレーンレイクは自家用車不可。Banff発ツアーとの比較対象。","tag":"湖アクセス"},{"name":"Yoho日帰りツアー","url":"https://www.google.com/maps/search/?api=1&query=Banff+Yoho+day+tour+Emerald+Lake","price":"CAD360〜560/2人目安","hint":"Plan Aの4日目。道路・天候で代替あり。","tag":"日帰り"}];
+const stays = [{"name":"第一候補: Banff Avenue徒歩圏","url":"https://www.booking.com/city/ca/banff.html","price":"5泊 CAD2,300〜3,800/1室目安","hint":"レンタカーなしなら最優先。ツアーピックアップ、夕食、買い物の負荷が低い。"},{"name":"第二候補: Banff Inn / Tunnel Mountain寄り","url":"https://www.google.com/maps/search/?api=1&query=Banff+hotels+Tunnel+Mountain","price":"中心部より少し安い場合あり","hint":"徒歩・Roamで中心部へ出る前提。夜の帰りや寒さを考えて距離を見る。"},{"name":"節約候補: Canmore","url":"https://www.google.com/maps/search/?api=1&query=Canmore+hotels","price":"Banffより安いことがある","hint":"車なしでは毎日の移動が重くなるため、宿代差が大きい時だけ比較。"},{"name":"下旬の予約メモ","url":"https://www.expedia.co.jp/","price":"税・手数料込みで比較","hint":"キャンセル無料期限、朝食有無、シャトル集合場所までの距離を同時に見る。"}];
+const budget = [["航空券","約43.6万円","WestJet直行 218,181円/人×2。最新運賃要確認。"],["宿泊","約27.6〜45.6万円","Banff中心部5泊1室。CAD2,300〜3,800目安。"],["空港シャトル","約4.1〜5.0万円","Banff Airporter 2人往復CAD339.60+税等。"],["現地交通・ツアー","約25〜38万円","湖、氷原、Yoho、Gondola、温泉、Roam/Parks Canada。"],["食事・カフェ","約17〜25万円","5泊分。昼軽め、夕食2〜3回予約想定。"],["eTA・保険・公園入園","約5〜8万円","eTA CAD14、保険、Banff入園料など。"],["合計めやす","約120〜165万円","CAD1=約120円の仮置き。航空券・宿・ツアー・為替は予約前に再確認。"]];
+const foresightList = [{"category":"入国","title":"eTAとパスポート","status":"予約前に確認","note":"カナダeTAは公式申請CAD7/人。パスポート残存期間と航空券の氏名表記を合わせる。","url":"https://www.canada.ca/en/immigration-refugees-citizenship/services/visit-canada/eta.html"},{"category":"航空券","title":"WestJet直行便の総額","status":"要再検索","note":"表示額、受託手荷物、座席指定、変更料、決済手数料まで含めて2名合計で見る。"},{"category":"宿","title":"Banff中心部の在庫とキャンセル条件","status":"要確認","note":"レンタカーなしなので、安さだけで郊外に寄せると毎日の移動負荷が増える。税・手数料込みで比較。"},{"category":"湖アクセス","title":"Lake Louise / Moraineの予約枠","status":"早めに確認","note":"モレーンレイクは自家用車不可。Roam/Parks CanadaシャトルかBanff発ツアーを先に押さえる。"},{"category":"天候","title":"9月の寒暖差と初雪","status":"服装準備","note":"下旬は高標高で初雪・凍結・強風の可能性。防寒・防水・手袋・帽子を用意。"},{"category":"保険","title":"海外旅行保険","status":"加入推奨","note":"山岳エリア、遅延、キャンセル、医療費を考えて補償内容を確認。"},{"category":"為替","title":"CAD為替と海外決済手数料","status":"変動","note":"CAD1=約120円の仮置き。航空券・宿・ツアー・為替は予約前に再確認。"},{"category":"黄葉","title":"9/25前後の混雑","status":"早め予約","note":"Plan Aは黄葉本命日程。湖シャトル、宿、夕食予約の競争が強い。"}];
+const bookList = [{"label":"WestJet Plan A日程","url":"https://www.westjet.com/"},{"label":"Banff中心部5泊の宿","url":"https://www.booking.com/city/ca/banff.html"},{"label":"Lake Louise / Moraine Lakeアクセス","url":"https://parks.canada.ca/pn-np/ab/banff/visit/parkbus/louise"},{"label":"Columbia Icefield day tour","url":"https://www.banffjaspercollection.com/attractions/columbia-icefield-adventure/"},{"label":"Yoho day tour","url":"https://www.google.com/maps/search/?api=1&query=Banff+Yoho+day+tour+Emerald+Lake"},{"label":"Farm & Fire / Block夕食予約","url":"https://www.google.com/maps/search/?api=1&query=Farm+and+Fire+Banff"}];
+const decideList = ["短い日程なので、悪天候時にYohoを削ってBanff近場へ寄せるか。","Lake/Moraineを公共シャトルで安くするか、Banff発ツアーで楽にするか。","Sky Bistroを入れるなら天気の良い日に動かす。"];
+/* =================== /DATA =================== */
+
+
+/* =================== 描画（触らない） =================== */
+function colorOf(k){return k==="hub"?"#16354a":"#d23b2c";}
+function pinIcon(n,color){return L.divIcon({className:"",iconSize:[22,22],iconAnchor:[11,11],
+  html:`<div class="pin" style="background:${color}">${n}</div>`});}
+
+// ピンは実在地に置く。完全同座標の地点だけ約400m離す（拡大時に2つと分かるため）。
+function spread(items,thr=0.0015,r=0.004){
+  const placed=[];
+  return items.map(s=>{
+    let lat=s.lat,lng=s.lng,k=0;
+    while(placed.some(p=>Math.hypot(p[0]-lat,p[1]-lng)<thr)&&k<8){
+      const a=k*Math.PI/3; lat=s.lat+r*Math.sin(a); lng=s.lng+r*Math.cos(a); k++;
+    }
+    placed.push([lat,lng]);
+    return Object.assign({},s,{dlat:lat,dlng:lng});
+  });
+}
+const spots = spread(mapSpots);
+const markers={};
+let routeMap=null;
+
+function showToast(message){
+  const toast=document.getElementById("toast");
+  if(!toast)return;
+  toast.textContent=message;
+  toast.classList.add("show");
+  clearTimeout(showToast._timer);
+  showToast._timer=setTimeout(()=>toast.classList.remove("show"),2200);
+}
+
+function emptyState(label){
+  return `<div class="empty-state">${label}</div>`;
+}
+
+function populateSummary(){
+  const set=(id,value)=>{ const el=document.getElementById(id); if(el)el.textContent=value; };
+  set("summary-days", `${days.length}日`);
+  set("summary-spots", `${spots.length}件`);
+  set("summary-meals", `${meals.reduce((sum,g)=>sum+(g.items||[]).length,0)}件`);
+  set("summary-checks", `${(foresightList||[]).length}件`);
+  set("summary-todos", `${(bookList||[]).length}件`);
+}
+
+document.querySelectorAll(".side-nav a,.tabset a").forEach(link=>{
+  link.addEventListener("click",()=>showToast(`${link.textContent.trim()}を開きます`));
+});
+
+function initMap(){
+  const mapEl=document.getElementById("map");
+  if(!window.L){
+    mapEl.innerHTML='<div class="mapfallback">地図を読み込み中です。表示されない場合は通信環境を確認してください。</div>';
+    return;
+  }
+  mapEl.style.animation="none";
+  routeMap = L.map("map",{scrollWheelZoom:false});
+  L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",{maxZoom:18,attribution:'&copy; OpenStreetMap contributors'}).addTo(routeMap);
+  const latlngs = spots.map(s=>[s.dlat,s.dlng]);
+  L.polyline(latlngs,{color:"#d23b2c",weight:4,opacity:.9,lineJoin:"round"}).addTo(routeMap);
+  spots.forEach(s=>{ markers[s.n]=L.marker([s.dlat,s.dlng],{icon:pinIcon(s.n,colorOf(s.kind))}).addTo(routeMap).bindPopup(`<b>${s.n}. ${s.name}</b><br>${s.time}`); });
+  foodTowns.forEach(f=>{ L.marker([f.lat,f.lng],{icon:L.divIcon({className:"",iconSize:[14,14],iconAnchor:[7,7],
+    html:`<div style="width:14px;height:14px;border-radius:50%;background:#b07d24;border:2px solid #fff;box-shadow:0 1px 4px rgba(0,0,0,.3)"></div>`})}).addTo(routeMap).bindPopup(`<b>🍽 ${f.name}</b>`); });
+  if(latlngs.length) routeMap.fitBounds(L.latLngBounds(latlngs).pad(0.2)); else routeMap.setView([36,138],5);
+}
+
+window.focusPin=(n)=>{ const s=spots.find(x=>x.n===n); if(!s)return;
+  if(routeMap&&markers[n]){ routeMap.setView([s.dlat,s.dlng],14,{animate:true}); markers[n].openPopup(); }
+  document.querySelectorAll(".pinbtn").forEach(b=>b.classList.toggle("active",Number(b.dataset.n)===n));
+  showToast(`${s.short||s.name}へ地図を移動しました`);
+};
+document.getElementById("pinindex").innerHTML = spots.map(s=>
+  `<button class="pinbtn" data-n="${s.n}" onclick="focusPin(${s.n})"><span class="num ${s.kind==='hub'?'hub':''}">${s.n}</span>${s.short}</button>`).join("");
+initMap();
+
+function legRow(l){ const pills=(l.pills||[]).map(p=>`<a class="pill ${p.cls}" href="${p.url}" target="_blank" rel="noopener">${p.label}</a>`).join("");
+  return `<div class="leg"><div class="ic">${l.ic}</div><div><div class="ttl">${l.ttl}</div><div class="meta">${l.meta}</div><div class="pillrow">${pills}</div></div></div>`; }
+document.getElementById("acc-a").innerHTML = (access.a||[]).length ? access.a.map(legRow).join("") : emptyState("アクセス情報は未設定です");
+document.getElementById("acc-b").innerHTML = (access.b||[]).length ? access.b.map(legRow).join("") : emptyState("アクセス情報は未設定です");
+
+document.getElementById("days").innerHTML = days.length ? days.map(d=>`
+  <div class="card day timeline"><h3>${d.label}</h3>
+  ${d.stops.map(s=>`<div class="stop"><div class="top">
+    ${s.num?`<span class="num ${s.kind==='hub'?'hub':''}">${s.num}</span>`:`<span style="width:22px;flex:0 0 auto"></span>`}
+    <div class="t">${s.t}</div>
+    <div class="p">${s.url?`<a href="${s.url}" target="_blank" rel="noopener">${s.p}</a>`:s.p}</div></div>
+    ${s.hint?`<div class="hint">${s.hint}</div>`:""}
+    ${s.move?`<a class="movelink" href="${s.move.url}" target="_blank" rel="noopener">${s.move.ic} ${s.move.label}</a>`:""}
+  </div>`).join("")}</div>`).join("") : emptyState("行程は未設定です");
+
+const itemCard=(o)=>`<div class="item">${o.tag?`<span class="tag ${o.sns?'sns':''}">${o.tag}</span>`:""}
+  <div class="name"><a href="${o.url}" target="_blank" rel="noopener">${o.name}</a></div>
+  ${o.price?`<div class="price">${o.price}</div>`:""}${o.hint?`<div class="hint">${o.hint}</div>`:""}</div>`;
+document.getElementById("meal-list").innerHTML = meals.length ? meals.map(g=>`<div class="mealgroup"><div class="when">${g.when}</div><div class="grid2">${g.items.map(itemCard).join("")}</div></div>`).join("") : emptyState("食事候補は未設定です");
+document.getElementById("activity-list").innerHTML = activities.length ? activities.map(itemCard).join("") : emptyState("アクティビティ候補は未設定です");
+document.getElementById("other-list").innerHTML = other.length ? other.map(itemCard).join("") : emptyState("追加スポットは未設定です");
+document.getElementById("car-list").innerHTML   = cars.length ? cars.map(itemCard).join("") : emptyState("現地交通・ツアー候補は未設定です");
+document.getElementById("stay-list").innerHTML  = stays.length ? stays.map(itemCard).join("") : emptyState("宿候補は未設定です");
+const checkCard=(o)=>`<div class="check-card">
+  <div class="check-label">${o.category||"確認"}</div>
+  <div class="check-title">${o.url?`<a href="${o.url}" target="_blank" rel="noopener">${o.title}</a>`:o.title}</div>
+  ${o.note?`<div class="check-note">${o.note}</div>`:""}
+  ${o.status?`<span class="check-status">${o.status}</span>`:""}
+</div>`;
+document.getElementById("check-list").innerHTML = foresightList.length ? foresightList.map(checkCard).join("") : emptyState("先読みチェックは未設定です");
+const totalBudgetRow = budget.find(r=>String(r[0]).includes("合計"));
+const totalBudgetEl = document.getElementById("budget-total-pill");
+if(totalBudgetEl) totalBudgetEl.textContent = totalBudgetRow ? totalBudgetRow[1] : "調整中";
+document.getElementById("budget-table").innerHTML = `<thead><tr><th>項目</th><th>2名合計</th><th>メモ</th></tr></thead><tbody>`+
+  budget.map(r=>{
+    const isTotal = String(r[0]).includes("合計");
+    return `<tr class="${isTotal ? "total-row" : ""}"><td data-label="項目">${r[0]}</td><td data-label="2名合計" class="r">${r[1]}</td><td data-label="メモ">${r[2]}</td></tr>`;
+  }).join("")+`</tbody>`;
+document.getElementById("book-list").innerHTML = bookList.length ? bookList.map(c=>`<li><a href="${c.url}" target="_blank" rel="noopener">${c.label}</a></li>`).join("") : "<li>予約ToDoは未設定です</li>";
+document.getElementById("decide-list").innerHTML = decideList.length ? decideList.map(d=>`<li>${d}</li>`).join("") : "<li>未確定事項は未設定です</li>";
+populateSummary();
+</script>
+</body>
+</html>
