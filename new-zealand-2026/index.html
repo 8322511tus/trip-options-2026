@@ -1,0 +1,807 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>ニュージーランド 南島・北島 現地7泊（大人2名）</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+  integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="">
+<style>
+  :root{
+    --color-brand:#0b5cab;
+    --color-brand-hover:#064a8a;
+    --color-brand-deep:#032d60;
+    --color-brand-soft:#eaf5ff;
+    --color-background:#eef4fb;
+    --color-surface:#ffffff;
+    --color-surface-alt:#f7f9fd;
+    --color-border:#c9d5e8;
+    --color-text-primary:#111827;
+    --color-text-secondary:#3f526d;
+    --color-text-muted:#6b778c;
+    --color-success:#2e844a;
+    --color-warning:#b76100;
+    --color-danger:#ba0517;
+    --color-info:#0176d3;
+    --space-1:4px;
+    --space-2:8px;
+    --space-3:12px;
+    --space-4:16px;
+    --space-6:24px;
+    --space-8:32px;
+    --radius-small:4px;
+    --radius-medium:8px;
+    --radius-large:12px;
+    --shadow-card:0 1px 2px rgba(10,31,68,.10),0 10px 28px rgba(10,31,68,.08);
+    --shadow-popover:0 12px 32px rgba(10,31,68,.20);
+    --shadow-modal:0 24px 60px rgba(10,31,68,.30);
+    --font-stack:"Segoe UI Variable","Segoe UI","Noto Sans JP","Yu Gothic UI","Yu Gothic",Meiryo,sans-serif;
+    --font-page-title:750 30px/1.16 var(--font-stack);
+    --font-section-title:750 18px/1.35 var(--font-stack);
+    --font-body:400 14px/1.65 var(--font-stack);
+    --font-caption:700 12px/1.4 var(--font-stack);
+    --z-header:100;
+    --z-dropdown:200;
+    --z-modal:500;
+    --z-toast:600;
+  }
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{margin:0;color:var(--color-text-primary);
+    background:linear-gradient(180deg,#fff 0,#fff 56px,#0b5cab 56px,#276f9f 172px,#eef4fb 172px,#eef4fb 100%);
+    font:var(--font-body);-webkit-text-size-adjust:100%}
+  a{color:var(--color-brand);text-underline-offset:.16em}
+  a:hover{color:var(--color-brand-hover)}
+  a:focus-visible,button:focus-visible{outline:3px solid rgba(1,118,211,.35);outline-offset:2px}
+  .app-shell{min-height:100vh;position:relative}
+  .app-shell::before{content:"";position:absolute;left:0;right:0;top:56px;height:156px;pointer-events:none;
+    background:
+      repeating-linear-gradient(135deg,rgba(255,255,255,.14) 0 1px,transparent 1px 18px),
+      linear-gradient(120deg,rgba(3,45,96,.92),rgba(11,92,171,.78) 54%,rgba(91,144,184,.52));
+    border-bottom:1px solid rgba(255,255,255,.28)}
+  .global-header{position:sticky;top:0;z-index:var(--z-header);height:56px;background:#fff;color:var(--color-text-primary);
+    border-bottom:1px solid #dfe5ef;display:flex;align-items:center;gap:var(--space-4);padding:0 var(--space-6);
+    box-shadow:0 1px 2px rgba(10,31,68,.08)}
+  .brand-home{display:flex;align-items:center;gap:var(--space-3);min-width:0;color:inherit;text-decoration:none}
+  .brand-home:hover{color:inherit}
+  .brand-mark{width:30px;height:30px;border-radius:var(--radius-medium);background:linear-gradient(135deg,#2b6cb0,#6c7ff2);
+    color:#fff;display:grid;place-items:center;font-weight:900;box-shadow:inset 0 0 0 1px rgba(255,255,255,.35)}
+  .brand-title{font-weight:800;letter-spacing:0}
+  .global-actions{margin-left:auto;display:flex;align-items:center;gap:var(--space-1);overflow:auto}
+  .global-actions a{display:inline-flex;align-items:center;min-height:32px;padding:0 10px;border-radius:var(--radius-small);
+    color:var(--color-text-secondary);font-size:13px;font-weight:750;text-decoration:none;white-space:nowrap}
+  .global-actions a:hover{background:var(--color-brand-soft);color:var(--color-brand)}
+  .global-actions .back-link{border:1px solid var(--color-border);background:var(--color-surface-alt);color:var(--color-brand-deep)}
+  .shell-body{position:relative;z-index:1;max-width:1440px;margin:0 auto;display:grid;grid-template-columns:220px minmax(0,1fr) 300px;gap:var(--space-4);padding:var(--space-4)}
+  .side-nav,.summary-panel{position:sticky;top:72px;align-self:start}
+  .side-nav,.summary-panel,.card{background:var(--color-surface);border:1px solid var(--color-border);border-radius:var(--radius-medium);box-shadow:var(--shadow-card)}
+  .side-nav{padding:var(--space-3);box-shadow:0 1px 2px rgba(10,31,68,.10),0 10px 22px rgba(10,31,68,.08)}
+  .side-nav-title,.summary-title{font:var(--font-caption);color:var(--color-text-muted);margin:0 0 var(--space-2)}
+  .side-nav a{display:flex;align-items:center;gap:var(--space-2);min-height:36px;padding:0 var(--space-3);border-radius:var(--radius-small);
+    color:var(--color-text-secondary);font-weight:700;text-decoration:none}
+  .side-nav a:hover,.side-nav a.active{background:var(--color-brand-soft);color:var(--color-brand)}
+  .main-content{min-width:0;display:grid;gap:var(--space-4)}
+  .summary-panel{padding:var(--space-4);display:grid;gap:var(--space-4)}
+  .summary-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:var(--space-2)}
+  .summary-metric{min-height:76px;display:grid;align-content:space-between;gap:var(--space-1);padding:var(--space-3);
+    border:1px solid #d7e3f5;border-radius:var(--radius-medium);background:linear-gradient(180deg,#fff,#f8fbff)}
+  .summary-metric span{color:var(--color-text-muted);font-size:11px;font-weight:750}
+  .summary-metric b{font-size:21px;line-height:1.1;color:var(--color-brand-deep);font-weight:750}
+  .summary-metric::after{content:"";display:block;width:100%;height:6px;border-radius:999px;background:linear-gradient(90deg,#2b6cb0,#6c7ff2)}
+  .utility-links{display:grid;gap:var(--space-2)}
+  .utility-links a{display:flex;justify-content:space-between;align-items:center;min-height:36px;padding:0 var(--space-3);
+    border:1px solid var(--color-border);border-radius:var(--radius-small);background:var(--color-surface-alt);
+    color:var(--color-text-primary);font-weight:750;text-decoration:none}
+  .utility-links a::after{content:"›";color:var(--color-brand);font-size:18px}
+  .utility-links a:hover{border-color:#9bbde6;background:var(--color-brand-soft);color:var(--color-brand)}
+  .hero{position:relative;overflow:hidden;background:linear-gradient(180deg,#fff,#f9fbff);border:1px solid #c4d4ea;
+    border-radius:var(--radius-medium);padding:0;box-shadow:0 2px 4px rgba(10,31,68,.10),0 16px 42px rgba(10,31,68,.12)}
+  .hero::before{content:"";position:absolute;left:0;right:0;top:0;height:6px;background:linear-gradient(90deg,#2b6cb0,#706eeb,#20a0d8)}
+  .hero-main{padding:var(--space-6)}
+  .title-cluster{display:flex;align-items:flex-start;gap:var(--space-3)}
+  .record-icon{width:42px;height:42px;border-radius:var(--radius-medium);display:grid;place-items:center;flex:0 0 auto;
+    background:linear-gradient(135deg,#5f7feb,#2b6cb0);color:#fff;font-weight:900;box-shadow:inset 0 0 0 1px rgba(255,255,255,.35)}
+  .kicker{font:var(--font-caption);color:var(--color-brand);margin-bottom:var(--space-1)}
+  .page-title-row{display:flex;align-items:flex-start;justify-content:space-between;gap:var(--space-4)}
+  h1{margin:0;font:var(--font-page-title)}
+  .lead{color:var(--color-text-secondary);margin:var(--space-2) 0 var(--space-4);max-width:74ch}
+  .badges{display:flex;gap:var(--space-2);flex-wrap:wrap}
+  .badge,.pill,.tag{display:inline-flex;align-items:center;gap:5px;border:1px solid var(--color-border);background:var(--color-surface-alt);
+    border-radius:999px;padding:5px 10px;font-size:12px;font-weight:800;color:var(--color-text-secondary)}
+  .badge.status-info{background:#eaf5ff;border-color:#b9dcff;color:#095da0}
+  .badge.status-success{background:#eaf7ee;border-color:#b7e1c1;color:#22683e}
+  .action-bar{display:flex;gap:var(--space-2);flex-wrap:wrap;margin-top:var(--space-4)}
+  .btn{display:inline-flex;align-items:center;justify-content:center;gap:var(--space-2);min-height:36px;border:1px solid var(--color-border);
+    border-radius:var(--radius-small);padding:0 var(--space-3);background:var(--color-surface);color:var(--color-text-primary);
+    text-decoration:none;font-weight:800;cursor:pointer;box-shadow:0 1px 1px rgba(10,31,68,.06)}
+  .btn:hover{border-color:#9bbde6;color:var(--color-brand);background:#f7fbff;box-shadow:0 2px 8px rgba(10,31,68,.10)}
+  .btn.primary{background:linear-gradient(180deg,#1677d2,#0b5cab);border-color:#084f99;color:#fff}
+  .btn.primary:hover{background:var(--color-brand-hover);color:#fff}
+  .btn.subtle{background:var(--color-surface-alt)}
+  .tabset{position:sticky;top:72px;z-index:50;background:var(--color-surface);border:1px solid var(--color-border);
+    border-radius:var(--radius-medium);box-shadow:var(--shadow-card);display:flex;gap:var(--space-1);padding:var(--space-1);overflow:auto}
+  .tabset a{white-space:nowrap;text-decoration:none;color:var(--color-text-secondary);font-weight:800;border-radius:var(--radius-small);padding:9px 12px}
+  .tabset a:hover{background:var(--color-brand-soft);color:var(--color-brand)}
+  section{scroll-margin-top:128px;margin-top:var(--space-4)}
+  .section-head{display:flex;align-items:flex-end;justify-content:space-between;gap:var(--space-4);margin-bottom:var(--space-3)}
+  h2{font:var(--font-section-title);margin:0;display:flex;align-items:center;gap:var(--space-2)}
+  h2 .dot{width:4px;height:18px;border-radius:999px;background:var(--color-brand)}
+  .sub{color:var(--color-text-muted);font-size:13px;margin:4px 0 0}
+  .card{padding:var(--space-4);margin-bottom:var(--space-3)}
+  .card:hover{box-shadow:0 2px 4px rgba(10,31,68,.10),0 12px 30px rgba(10,31,68,.08)}
+  #map{height:62vh;min-height:380px;max-height:560px;width:100%;border-radius:var(--radius-medium);border:1px solid var(--color-border);z-index:0;
+    background:linear-gradient(90deg,#eef2f7 25%,#f7f9fc 37%,#eef2f7 63%);background-size:400% 100%;animation:skeleton 1.25s ease-in-out infinite}
+  .mapfallback{height:100%;display:flex;align-items:center;justify-content:center;text-align:center;padding:24px;color:var(--color-text-secondary);background:#eef4f8}
+  .legend{display:flex;gap:14px;flex-wrap:wrap;margin-top:10px;font-size:13px;color:var(--color-text-secondary)}
+  .legend span{display:inline-flex;align-items:center;gap:6px}
+  .swatch{width:14px;height:14px;border-radius:50%;display:inline-block}
+  .routeline{width:22px;height:0;border-top:3px solid var(--color-danger);display:inline-block}
+  .pinindex{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+  .pinbtn{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--color-border);background:#fff;
+    border-radius:999px;padding:5px 11px 5px 6px;font-size:13px;font-weight:800;color:var(--color-text-primary);cursor:pointer}
+  .pinbtn:hover,.pinbtn.active{border-color:var(--color-danger);background:#fff4f2}
+  .pinbtn .num{width:20px;height:20px;border-radius:50%;background:var(--color-danger);color:#fff;font-size:12px;font-weight:800;
+    display:inline-flex;align-items:center;justify-content:center}
+  .pinbtn .num.hub{background:#16354a}
+  .pin{width:22px;height:22px;border-radius:50%;color:#fff;font-weight:800;font-size:12px;
+    display:flex;align-items:center;justify-content:center;border:2px solid #fff;box-shadow:0 2px 6px rgba(0,0,0,.35)}
+  .responsive-grid,.grid2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:var(--space-3)}
+  .access{display:grid;gap:10px}
+  .leg{display:grid;grid-template-columns:30px 1fr;gap:10px;padding:10px 0;border-bottom:1px dashed #e6ebee}
+  .leg:last-child{border-bottom:0}
+  .leg .ic{font-size:20px;text-align:center}
+  .leg .ttl{font-weight:800}
+  .leg .meta{font-size:13px;color:var(--color-text-secondary)}
+  .pillrow{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
+  .pill{text-decoration:none;background:#eef4f2;color:#27514a}
+  .pill.book{background:#eaf1f7;color:#1c537a}
+  .day{margin-bottom:14px}
+  .day h3{margin:0 0 12px;font-size:16px;color:var(--color-text-primary)}
+  .timeline{position:relative}
+  .stop{position:relative;padding:12px 0;border-bottom:1px solid #eef2f4}
+  .stop:last-child{border-bottom:0}
+  .stop .top{display:flex;gap:9px;align-items:baseline}
+  .stop .num{flex:0 0 auto;width:22px;height:22px;border-radius:50%;background:var(--color-danger);color:#fff;
+    font-size:12px;font-weight:800;display:inline-flex;align-items:center;justify-content:center;align-self:center}
+  .stop .num.hub{background:#16354a}
+  .stop .t{color:var(--color-brand);font-weight:800;font-variant-numeric:tabular-nums;min-width:46px}
+  .stop .p{font-weight:800}
+  .stop .hint{color:var(--color-text-muted);font-size:13px;margin-left:31px}
+  .movelink{margin:8px 0 2px 31px;display:inline-flex;align-items:center;gap:7px;font-size:13px;font-weight:700;
+    background:#f3f7f5;border:1px solid #e2ebe6;border-radius:10px;padding:5px 11px;color:#2f5a4c;text-decoration:none}
+  .mealgroup{margin-bottom:8px}
+  .mealgroup .when{font-weight:800;font-size:14px;color:var(--color-text-primary);margin:6px 2px 8px}
+  .item{border:1px solid var(--color-border);border-radius:var(--radius-medium);padding:var(--space-4);background:linear-gradient(180deg,#fff,#fbfdff);box-shadow:0 1px 1px rgba(10,31,68,.05)}
+  .item:hover{border-color:#9bbde6;box-shadow:var(--shadow-card);transform:translateY(-1px)}
+  .item .name{font-weight:800}
+  .item .price{font-weight:800;color:#123e5b;font-size:14px}
+  .item .hint{color:var(--color-text-muted);font-size:13px}
+  .tag{border-radius:var(--radius-small);padding:2px 7px;margin:0 6px 6px 0;color:#6a4a14;background:#fdf0d6}
+  .tag.sns{color:#8a2b6b;background:#fbe4f1}
+  .check-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:var(--space-3)}
+  .check-card{position:relative;border:1px solid #c7d8ea;border-radius:var(--radius-medium);padding:var(--space-4);
+    background:linear-gradient(180deg,#fff,#f8fbff);box-shadow:0 1px 1px rgba(10,31,68,.05)}
+  .check-card::before{content:"";position:absolute;left:0;top:0;bottom:0;width:4px;border-radius:var(--radius-medium) 0 0 var(--radius-medium);background:var(--color-warning)}
+  .check-label{font-size:12px;font-weight:850;color:var(--color-warning);margin-bottom:var(--space-1)}
+  .check-title{font-weight:850;color:var(--color-text-primary)}
+  .check-note{color:var(--color-text-muted);font-size:13px;margin-top:4px}
+  .check-status{display:inline-flex;margin-top:8px;border:1px solid #d9c6a0;background:#fff8ed;color:#7a4b00;border-radius:999px;padding:3px 8px;font-size:12px;font-weight:800}
+  .budget-card{padding:0;overflow:hidden}
+  .budget-head{display:flex;justify-content:space-between;gap:var(--space-4);align-items:flex-start;padding:var(--space-4);
+    background:linear-gradient(180deg,#f7fbff,#eef5ff);border-bottom:1px solid var(--color-border)}
+  .budget-head h3{margin:2px 0 0;font:var(--font-section-title)}
+  .budget-total{min-width:180px;border:1px solid #b9d6f4;background:#fff;border-radius:var(--radius-medium);padding:var(--space-3);text-align:right;
+    box-shadow:0 1px 2px rgba(10,31,68,.06)}
+  .budget-total span{display:block;color:var(--color-text-muted);font-size:11px;font-weight:750}
+  .budget-total b{display:block;color:var(--color-brand-deep);font-size:20px;line-height:1.2;margin-top:2px}
+  .budget-table-wrap{padding:var(--space-3);overflow-x:auto}
+  table{width:100%;border-collapse:separate;border-spacing:0;font-size:14px}
+  th,td{padding:12px 12px;border-bottom:1px solid #e3eaf5;text-align:left;vertical-align:top}
+  th{background:#f4f8fd;color:#314763;font-size:12px;font-weight:800}
+  th:first-child{border-top-left-radius:var(--radius-small)}
+  th:last-child{border-top-right-radius:var(--radius-small)}
+  tbody tr:hover td{background:#f8fbff}
+  td.r{text-align:right;font-variant-numeric:tabular-nums;font-weight:800;color:var(--color-brand-deep)}
+  .total-row td{background:#edf5ff!important;border-top:2px solid #9bbde6;border-bottom:0;font-weight:900}
+  .total-row td:first-child{border-bottom-left-radius:var(--radius-small)}
+  .total-row td:last-child{border-bottom-right-radius:var(--radius-small)}
+  .todo{list-style:none;padding:0;margin:0}
+  .todo li{padding:8px 0;border-bottom:1px solid #eef2f4}
+  .todo.book li:before{content:"□";color:var(--color-brand);font-weight:800;margin-right:6px}
+  .todo.decide li:before{content:"•";color:var(--color-warning);font-weight:800;margin-right:6px}
+  .twohead{font-weight:800;margin:2px 0 6px;font-size:14px}
+  .empty-state{border:1px dashed var(--color-border);border-radius:var(--radius-medium);background:var(--color-surface-alt);padding:var(--space-6);color:var(--color-text-muted);text-align:center}
+  .toast{position:fixed;right:var(--space-4);bottom:var(--space-4);z-index:var(--z-toast);background:#17324d;color:#fff;border-radius:var(--radius-medium);
+    box-shadow:var(--shadow-popover);padding:var(--space-3) var(--space-4);font-weight:800;opacity:0;transform:translateY(10px);pointer-events:none;transition:.18s ease}
+  .toast.show{opacity:1;transform:translateY(0)}
+  footer{margin-top:34px;color:var(--color-text-muted);font-size:12px;text-align:center}
+  @keyframes skeleton{0%{background-position:100% 0}100%{background-position:0 0}}
+  @media(max-width:1120px){
+    .shell-body{grid-template-columns:190px minmax(0,1fr)}
+    .summary-panel{position:static;grid-column:2}
+  }
+  @media(max-width:760px){
+    body{background:linear-gradient(180deg,#fff 0,#fff 56px,#0b5cab 56px,#276f9f 170px,#eef4fb 170px,#eef4fb 100%)}
+    .app-shell::before{top:56px;height:132px}
+    .global-header{position:relative;height:56px;min-height:56px;padding:0 12px;gap:8px}
+    .brand-home{gap:8px;min-width:0}
+    .brand-title{font-size:14px;line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .global-actions{margin-left:auto;flex:0 0 auto;max-width:44%;overflow:visible}
+    .global-actions a:not(.back-link){display:none}
+    .global-actions .back-link{min-height:34px;padding:0 9px;font-size:12px}
+    .shell-body{display:block;padding:14px 12px 12px}
+    .side-nav{display:none}
+    .summary-panel{margin-top:var(--space-3)}
+    .hero-main{padding:var(--space-4)}
+    .title-cluster{gap:var(--space-2)}
+    .record-icon{width:36px;height:36px}
+    .page-title-row{display:block}
+    .tabset{top:0}
+    .responsive-grid,.grid2,.check-grid{grid-template-columns:1fr}
+    table,thead,tbody,tr,th,td{display:block}
+    thead{display:none}
+    .budget-head{display:grid}
+    .budget-total{text-align:left;min-width:0}
+    tr{border:1px solid var(--color-border);border-radius:var(--radius-medium);padding:var(--space-2);margin-bottom:var(--space-2);background:#fff}
+    td{border:0;display:grid;grid-template-columns:96px 1fr;gap:var(--space-2)}
+    td:before{content:attr(data-label);font-weight:800;color:var(--color-text-muted)}
+    td.r{text-align:left}
+    #map{min-height:320px;height:52vh}
+  }
+  @media(prefers-reduced-motion:reduce){
+    html{scroll-behavior:auto}
+    *,*::before,*::after{animation:none!important;transition:none!important}
+  }
+</style>
+</head>
+<body>
+<div class="app-shell">
+  <header class="global-header">
+    <a class="brand-home" href="#main-content" aria-label="ページ先頭へ">
+      <div class="brand-mark" aria-hidden="true">NZ</div>
+      <div class="brand-title">ニュージーランド 現地7泊プラン</div>
+    </a>
+    <nav class="global-actions" aria-label="クイックリンク">
+      <a class="back-link" href="#route">地図</a>
+      <a href="#itinerary">行程</a>
+      <a href="#checks">先読み</a>
+      <a href="#budget">費用</a>
+      <a href="#entry">入国</a>
+      <a href="#next">予約</a>
+    </nav>
+  </header>
+
+  <div class="shell-body">
+    <nav class="side-nav" aria-label="セクションナビ">
+      <p class="side-nav-title">ページ内ナビ</p>
+      <a href="#route">ルート地図</a>
+      <a href="#access">アクセス</a>
+      <a href="#itinerary">行程</a>
+      <a href="#meals">食事</a>
+      <a href="#activities">アクティビティ</a>
+      <a href="#other">他のおすすめ</a>
+      <a href="#car">レンタカー</a>
+      <a href="#stay">宿</a>
+      <a href="#checks">先読みチェック</a>
+      <a href="#budget">費用</a>
+      <a href="#entry">入国・手続き</a>
+      <a href="#next">予約ToDo</a>
+    </nav>
+
+<main class="main-content" id="main-content">
+  <header class="hero">
+    <div class="hero-main">
+    <div class="page-title-row">
+      <div class="title-cluster">
+        <div class="record-icon" aria-hidden="true">NZ</div>
+        <div>
+          <div class="kicker">大人2名・2026年11月26日〜12月4日（金曜帰着）／ニュージーランド航空 全4便</div>
+          <h1>ニュージーランド 南島・北島 現地7泊</h1>
+        </div>
+      </div>
+    </div>
+    <p class="lead">東京から南島クイーンズタウンへ入り、フィヨルドと湖の絶景を4泊。北島オークランドへ渡って、島とワインの街を3泊。全便ニュージーランド航空でつなぎ、金曜日中に成田へ戻る現地7泊のプランです。</p>
+    <div class="badges">
+      <span class="badge">🗓 現地7泊</span>
+      <span class="badge">👥 大人2名</span>
+      <span class="badge">✈️ Air NZ 全4便</span>
+      <span class="badge">🏔 クイーンズタウン4泊</span>
+      <span class="badge">🌆 オークランド3泊</span>
+    </div>
+    <div class="action-bar" aria-label="主要アクション">
+      <a class="btn primary" href="#next">予約ToDoを見る</a>
+      <a class="btn" href="#route">地図を確認</a>
+      <a class="btn" href="#checks">先読みチェック</a>
+      <a class="btn" href="#budget">費用を見る</a>
+      <a class="btn" href="#entry">入国・手続き</a>
+    </div>
+    </div>
+  </header>
+
+  <nav class="tabset" aria-label="レポートタブ">
+    <a href="#route">概要</a>
+    <a href="#itinerary">行程</a>
+    <a href="#meals">食事</a>
+    <a href="#activities">体験</a>
+    <a href="#other">おすすめ</a>
+    <a href="#car">レンタカー</a>
+    <a href="#stay">宿</a>
+    <a href="#checks">先読み</a>
+    <a href="#budget">費用</a>
+    <a href="#entry">入国</a>
+    <a href="#next">予約</a>
+  </nav>
+
+  <section id="route">
+    <h2><span class="dot"></span>ルート地図</h2>
+    <p class="sub">番号順に巡るルート。赤い線が実際の移動経路です。①〜⑧がクイーンズタウン圏（南島）、⑨〜⑬がオークランド圏（北島）で、⑧→⑨は区間便フライト（約1h50m）でつながります。</p>
+    <div id="map"></div>
+    <div class="legend">
+      <span><i class="routeline"></i>順路</span>
+      <span><i class="swatch" style="background:#16354a"></i>拠点（滞在の中心）</span>
+      <span><i class="swatch" style="background:#d23b2c"></i>観光・体験スポット</span>
+      <span>✈️ ⑧→⑨は南島→北島の区間便フライト</span>
+    </div>
+    <div class="pinindex" id="pinindex"></div>
+    <p class="sub" style="margin-top:8px">番号をタップすると、地図のその場所に移動します。</p>
+  </section>
+
+  <section id="access">
+    <h2><span class="dot"></span>行き帰りのアクセス</h2>
+    <p class="sub">出発地は東京。往路は成田発・オークランド乗継でクイーンズタウンへ。復路はオークランド発の直行便で帰国します。</p>
+    <div class="card"><div class="twohead">往路（東京 → クイーンズタウン）</div><div class="access" id="acc-a"></div></div>
+    <div class="card"><div class="twohead">復路（クイーンズタウン → オークランド → 東京）</div><div class="access" id="acc-b"></div></div>
+  </section>
+
+  <section id="itinerary">
+    <h2><span class="dot"></span>行程</h2>
+    <p class="sub">番号は上の地図のピンと同じ順番です。スポット名は地図/公式リンク、区間リンクは公式時刻・料金ページまたは経路地図に飛びます。</p>
+    <div id="days"></div>
+  </section>
+
+  <section id="meals">
+    <h2><span class="dot"></span>食事候補</h2>
+    <p class="sub">タイミング別の候補。気分と予約状況で選べます（NZ価格・GST込み表示、飲み物別）。</p>
+    <div id="meal-list"></div>
+  </section>
+
+  <section id="activities">
+    <h2><span class="dot"></span>アクティビティ候補</h2>
+    <p class="sub">行程に入れるかを相談しやすい体験候補です。天気・体力・予約状況で選べます。</p>
+    <div class="grid2" id="activity-list"></div>
+  </section>
+
+  <section id="other">
+    <h2><span class="dot"></span>他にもおすすめのスポット</h2>
+    <p class="sub">天気や気分で順路に足せる／差し替えられる候補です。</p>
+    <div class="grid2" id="other-list"></div>
+  </section>
+
+  <section id="car">
+    <h2><span class="dot"></span>レンタカー</h2>
+    <p class="sub">大人2名＋スーツケース2個は1台（コンパクトSUV・定員5）で余裕。Day3〜Day4の中盤だけ借りて費用を圧縮。運転にはIDP（国際運転免許証）またはNZTA承認英訳の携行が必須です。</p>
+    <div class="grid2" id="car-list"></div>
+  </section>
+
+  <section id="stay">
+    <h2><span class="dot"></span>宿</h2>
+    <p class="sub">クイーンズタウン4泊は湖畔・中心部、オークランド3泊はCBD（Viaduct／Britomart圏）が動きやすい。12月は繁忙期入りで早めの押さえ推奨。日付・人数で各サイト比較。</p>
+    <div class="grid2" id="stay-list"></div>
+  </section>
+
+  <section id="checks">
+    <h2><span class="dot"></span>先読みチェック</h2>
+    <p class="sub">予約前に見落としやすい費用・リスク・代替案です。</p>
+    <div class="check-grid" id="check-list"></div>
+  </section>
+
+  <section id="budget">
+    <h2><span class="dot"></span>費用のめやす（1人あたり）</h2>
+    <div class="card budget-card">
+      <div class="budget-head">
+        <div>
+          <p class="summary-title">費用サマリー</p>
+          <h3>1人あたりの概算（メモ欄に2名合計）</h3>
+        </div>
+        <div class="budget-total">
+          <span>合計めやす（1人）</span>
+          <b id="budget-total-pill">-</b>
+        </div>
+      </div>
+      <div class="budget-table-wrap"><table id="budget-table"></table></div>
+    </div>
+    <p class="sub" style="margin-top:10px">航空券は変動するため予約直前に最新を再取得。燃油サーチャージ・空港税／諸税・発券／予約手数料、カード会社所定の海外決済手数料、繁忙期の宿高騰・予備費まで含めた実質総額で見ています。円換算は1NZD≒¥93（2026/7/9）を基準に、¥97まで振れても収まるか確認します。</p>
+  </section>
+
+  <section id="entry">
+    <h2><span class="dot"></span>入国・手続き（出発前の必須事項）</h2>
+    <p class="sub">ニュージーランドは電子渡航認証と検疫が厳格です。料金は変動するため申請直前に公式で最新額を確認してください。</p>
+    <div class="check-grid">
+      <div class="check-card">
+        <div class="check-label">電子渡航認証</div>
+        <div class="check-title"><a href="https://www.immigration.govt.nz/visas/new-zealand-electronic-travel-authority-nzeta/" target="_blank" rel="noopener">NZeTA（必須）</a></div>
+        <div class="check-note">日本国籍のビザ免除者は空路入国にNZeTAが必須。アプリ NZD17／ウェブ NZD23。発給は数分〜最大72時間。有効期間2年。数日前までに取得を。</div>
+      </div>
+      <div class="check-card">
+        <div class="check-label">観光目的税</div>
+        <div class="check-title"><a href="https://www.immigration.govt.nz/process-to-apply/applying-for-a-visa/fees-processing-times-and-refunds/paying-the-international-visitor-levy/" target="_blank" rel="noopener">IVL（NZD100／人）</a></div>
+        <div class="check-note">NZeTA申請時に自動で同時課金（返金不可）。過去に値上げ履歴があるため、申請直前に公式で最新額を確認。NZeTA＋IVLで1人 約NZD117（約10,760円）。</div>
+      </div>
+      <div class="check-card">
+        <div class="check-label">到着申告</div>
+        <div class="check-title"><a href="https://www.travellerdeclaration.govt.nz/" target="_blank" rel="noopener">NZTD（無料・全員必須）</a></div>
+        <div class="check-note">全入国者に必須（1人1件）。出発の24時間前からオンライン提出可。約10分。パスポートに紐付き、到着時のパスポートコントロールまでに提出。</div>
+      </div>
+      <div class="check-card">
+        <div class="check-label">検疫（バイオセキュリティ）</div>
+        <div class="check-title"><a href="https://www.mpi.govt.nz/travel-and-recreation/arriving-in-new-zealand/" target="_blank" rel="noopener">食品・自然物は必ず申告</a></div>
+        <div class="check-note">世界屈指の厳格な検疫。食品・植物・種子・木製品・靴の泥は必ず申告（NZTD内）。不申告は即時NZD400の罰金〜。乗継の機内食の残りにも注意。</div>
+      </div>
+      <div class="check-card">
+        <div class="check-label">パスポート・保険</div>
+        <div class="check-title"><a href="https://www.immigration.govt.nz/visit/what-you-need-to-visit-new-zealand/arriving-in-new-zealand/" target="_blank" rel="noopener">残存3か月以上＋保険加入</a></div>
+        <div class="check-note">出国予定日から3か月以上の残存（乗継地の基準もあり6か月あると安心）。医療費が高額なので海外旅行保険は必須。遊覧飛行・バンジー等を選ぶ場合はアクティビティ補償の有無を確認。</div>
+      </div>
+      <div class="check-card">
+        <div class="check-label">お金・電源・時差</div>
+        <div class="check-title"><a href="https://www.anzen.mofa.go.jp/info/pcinfectionspothazardinfo_257.html" target="_blank" rel="noopener">通貨NZD／プラグType I／時差+4h</a></div>
+        <div class="check-note">物価はGST15%込み表示、チップ不要。カード会社所定の海外決済手数料を確認し、割高になりやすい円建て決済（DCC）は避けてNZD建てで。電源はType I（230V・変換プラグ必須）。時差は日本+4h（NZ夏時間）。「たびレジ」登録推奨。</div>
+      </div>
+    </div>
+  </section>
+
+  <section id="next">
+    <h2><span class="dot"></span>これから決める・予約すること</h2>
+    <div class="card"><div class="twohead">予約するもの（この順番で押さえる）</div><ul class="todo book" id="book-list"></ul></div>
+    <div class="card"><div class="twohead">これから決めること（まだ未確定の論点）</div><ul class="todo decide" id="decide-list"></ul></div>
+  </section>
+
+  <footer>所要時間・便・料金は作成時点の各社公式時刻表・料金ページ・地図経路に基づくめやすです。運賃・空席・営業時間・天候は変動するため、予約時に最新を確認してください。</footer>
+</main>
+
+    <aside class="summary-panel" aria-label="旅の要点">
+      <div>
+        <p class="summary-title">旅の要点</p>
+        <div class="summary-grid">
+          <div class="summary-metric"><span>日数</span><b id="summary-days">-</b></div>
+          <div class="summary-metric"><span>訪問地</span><b id="summary-spots">-</b></div>
+          <div class="summary-metric"><span>食事候補</span><b id="summary-meals">-</b></div>
+          <div class="summary-metric"><span>確認項目</span><b id="summary-checks">-</b></div>
+          <div class="summary-metric"><span>予約項目</span><b id="summary-todos">-</b></div>
+        </div>
+      </div>
+      <div class="utility-links">
+        <p class="summary-title">すぐ確認</p>
+        <a href="#route">ルート地図</a>
+        <a href="#itinerary">当日の流れ</a>
+        <a href="#checks">先読みチェック</a>
+        <a href="#budget">費用のめやす</a>
+        <a href="#entry">入国・手続き</a>
+        <a href="#next">これから決めること</a>
+      </div>
+    </aside>
+  </div>
+</div>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+  integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+<script>
+/* =================== DATA =================== */
+const G  = (from,to)=>`https://www.google.com/maps/dir/?api=1&origin=${encodeURIComponent(from)}&destination=${encodeURIComponent(to)}&travelmode=driving`;
+const Gt = (from,to)=>`https://www.google.com/maps/dir/?api=1&origin=${encodeURIComponent(from)}&destination=${encodeURIComponent(to)}&travelmode=transit`;
+const M  = q => `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(q)}`;
+
+// 地図ピン＝行程番号（1:1）。訪問順。①〜⑧=南島クイーンズタウン圏、⑨〜⑬=北島オークランド圏。
+const mapSpots = [
+  {n:1,  name:"ワカティプ湖 湖畔（クイーンズタウン中心）", short:"湖畔・中心", lat:-45.0312, lng:168.6626, kind:"hub",  time:"Day1 16:00"},
+  {n:2,  name:"ミルフォードサウンド（日帰り）",             short:"ミルフォード", lat:-44.6414, lng:167.8974, kind:"spot", time:"Day2 06:45"},
+  {n:3,  name:"グレノーキー〜パラダイス",                   short:"グレノーキー", lat:-44.8471, lng:168.3840, kind:"spot", time:"Day3 09:15"},
+  {n:4,  name:"アロータウン",                               short:"アロータウン", lat:-44.9376, lng:168.8340, kind:"spot", time:"Day3 13:00"},
+  {n:5,  name:"ギブストンバレー・ワイナリー",               short:"ギブストン", lat:-45.0100, lng:168.9350, kind:"spot", time:"Day3 15:00"},
+  {n:6,  name:"TSSアーンショー号（Steamer Wharf）",         short:"TSSアーンショー号", lat:-45.0329, lng:168.6588, kind:"spot", time:"Day4 12:00"},
+  {n:7,  name:"Onsen Hot Pools（Arthurs Point）",            short:"温泉・渓谷眺望", lat:-44.9855, lng:168.6840, kind:"spot", time:"Day4 17:30"},
+  {n:8,  name:"スカイライン・ゴンドラ＋リュージュ",         short:"スカイライン", lat:-45.0300, lng:168.6600, kind:"spot", time:"Day5 09:00"},
+  {n:9,  name:"オークランドCBD（Britomart／Viaduct）",       short:"オークランドCBD", lat:-36.8443, lng:174.7676, kind:"hub",  time:"Day5 17:00"},
+  {n:10, name:"ワイヘキ島（Matiatia）",                     short:"ワイヘキ島", lat:-36.7847, lng:174.9990, kind:"spot", time:"Day6 10:40"},
+  {n:11, name:"スカイタワー",                               short:"スカイタワー", lat:-36.8485, lng:174.7625, kind:"spot", time:"Day7 11:00"},
+  {n:12, name:"デボンポート",                               short:"デボンポート", lat:-36.8330, lng:174.7960, kind:"spot", time:"Day7 14:00"},
+  {n:13, name:"ホビトン映画セット（任意）",                 short:"ホビトン(任意)", lat:-37.8721, lng:175.6836, kind:"spot", time:"Day7 06:45（任意）"},
+];
+const foodTowns = [];
+
+// アクセス: 区間ごとに具体便（何時発→何時着・所要・運賃）。
+const access = {
+  a:[
+    {ic:"✈️", ttl:"NRT → AKL（往路・国際線）", meta:"NZ98 11/26 18:30 → 11/27 09:00・約10h30m・Air NZ直行・NRT⇄AKL往復¥181,937/人（2026/7/12表示、変動）", pills:[{cls:"book",label:"2名の運賃表示（11/26→12/4）",url:"https://www.kayak.co.jp/flights/NRT-AKL/2026-11-26/2026-12-04/2adults?sort=bestflight_a"},{cls:"book",label:"Air NZ 成田便スケジュール",url:"https://www.airnewzealand.jp/nrt-flights-information"}]},
+    {ic:"✈️", ttl:"AKL → ZQN（同日・別切り）", meta:"NZ637 11/27 12:25 → 14:20・約1h55m・運賃¥15,065/人（2026/7/12表示、変動）。AKL乗継3h25mで、入国審査→荷物受取→税関・検疫→国内線再預け→ターミナル移動", pills:[{cls:"book",label:"2名の運賃表示（AKL→ZQN）",url:"https://www.kayak.co.jp/flights/AKL-ZQN/2026-11-27/2adults?sort=bestflight_a"},{cls:"book",label:"Air NZ公式予約・最新運賃",url:"https://www.airnewzealand.jp/book"},{cls:"book",label:"AKL乗継公式案内",url:"https://www.airnewzealand.com/connecting-at-auckland"}]},
+    {ic:"🚕", ttl:"ZQN空港 → 市街（湖畔）", meta:"タクシー/Uber 約10〜15分・NZD50〜85（2名1台）", pills:[{cls:"book",label:"ZQN空港 交通オプション",url:"https://www.queenstownairport.co.nz/parking-transport/transport-options/taxis-rideshare/"}]},
+  ],
+  b:[
+    {ic:"✈️", ttl:"ZQN → AKL（区間便）", meta:"NZ620 12/01 13:25 → 15:15・約1h50m・Air NZ直行・運賃¥12,221/人（2026/7/12表示、変動）", pills:[{cls:"book",label:"2名の運賃表示（ZQN→AKL）",url:"https://www.kayak.co.jp/flights/ZQN-AKL/2026-12-01/2adults?sort=bestflight_a"},{cls:"book",label:"Air NZ公式予約・最新運賃",url:"https://www.airnewzealand.jp/book"}]},
+    {ic:"🚌", ttl:"AKL空港 → CBD", meta:"SkyDrive 12/01 16:00 AKL国内線Bus Stop A発 → SkyCity 16:35頃着・約35分・運賃は予約画面表示（参考NZD20/人＋一時燃料サーチャージ）。30分間隔で同日中の後続便も利用可", pills:[{cls:"book",label:"SkyDrive 時刻・料金",url:"https://www.skydrive.co.nz/auckland/"}]},
+    {ic:"✈️", ttl:"AKL → NRT（帰国・直行）", meta:"NZ99 12/04（金）10:05 → 17:00・約10h55m（直行）・運賃はNRT⇄AKL往復¥181,937/人に含む（2026/7/12表示、変動）。SkyCity 06:30発で空港07:05頃着を想定", pills:[{cls:"book",label:"2名の運賃表示（国際線往復）",url:"https://www.kayak.co.jp/flights/NRT-AKL/2026-11-26/2026-12-04/2adults?sort=bestflight_a"},{cls:"book",label:"Air NZ 成田便スケジュール",url:"https://www.airnewzealand.jp/nrt-flights-information"}]},
+  ],
+};
+
+// 行程: numのある行が地図ピンと対応。
+const days = [
+  {label:"Day1（11/27 金）｜クイーンズタウン着・軽め", stops:[
+    {t:"14:20", p:"クイーンズタウン空港 着", url:M("Queenstown Airport"), hint:"AKLでは入国審査・受託手荷物受取・税関検疫・国内線再預け・ターミナル移動が必要。別切りのため遅延時の振替保証はない。", move:{ic:"🚕", label:"ZQN空港 → 市街 タクシー/Uber 約10〜15分・NZD50〜85（2名1台）", url:"https://www.queenstownairport.co.nz/parking-transport/transport-options/taxis-rideshare/"}},
+    {num:1, kind:"hub", t:"16:00", p:"ワカティプ湖 湖畔さんぽ", url:M("Lake Wakatipu Queenstown"), hint:"到着日は詰め込まず、チェックイン後に湖畔をゆっくり。中心部は徒歩圏。", move:{ic:"🚶", label:"中心部まで徒歩約5分・料金無料", url:G("Lake Wakatipu Queenstown","Fergburger Queenstown")}},
+    {t:"18:00", p:"夕食（名物バーガーなど）", url:"#meals", hint:"下の食事候補から。Fergburgerは電話ピックアップで行列回避。早めに就寝。"},
+  ]},
+  {label:"Day2（11/28 土）｜ミルフォードサウンド 日帰り（ハイライト）", stops:[
+    {num:2, kind:"spot", t:"06:45", p:"ミルフォードサウンド 日帰り（コーチ&クルーズ）", url:"https://www.realnz.com/en/experiences/day-cruises/milford-sound-day-trip-from-queenstown/", hint:"代表便は6:45発、コーチ片道約5時間＋クルーズ1.5〜2時間。雨でも催行で滝が増え絶景化。帰着時刻は選択した乗車地と予約枠で最終確定。", move:{ic:"🚌", label:"Queenstown 06:45発 → 19:30頃帰着・約12時間45分・コーチ往復＋クルーズNZD292〜/人", url:"https://www.realnz.com/en/experiences/day-cruises/milford-sound-day-trip-from-queenstown/"}},
+  ]},
+  {label:"Day3（11/29 日）｜グレノーキー絶景＋アロータウン＋ギブストン（レンタカー）", stops:[
+    {t:"08:30", p:"レンタカーで出発（市街）", url:M("Queenstown"), hint:"中盤2日はレンタカー。IDP（国際運転免許証）またはNZTA承認英訳の携行が必須。左側通行・ラウンドアバウトに注意。", move:{ic:"🚗", label:"市街 → グレノーキー 約45分・料金はレンタカー／燃料費に別計上", url:G("Queenstown","Glenorchy")}},
+    {num:3, t:"09:15", p:"グレノーキー〜パラダイス 絶景ドライブ", url:"https://pureglenorchy.com/lord-of-the-rings-tour/", hint:"湖畔の絶景と映画ロケ地。片道約45分。自力ドライブでも十分映える。", move:{ic:"🚗", label:"グレノーキー → アロータウン 約60分・料金はレンタカー／燃料費に別計上", url:G("Glenorchy","Arrowtown")}},
+    {num:4, t:"13:00", p:"アロータウン（レトロな金鉱の町）", url:"https://www.arrowtown.com/", hint:"石畳の街並みを散策。中心部から片道約20分。", move:{ic:"🚗", label:"アロータウン → ギブストン 約15分・料金はレンタカー／燃料費に別計上", url:G("Arrowtown","Gibbston Valley")}},
+    {num:5, t:"15:00", p:"ギブストンバレー・ワイナリー", url:"https://www.gibbstonvalley.com/us/experiences/tours/", hint:"NZ最大のワインケイブ・45分ツアー＋4種試飲NZD38〜。洞窟で雨に強い。飲酒運転厳禁→送迎か片方が運転。", move:{ic:"🚗", label:"ギブストン → 市街 約25分・料金はレンタカー／燃料費に別計上", url:G("Gibbston Valley","Queenstown")}},
+  ]},
+  {label:"Day4（11/30 月）｜湖上クルーズ＆温泉・予備日（Day2荒天時の振替）", stops:[
+    {t:"10:30", p:"中心部でブランチ／湖畔散歩", url:"#meals", hint:"ミルフォード振替になった場合はこの日の予定をキャンセル・移動。"},
+    {num:6, t:"12:00", p:"TSSアーンショー号＋ウォルターピーク グルメBBQランチ", url:"https://www.realnz.com/en/experiences/day-cruises/tss-earnslaw-lake-cruises/", hint:"1912年の蒸気船で湖を渡り高原牧場でBBQビュッフェ。所要約3h45m・大人NZD189前後。船内と屋内主体で雨に強い。この日はミルフォード荒天時の振替予備日にもなる。", move:{ic:"🚗", label:"Steamer Wharf → Arthurs Point 約15分・料金はレンタカー／燃料費に別計上", url:G("Steamer Wharf Queenstown","Onsen Hot Pools Queenstown")}},
+    {num:7, t:"17:30", p:"Onsen Hot Pools（渓谷を望む貸切温泉）", url:"https://www.onsen.co.nz/", hint:"貸切60分・Original Onsenは大人1名NZD117前後。中心部から無料シャトルあり。変更・取消は24時間前までの条件を予約時に再確認。"},
+  ]},
+  {label:"Day5（12/1 火）｜クイーンズタウン → オークランド 移動日", stops:[
+    {num:8, t:"09:00", p:"スカイライン・ゴンドラ＋リュージュ", url:"https://queenstown.skyline.co.nz/pricing-and-packages/", hint:"ゴンドラ往復NZD66／＋リュージュNZD89前後。午前枠で混雑と移動日の遅れを避ける。", move:{ic:"🚗", label:"Queenstown市街 10:40発 → ZQN空港 11:00頃着・約20分・料金はレンタカー／燃料費に別計上", url:G("Skyline Queenstown","Queenstown Airport")}},
+    {t:"11:15", p:"レンタカー返却・ZQN空港へ", url:M("Queenstown Airport"), hint:"国内線出発の約2時間前を目安。", move:{ic:"✈️", label:"NZ620 ZQN 13:25 → AKL 15:15・約1時間50分・運賃¥12,221/人（2026/7/12表示、変動）", url:"https://www.airnewzealand.jp/book"}},
+    {t:"15:15", p:"オークランド空港 着", url:M("Auckland Airport"), hint:"", move:{ic:"🚌", label:"SkyDrive 16:00 AKL国内線Bus Stop A発 → SkyCity 16:35頃着・約35分・運賃は予約画面表示（参考NZD20/人＋一時燃料サーチャージ）", url:"https://www.skydrive.co.nz/auckland/"}},
+    {num:9, kind:"hub", t:"17:00", p:"オークランドCBD（Viaduct／Britomart）", url:M("Britomart Auckland"), hint:"Viaduct Harbour／Wynyard Quarterを散策。市内はレンタカー不要（徒歩＋AT HOP）。"},
+    {t:"18:30", p:"夕食（ウォーターフロント）", url:"#meals", hint:"下の食事候補から。Viaduct Harbourの水辺で。"},
+  ]},
+  {label:"Day6（12/2 水）｜ワイヘキ島 デイトリップ", stops:[
+    {t:"09:30", p:"ダウンタウン・フェリーターミナル（Pier 11/12）", url:M("Downtown Ferry Terminal Auckland"), hint:"10:00便の15〜20分前を目安に乗り場へ。", move:{ic:"⛴", label:"Fullers360 Downtown 10:00発 → Matiatia 10:40頃着・約40分・Walk-up往復NZD62/人（Wine and Dine NZD169なら込み）", url:"https://www.fullers.co.nz/timetables-and-fares/?from=AUCK&to=WAIH"}},
+    {num:10, t:"10:40", p:"ワイヘキ島（Matiatia Wharf）", url:"https://www.fullers.co.nz/destinations-and-experiences/experiences/wine-and-food-tours/waiheke-wine-and-dine/", hint:"Wine and Dineは往復フェリー＋マルチコースランチ＋ワイン＋周遊バス1日券でNZD169・大人限定。単体フェリーなら朝発のWalk-up往復NZD62。眺望ワイナリーMudbrick／Cable Bayも。", move:{ic:"⛴", label:"Matiatia 17:00発 → Downtown 17:40頃着・約40分・Walk-up往復NZD62/人（Wine and Dineなら込み）", url:"https://www.fullers.co.nz/timetables-and-fares/?from=WAIH&to=AUCK"}},
+  ]},
+  {label:"Day7（12/3 木）｜オークランド市内（ゆったり）", stops:[
+    {num:11, t:"11:00", p:"スカイタワー", url:"https://skycityauckland.co.nz/sky-tower/admissions/", hint:"328m展望・NZD47・所要30〜60分。屋内で雨天に強く、サンセット〜夜景も映える。", move:{ic:"⛴", label:"Sky Tower 12:40発 → Downtown Ferry Terminal 12:55（徒歩15分・無料）→ 13:00フェリー発 → Devonport 13:12着（船12分・非接触決済NZD7.80/人）", url:"https://at.govt.nz/media/3igbyuqo/auckland-transport-devonport-ferry-timetable.pdf"}},
+    {num:12, t:"14:00", p:"デボンポート（レトロな港町）", url:"https://at.govt.nz/timetables/", hint:"マウント・ビクトリアから市街とスカイタワーの眺望。Queen St／Britomartで買い物も。往復は非接触決済でNZD15.60/人。", move:{ic:"⛴", label:"Devonport 16:20発 → Downtown 16:32着・約12分・往復運賃NZD15.60/人に込み", url:"https://at.govt.nz/media/3igbyuqo/auckland-transport-devonport-ferry-timetable.pdf"}},
+    {num:13, t:"06:45（任意）", p:"ホビトン映画セット 日帰り（市内案と二者択一）", url:"https://www.greatsights.co.nz/new-zealand-tour-destinations/hobbiton-movie-set-tours/hobbiton-movie-set-from-auckland/", hint:"GreatSights GS10H。06:45ホテル迎え→07:00 SkyCity集合→07:15 Auckland発→09:30 Hobbiton着→13:15現地発→15:30 SkyCity着。送迎・入場・昼食込みで大人NZD259〜/人。対象日の価格・空席は予約画面で確定。", move:{ic:"🚌", label:"GreatSights 07:15 SkyCity発 → Hobbiton 09:30着 → 13:15発 → SkyCity 15:30着・約8時間15分・NZD259〜/人", url:"https://www.greatsights.co.nz/new-zealand-tour-destinations/hobbiton-movie-set-tours/hobbiton-movie-set-from-auckland/"}},
+  ]},
+  {label:"Day8（12/4 金）｜帰国（週末前に帰着）", stops:[
+    {t:"06:30", p:"CBD → オークランド空港", url:M("Auckland Airport"), hint:"国際線は出発3時間前を目安。SkyDriveは30分間隔で、同日中なら後続便も利用可。", move:{ic:"🚌", label:"SkyDrive 06:30 SkyCity発 → AKL国際線 07:05頃着・約35分・運賃は予約画面表示（参考NZD20/人＋一時燃料サーチャージ）", url:"https://www.skydrive.co.nz/auckland/"}},
+    {t:"10:05", p:"NZ99 オークランド発 → 成田 17:00着", url:"https://www.airnewzealand.jp/nrt-flights-information", hint:"直行・約10h55m。金曜日中に帰宅できる時間帯。"},
+  ]},
+];
+
+// 食事: タイミングごとに3〜4候補。SNS話題はtag+sns:true。
+const meals = [
+  {when:"クイーンズタウン｜朝・カフェ", items:[
+    {name:"Bespoke Kitchen", url:"https://www.bespokekitchen.co.nz", price:"約NZD20〜30／人", hint:"Google4.6。NZカフェ・オブ・ザ・イヤー。Eggs Benedict/ヴィーガン充実。行列あり（予約不可）。", tag:"人気カフェ"},
+    {name:"Vudu Cafe & Larder", url:"https://www.vudu.co.nz", price:"約NZD20〜30／人", hint:"Google4.4（約1,885件）／TripAdvisor4.5。湖畔パティオの王道ブランチ。個人は基本ウォークインで、開店直後が安全。", tag:"湖畔"},
+    {name:"Yonder", url:"https://yonderqt.co.nz", price:"約NZD20〜30／人", hint:"Google4.5。屋外ヒーター席で会話しやすい。公式で予約可、混雑日は事前予約推奨。", tag:"SNS人気", sns:true},
+  ]},
+  {when:"クイーンズタウン｜昼・カジュアル/名物", items:[
+    {name:"Fergburger", url:"https://fergburger.com", price:"約NZD15〜22／人", hint:"Google4.6（約24,400件）。席予約不可・行列必至。電話注文→店頭ピックアップで回避可。", tag:"SNS人気", sns:true},
+    {name:"Public Kitchen & Bar", url:"https://www.tripadvisor.com/Restaurant_Review-g255122-d726702.html", price:"約NZD60〜90／人（シェア）", hint:"Google4.4。Steamer Wharfの湖畔テラス。シェアで賑やか。週末は予約推奨。"},
+    {name:"Kinross Bistro & Cellar Door", url:"https://kinross.nz/pages/dine-with-us", price:"約NZD30〜50／人", hint:"NZワイン観光賞2024・TripAdvisor高評価。5つの小規模ワイナリー試飲拠点＋自家製サワードウピザ。公式予約推奨、飲むなら送迎で。"},
+  ]},
+  {when:"クイーンズタウン｜夜・記念日/ファイン", items:[
+    {name:"Rātā（Josh Emett）", url:"https://www.ratadining.co.nz", price:"夜 約NZD90〜130／人", hint:"ミシュラン1つ星2026。南島産地直送・森の写真壁で落ち着く。記念日の王道。要予約。", tag:"ミシュラン"},
+    {name:"Botswana Butchery", url:"https://www.sevenrooms.com/reservations/botswanabutcheryqueenstown", price:"夜 約NZD90〜150／人", hint:"Google4.6。湖畔・暖炉、肉料理と雰囲気トップクラス。記念日向き。要予約（週末は特に）。", tag:"記念日"},
+    {name:"The Bathhouse", url:"https://www.bathhouse.co.nz/", price:"夜 約NZD70〜110／人", hint:"Google4.2／TripAdvisor4.3。湖畔・砂浜の1911築一軒家。席数が少ないため電話予約推奨（+64 3 442 5625）。"},
+    {name:"Amisfield（大奮発枠）", url:"https://www.exploretock.com/amisfield", price:"昼デギュ $395／夜 $595", hint:"ミシュラン1つ星・「世界3位」報道。中級枠を大きく超える“1回だけ贅沢”ゾーン。予算次第で本命か見送り。要予約。", tag:"大奮発"},
+  ]},
+  {when:"オークランド｜朝・カフェ/ブランチ", items:[
+    {name:"Ortolana", url:"https://savor.co.nz/ortolana", price:"朝昼 約NZD17〜28／人", hint:"Google4.5。Britomartのキャノピー付き中庭が映える。ブランチ王道。ウォークイン中心。", tag:"中庭"},
+    {name:"Odettes Eatery", url:"https://www.odettes.co.nz", price:"朝昼 約NZD20〜35／人", hint:"評価4.5（RestaurantGuru4.4／約3,723件）。明るくリラックス、公式で予約可。"},
+    {name:"Amano", url:"https://amano.nz", price:"朝〜夜 約NZD45〜70／人", hint:"Google4.6。Britomartのラスティック伊。ベーカリー併設で朝から通し。人気店のため公式予約推奨。", tag:"人気"},
+  ]},
+  {when:"オークランド｜昼・ワイヘキ島/ウォーターフロント", items:[
+    {name:"Mudbrick Vineyard（ワイヘキ）", url:"https://mudbrick.co.nz/menus/", price:"2皿 $105／3皿 $125", hint:"ミシュラン1つ星2026。ハウラキ湾を望む屈指の絶景。平均42日前に満席→早期予約。", tag:"ミシュラン・絶景", sns:true},
+    {name:"Cable Bay Vineyards（ワイヘキ）", url:"https://cablebay.nz/dine/", price:"Verandah 約NZD40〜70／人", hint:"TripAdvisor4.0（約1,546件）。芝生＋海＆スカイライン絶景。公式予約推奨、Verandahは薪窯ピザでカジュアル。"},
+    {name:"Depot（Al Brown・CBD）", url:"https://depoteatery.co.nz", price:"約NZD60〜90／人", hint:"TripAdvisor4.6（約2,800件）・Travelers' Choice 2025。予約不可・完全ウォークイン。賑やかで会話弾む。"},
+  ]},
+  {when:"オークランド｜夜・記念日/落ち着いた席", items:[
+    {name:"Soul Bar & Bistro", url:"https://soulbar.co.nz", price:"夜 約NZD70〜120／人", hint:"Google4.6。Viaduct Harbourの水辺、西向きテラスで夕日＆ヨットビュー。要直接予約（TEL）。", tag:"SNS人気", sns:true},
+    {name:"Ahi.（Ben Bayly）", url:"https://ahirestaurant.co.nz", price:"夜 約NZD90〜160／人", hint:"ミシュラン1つ星2026。NZ産地主義のモダン。落ち着いた記念日向き。要予約。", tag:"ミシュラン"},
+    {name:"Cassia（Sid Sahrawat）", url:"https://www.cassiarestaurant.co.nz", price:"アラカルト 約NZD70〜80／Voyage $175", hint:"Google4.5。モダンインディアンの傑作。Grey Lynnへ移転・水〜日 夜のみ・要予約。"},
+    {name:"Azabu（Ponsonby）", url:"https://savor.co.nz/azabu-ponsonby/", price:"夜 約NZD50〜80／人", hint:"TripAdvisor Travelers' Choice（上位10%）。日×ペルーのNikkei。人気店のため公式予約推奨。"},
+  ]},
+];
+
+const activities = [
+  {name:"ミルフォードサウンド コーチ&クルーズ", url:"https://www.realnz.com/en/experiences/day-cruises/milford-sound-day-trip-from-queenstown/", price:"大人NZD278〜292（約2.6万円）", hint:"所要約12〜13時間。テアナウ経由でフィヨルド遊覧。雨でも催行で滝が増え絶景化。王道ハイライト。", tag:"本命"},
+  {name:"ミルフォード フライ・クルーズ・フライ", url:"https://www.realnz.com/en/experiences/scenic-flights/milford-sound-fly-cruise-fly/", price:"NZD730〜850（約6.7〜7.8万円）", hint:"所要約5〜5.5時間。小型機で南アルプス越えの空撮が圧巻の記念日プレミアム。好天日は早期完売・天候欠航あり。", tag:"プレミアム"},
+  {name:"スカイライン ゴンドラ＋リュージュ", url:"https://queenstown.skyline.co.nz/pricing-and-packages/", price:"ゴンドラ往復NZD66／＋リュージュNZD89", hint:"街の真上の展望＋そり滑走。所要1.5〜2時間。夕景→街の夜景が映える鉄板。", tag:"鉄板"},
+  {name:"TSSアーンショー号＋ウォルターピーク昼", url:"https://www.realnz.com/en/experiences/day-cruises/tss-earnslaw-lake-cruises/", price:"大人NZD189前後（約1.8万円）", hint:"1912年蒸気船＋高原牧場BBQランチ・所要約3h45m。船内と屋内主体で雨に強い、ゆったり派向き。"},
+  {name:"Onsen Hot Pools", url:"https://www.onsen.co.nz/", price:"Original Onsen 大人1名NZD117前後", hint:"渓谷を望む貸切温泉60分。中心部から無料シャトルあり。Day4夕方に配置し、長い観光日の疲れを回復。", tag:"貸切"},
+  {name:"ワイヘキ島 Wine and Dine", url:"https://www.fullers.co.nz/destinations-and-experiences/experiences/wine-and-food-tours/waiheke-wine-and-dine/", price:"NZD169（約1.55万円・大人限定）", hint:"往復フェリー＋マルチコースランチ＋ワイン＋周遊バス1日券。所要半日〜。景色・グルメ・お酒が揃う。", tag:"本命"},
+  {name:"スカイタワー展望", url:"https://skycityauckland.co.nz/sky-tower/admissions/", price:"NZD47（約4,300円）", hint:"328m展望・所要30〜60分。屋内で雨天に最強。サンセット〜夜景が映える。当日購入可。"},
+];
+
+const other = [
+  {name:"ギブストンバレー・ワイナリー", url:"https://www.gibbstonvalley.com/us/experiences/tours/", hint:"NZ最大のワインケイブ。洞窟で雨に強く落ち着いて過ごせる。45分ツアー＋4種試飲NZD38〜。飲むなら送迎で。"},
+  {name:"グレノーキー／LOTRロケ地ドライブ", url:"https://pureglenorchy.com/lord-of-the-rings-tour/", hint:"湖畔の絶景ドライブ＋映画ロケ地・片道45分。ハーフデイツアーNZD245前後。自力レンタカーでも映える。"},
+  {name:"タンデム・パラグライダー", url:"https://nzgforce.com/", hint:"山頂から街と湖を見下ろす滑空15〜25分・NZD199〜（＋ゴンドラ代）。風・天候で催行判断がシビア。"},
+  {name:"カワラウ・バンジー（世界初）", url:"https://www.bungy.co.nz/queenstown/kawarau-bungy-centre/kawarau-bridge-bungy/", hint:"世界初の商業バンジー発祥地・43m・NZD205。跳ばない側も観覧席で楽しめる。挑戦は希望者のみ。"},
+  {name:"デボンポート（フェリー＋展望）", url:"https://at.govt.nz/timetables/", hint:"市内からフェリー12分のレトロ港町。非接触決済は片道NZD7.80／往復NZD15.60。マウント・ビクトリアから展望。手軽な半日。"},
+  {name:"ピハ／西海岸（ガイドツアー）", url:"https://bushandbeach.co.nz/tour/wilderness-experience-nature-tour/", hint:"黒砂ビーチと原生林・ガイドツアー5時間NZD200（ホテル送迎込）。雨・強風時は不向き（遊泳は離岸流に注意）。"},
+  {name:"ホビトン映画セット（任意・終日）", url:"https://www.greatsights.co.nz/new-zealand-tour-destinations/hobbiton-movie-set-tours/hobbiton-movie-set-from-auckland/", hint:"GreatSightsのオークランド往復はNZD259〜・約8時間15分。送迎・入場・昼食込み。要早期予約。"},
+];
+
+// レンタカー: 2名＝1台（コンパクトSUV・定員5）。中盤2〜3日だけ。現地大手＋比較を併記。
+const cars = [
+  {name:"ZQN空港公式・レンタカー各社一覧（Budget/Avis/Hertz/Thrifty/Europcar/Go Rentals ほか）", url:"https://www.queenstownairport.co.nz/parking-transport/transport-options/car-rentals/", price:"コンパクトSUV NZD70〜130/日＋免責軽減NZD25〜45/日", hint:"車種例：Mitsubishi ASX／Toyota RAV4クラス（定員5）。空港カウンター受取。中盤だけなら市街店舗も。", tag:"公式一覧"},
+  {name:"Go Rentals（NZ現地大手・直営）", url:"https://www.gorentals.co.nz/", price:"日付・車種で見積", hint:"コンパクト〜SUV。空港／市街受取。3〜4日で総額NZD450〜700（約4.1〜6.4万円）＋燃料NZD100〜150が目安。", tag:"現地直営"},
+  {name:"Skyscanner レンタカー（ZQN・横断比較）", url:"https://www.skyscanner.net/car-hire-from/zqn/car-hire-from-queenstown-airport.html", price:"各社の料金を比較", hint:"複数社を横断して最安・条件を比較。免責・走行距離条件も確認。", tag:"比較"},
+  {name:"VroomVroomVroom（ZQN・NZ比較）", url:"https://www.vroomvroomvroom.co.nz/locations/queenstown-airport/", price:"各社の料金を比較", hint:"NZ現地比較サイト。受取場所・追加ドライバー条件を確認。", tag:"比較"},
+  {name:"KAYAK（Queenstown・対象日入り比較）", url:"https://www.kayak.co.jp/cars/Queenstown,New-Zealand-c8584/2026-11-29/2026-12-01", price:"11/29〜12/1の料金を比較", hint:"2名・コンパクトSUVを基準に、免責軽減・追加ドライバー・燃料条件込みの最終額を比較。", tag:"日付入り"},
+];
+
+// 宿: 予約前のエリア検索URL（価格が見える）。
+const stays = [
+  {name:"QT｜Queenstown Holiday Park Creeksyde（4泊・2名）", url:"https://www.booking.com/searchresults.ja.html?ss=Queenstown%2C%20Otago%2C%20New%20Zealand&checkin=2026-11-27&checkout=2026-12-01&group_adults=2&no_rooms=1&group_children=0", price:"¥81,045・税手数料込（7/12表示）", hint:"中心部0.6km、評価8.9／548件、スタジオ。残室2表示。価格重視候補。"},
+  {name:"QT｜Blue Peaks Lodge（4泊・2名）★本命", url:"https://www.booking.com/searchresults.ja.html?ss=Queenstown%2C%20Otago%2C%20New%20Zealand&checkin=2026-11-27&checkout=2026-12-01&group_adults=2&no_rooms=1&group_children=0", price:"¥140,062・税手数料込（7/12表示）", hint:"中心部400m、評価8.4／1,554件。無料キャンセル・前払い不要、残室1表示。"},
+  {name:"QT｜Queenstown House Lakeside（4泊・2名）", url:"https://www.booking.com/searchresults.ja.html?ss=Queenstown%2C%20Otago%2C%20New%20Zealand&checkin=2026-11-27&checkout=2026-12-01&group_adults=2&no_rooms=1&group_children=0", price:"¥208,811・税手数料込（7/12表示）", hint:"中心部0.6km、評価9.3／229件、レイクビュー・スタジオ。残室1表示。"},
+  {name:"AKL｜LyLo Auckland（3泊・2名）", url:"https://www.booking.com/searchresults.ja.html?ss=Auckland%2C%20Auckland%20Region%2C%20New%20Zealand&checkin=2026-12-01&checkout=2026-12-04&group_adults=2&no_rooms=1&group_children=0", price:"¥47,024・税手数料込（7/12表示）", hint:"CBD中心部450m、評価8.7／5,356件、個室ダブル。無料キャンセル・前払い不要。"},
+  {name:"AKL｜Radisson RED Auckland（3泊・2名）★本命", url:"https://www.booking.com/searchresults.ja.html?ss=Auckland%2C%20Auckland%20Region%2C%20New%20Zealand&checkin=2026-12-01&checkout=2026-12-04&group_adults=2&no_rooms=1&group_children=0", price:"¥67,118・税手数料込（7/12表示）", hint:"CBD中心部250m、評価8.9／369件。無料キャンセル・前払い不要。"},
+  {name:"AKL｜Adina Citylife Auckland（3泊・2名）", url:"https://www.booking.com/searchresults.ja.html?ss=Auckland%2C%20Auckland%20Region%2C%20New%20Zealand&checkin=2026-12-01&checkout=2026-12-04&group_adults=2&no_rooms=1&group_children=0", price:"¥88,550・税手数料込（7/12表示）", hint:"Queen Street、中心部150m、評価9.0／2,628件。立地と快適性重視。"},
+];
+
+const budget = [
+  ["航空券（全4便・表示運賃）","¥209,223","2名 ¥418,446／国際線往復＋国内2区間"],
+  ["航空券（荷物・決済費込の見込）","約21.7〜22.1万円","2名 約¥434,000〜442,000／最終画面で1人¥230,000以下を確認"],
+  ["燃油・空港税／諸税・発券／予約","航空券最終額に含める","Air NZ日本発表示は燃油・公定諸税込み。公式オンライン予約0円／電話発券は2名で¥11,000"],
+  ["NZeTA＋IVL","約1.1万円","NZD117／2名 約¥21,500"],
+  ["海外旅行保険（約9日）","1.0〜2.0万円","アクティビティ補償の有無を確認"],
+  ["宿（7泊・2名1室）","約6.4〜14.9万円","2名 約¥128,069〜297,361（実在庫3段階）／本命組合せ¥207,180"],
+  ["現地交通","約1.7〜3.5万円","空港送迎・レンタカー・フェリー・市内交通"],
+  ["体験・アクティビティ","約6〜10万円","選択制（ミルフォード＋数本）"],
+  ["食事（8日・カフェ込）","約5〜8万円","2名 約¥100,000〜160,000・GST込み表示"],
+  ["予備費（10〜12%）","約4.5〜5.5万円","悪天・追加移動・為替・買い物"],
+  ["合計めやす（推奨：中盤レンタカー）","約49〜60万円","2名 約¥98〜120万円"],
+  ["参考：ツアー主体（車なし）","約47〜58万円","2名 約¥95〜115万円"],
+];
+
+const foresightList = [
+  {category:"費用", title:"航空券は荷物込み最終額で上限判定", status:"最優先で予約", url:"https://www.kayak.co.jp/flights/NRT-AKL/2026-11-26/2026-12-04/2adults?sort=bestflight_a", note:"2名検索の表示運賃は1人¥209,223。国内線Seat運賃に23kg受託手荷物各1個と決済手数料を足すと約¥217,000〜221,000/人の見込み。最終決済画面が必ず¥230,000/人以下であることを確認する。"},
+  {category:"予約", title:"12月は繁忙期入り", status:"日本出発前に確保", note:"宿・ミルフォード・ワイヘキ人気ランチ・ホビトン・記念日ディナーは数週間前に埋まる枠あり。人気ツアーとファイン系レストランは早めに押さえる。"},
+  {category:"実行性", title:"往路AKL乗継は3時間25分・別切り", status:"変更不可なら慎重に", url:"https://www.airnewzealand.com/connecting-at-auckland", note:"NZ98 09:00着→NZ637 12:25発。入国審査・荷物受取・税関検疫・再預け・別ターミナル移動が必要。空港の約3時間目安は満たすが、別切りのため国際線遅延時の振替保証はない。"},
+  {category:"天候", title:"ミルフォード方面は天候変化が大きい", status:"予備日で吸収", note:"Day4を予備日にして荒天時の振替に。雨のミルフォードは滝が増えてむしろ映えるので、中止を即断しない。"},
+  {category:"安全", title:"ジェットボートは本行程から除外", status:"調査更新後に再判断", url:"https://www.1news.co.nz/2026/07/10/jetboat-crashes-into-rocks-at-queenstowns-shotover-river/", note:"2026年7月10日にShotover Riverで岩への衝突と軽傷者が報道され、TAICも峡谷ジェットボートを高リスク活動と明記。運航・調査状況が固まるまでは温泉へ差し替える。"},
+  {category:"交通", title:"レンタカーは日本免許＋IDPが必須", status:"IDPを取得", url:"https://www.nzta.govt.nz/driver-licences/new-residents-and-visitors/", note:"NZ運転には国際運転免許証(IDP)またはNZTA承認英訳の携行が必要。左側通行・ラウンドアバウトに注意。ワイン試飲日は飲酒運転厳禁→送迎か片方が運転。"},
+  {category:"費用", title:"燃油・空港税・発券・為替を最終確認", status:"総額で判断", url:"https://www.airnewzealand.jp/special-deal-jul-2026-sep-may-matariki", note:"Air NZ公式の日本発表示運賃は燃油サーチャージ・公定諸税込み。空港税・国際観光旅客税などの内訳は販売元の最終画面で確認。<a href='https://www.airnewzealand.jp/fare-rules' target='_blank' rel='noopener'>公式オンライン予約</a>は予約手数料なし、<a href='https://www.airnewzealand.jp/online-bookings-important-info' target='_blank' rel='noopener'>電話発券</a>は1名・1予約¥5,500（OTAは販売元条件）。換算は<a href='https://www.rbnz.govt.nz/statistics/series/exchange-and-interest-rates/exchange-rates-and-the-trade-weighted-index' target='_blank' rel='noopener'>1NZD≒¥93</a>（2026/7/9、予算は¥97でも確認）。カード会社所定の海外決済手数料を確認し、現地ではDCCを避けNZD建てを選ぶ。"},
+];
+
+const bookList = [
+  {label:"① 航空券全4便 — 23kg荷物×国内2区間と全手数料込みで1人¥230,000以下を確認", url:"https://www.kayak.co.jp/flights/NRT-AKL/2026-11-26/2026-12-04/2adults?sort=bestflight_a"},
+  {label:"② NZeTA＋IVL（発給に最大72時間・出発の数日前までに）", url:"https://www.immigration.govt.nz/visas/new-zealand-electronic-travel-authority-nzeta/"},
+  {label:"③ 宿（クイーンズタウン4泊／オークランドCBD3泊・繁忙期入りで早めに）", url:"https://www.booking.com/city/nz/queenstown.html"},
+  {label:"④ 早期完売系ツアー（ミルフォード／ワイヘキ人気ランチ／ホビトン任意／記念日ディナー）", url:"https://www.realnz.com/en/experiences/day-cruises/milford-sound-day-trip-from-queenstown/"},
+  {label:"⑤ レンタカー（借りる場合）＋IDP（国際運転免許証）の取得", url:"https://www.queenstownairport.co.nz/parking-transport/transport-options/car-rentals/"},
+  {label:"⑥ 海外旅行保険（遊覧飛行・バンジー等を選ぶ場合の補償範囲を確認）", url:"https://www.google.com/maps/search/?api=1&query=%E6%B5%B7%E5%A4%96%E6%97%85%E8%A1%8C%E4%BF%9D%E9%99%BA%20%E3%83%8B%E3%83%A5%E3%83%BC%E3%82%B8%E3%83%BC%E3%83%A9%E3%83%B3%E3%83%89%20%E3%82%A2%E3%82%AF%E3%83%86%E3%82%A3%E3%83%93%E3%83%86%E3%82%A3%E8%A3%9C%E5%84%9F"},
+  {label:"⑦ NZTD（出発の24時間前・無料）", url:"https://www.travellerdeclaration.govt.nz/"},
+];
+const decideList = [
+  "航空券全4便の最終決済額（国内線23kg手荷物各1個＋全手数料込みで1人23万円以下）。",
+  "宿の本命（Blue Peaks Lodge＋Radisson RED）か、節約／快適性重視へ振るか。無料キャンセル期限も確認。",
+  "レンタカーを借りるか（全ツアーで車なしも成立）＋IDP／NZTA承認英訳の取得。",
+  "IVL／NZeTA料金の改定有無（申請直前に公式で最新額を確認）。",
+  "海外旅行保険のアクティビティ補償範囲（遊覧飛行／バンジー等）。",
+  "ミルフォードの手段（コーチ&クルーズ／往路バス＋復路フライト／フライ・クルーズ・フライ）。",
+  "パスポート残存月数（出国日から3か月以上、できれば6か月）の最終確認。",
+  "記念日ディナーの店・席（大奮発のAmisfield か、Botswana Butchery／Rātā）。",
+];
+/* =================== /DATA =================== */
+
+
+/* =================== 描画（触らない） =================== */
+function colorOf(k){return k==="hub"?"#16354a":"#d23b2c";}
+function pinIcon(n,color){return L.divIcon({className:"",iconSize:[22,22],iconAnchor:[11,11],
+  html:`<div class="pin" style="background:${color}">${n}</div>`});}
+
+function spread(items,thr=0.0015,r=0.004){
+  const placed=[];
+  return items.map(s=>{
+    let lat=s.lat,lng=s.lng,k=0;
+    while(placed.some(p=>Math.hypot(p[0]-lat,p[1]-lng)<thr)&&k<8){
+      const a=k*Math.PI/3; lat=s.lat+r*Math.sin(a); lng=s.lng+r*Math.cos(a); k++;
+    }
+    placed.push([lat,lng]);
+    return Object.assign({},s,{dlat:lat,dlng:lng});
+  });
+}
+const spots = spread(mapSpots);
+const markers={};
+let routeMap=null;
+
+function showToast(message){
+  const toast=document.getElementById("toast");
+  if(!toast)return;
+  toast.textContent=message;
+  toast.classList.add("show");
+  clearTimeout(showToast._timer);
+  showToast._timer=setTimeout(()=>toast.classList.remove("show"),2200);
+}
+
+function emptyState(label){
+  return `<div class="empty-state">${label}</div>`;
+}
+
+function populateSummary(){
+  const set=(id,value)=>{ const el=document.getElementById(id); if(el)el.textContent=value; };
+  set("summary-days", `${days.length}日`);
+  set("summary-spots", `${spots.length}件`);
+  set("summary-meals", `${meals.reduce((sum,g)=>sum+(g.items||[]).length,0)}件`);
+  set("summary-checks", `${(foresightList||[]).length}件`);
+  set("summary-todos", `${(bookList||[]).length}件`);
+}
+
+document.querySelectorAll(".side-nav a,.tabset a").forEach(link=>{
+  link.addEventListener("click",()=>showToast(`${link.textContent.trim()}を開きます`));
+});
+
+function initMap(){
+  const mapEl=document.getElementById("map");
+  if(!window.L){
+    mapEl.innerHTML='<div class="mapfallback">地図を読み込み中です。表示されない場合は通信環境を確認してください。</div>';
+    return;
+  }
+  mapEl.style.animation="none";
+  routeMap = L.map("map",{scrollWheelZoom:false});
+  L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",{maxZoom:18,attribution:'&copy; OpenStreetMap contributors'}).addTo(routeMap);
+  const latlngs = spots.map(s=>[s.dlat,s.dlng]);
+  L.polyline(latlngs,{color:"#d23b2c",weight:4,opacity:.9,lineJoin:"round"}).addTo(routeMap);
+  spots.forEach(s=>{ markers[s.n]=L.marker([s.dlat,s.dlng],{icon:pinIcon(s.n,colorOf(s.kind))}).addTo(routeMap).bindPopup(`<b>${s.n}. ${s.name}</b><br>${s.time}`); });
+  foodTowns.forEach(f=>{ L.marker([f.lat,f.lng],{icon:L.divIcon({className:"",iconSize:[14,14],iconAnchor:[7,7],
+    html:`<div style="width:14px;height:14px;border-radius:50%;background:#b07d24;border:2px solid #fff;box-shadow:0 1px 4px rgba(0,0,0,.3)"></div>`})}).addTo(routeMap).bindPopup(`<b>🍽 ${f.name}</b>`); });
+  if(latlngs.length) routeMap.fitBounds(L.latLngBounds(latlngs).pad(0.2)); else routeMap.setView([-41,172],5);
+}
+
+window.focusPin=(n)=>{ const s=spots.find(x=>x.n===n); if(!s)return;
+  if(routeMap&&markers[n]){ routeMap.setView([s.dlat,s.dlng],13,{animate:true}); markers[n].openPopup(); }
+  document.querySelectorAll(".pinbtn").forEach(b=>b.classList.toggle("active",Number(b.dataset.n)===n));
+  showToast(`${s.short||s.name}へ地図を移動しました`);
+};
+document.getElementById("pinindex").innerHTML = spots.map(s=>
+  `<button class="pinbtn" data-n="${s.n}" onclick="focusPin(${s.n})"><span class="num ${s.kind==='hub'?'hub':''}">${s.n}</span>${s.short}</button>`).join("");
+initMap();
+
+function legRow(l){ const pills=(l.pills||[]).map(p=>`<a class="pill ${p.cls}" href="${p.url}" target="_blank" rel="noopener">${p.label}</a>`).join("");
+  return `<div class="leg"><div class="ic">${l.ic}</div><div><div class="ttl">${l.ttl}</div><div class="meta">${l.meta}</div><div class="pillrow">${pills}</div></div></div>`; }
+document.getElementById("acc-a").innerHTML = (access.a||[]).length ? access.a.map(legRow).join("") : emptyState("アクセス情報は未設定です");
+document.getElementById("acc-b").innerHTML = (access.b||[]).length ? access.b.map(legRow).join("") : emptyState("アクセス情報は未設定です");
+
+document.getElementById("days").innerHTML = days.length ? days.map(d=>`
+  <div class="card day timeline"><h3>${d.label}</h3>
+  ${d.stops.map(s=>`<div class="stop"><div class="top">
+    ${s.num?`<span class="num ${s.kind==='hub'?'hub':''}">${s.num}</span>`:`<span style="width:22px;flex:0 0 auto"></span>`}
+    <div class="t">${s.t}</div>
+    <div class="p">${s.url?`<a href="${s.url}" target="_blank" rel="noopener">${s.p}</a>`:s.p}</div></div>
+    ${s.hint?`<div class="hint">${s.hint}</div>`:""}
+    ${s.move?`<a class="movelink" href="${s.move.url}" target="_blank" rel="noopener">${s.move.ic} ${s.move.label}</a>`:""}
+  </div>`).join("")}</div>`).join("") : emptyState("行程は未設定です");
+
+const itemCard=(o)=>`<div class="item">${o.tag?`<span class="tag ${o.sns?'sns':''}">${o.tag}</span>`:""}
+  <div class="name"><a href="${o.url}" target="_blank" rel="noopener">${o.name}</a></div>
+  ${o.price?`<div class="price">${o.price}</div>`:""}${o.hint?`<div class="hint">${o.hint}</div>`:""}</div>`;
+document.getElementById("meal-list").innerHTML = meals.length ? meals.map(g=>`<div class="mealgroup"><div class="when">${g.when}</div><div class="grid2">${g.items.map(itemCard).join("")}</div></div>`).join("") : emptyState("食事候補は未設定です");
+document.getElementById("activity-list").innerHTML = activities.length ? activities.map(itemCard).join("") : emptyState("アクティビティ候補は未設定です");
+document.getElementById("other-list").innerHTML = other.length ? other.map(itemCard).join("") : emptyState("追加スポットは未設定です");
+document.getElementById("car-list").innerHTML   = cars.length ? cars.map(itemCard).join("") : emptyState("レンタカー候補は未設定です");
+document.getElementById("stay-list").innerHTML  = stays.length ? stays.map(itemCard).join("") : emptyState("宿候補は未設定です");
+const checkCard=(o)=>`<div class="check-card">
+  <div class="check-label">${o.category||"確認"}</div>
+  <div class="check-title">${o.url?`<a href="${o.url}" target="_blank" rel="noopener">${o.title}</a>`:o.title}</div>
+  ${o.note?`<div class="check-note">${o.note}</div>`:""}
+  ${o.status?`<span class="check-status">${o.status}</span>`:""}
+</div>`;
+document.getElementById("check-list").innerHTML = foresightList.length ? foresightList.map(checkCard).join("") : emptyState("先読みチェックは未設定です");
+const totalBudgetRow = budget.find(r=>String(r[0]).includes("合計"));
+const totalBudgetEl = document.getElementById("budget-total-pill");
+if(totalBudgetEl) totalBudgetEl.textContent = totalBudgetRow ? totalBudgetRow[1] : "調整中";
+document.getElementById("budget-table").innerHTML = `<thead><tr><th>項目</th><th>1人あたり</th><th>メモ</th></tr></thead><tbody>`+
+  budget.map(r=>{
+    const isTotal = String(r[0]).includes("合計");
+    return `<tr class="${isTotal ? "total-row" : ""}"><td data-label="項目">${r[0]}</td><td data-label="1人あたり" class="r">${r[1]}</td><td data-label="メモ">${r[2]}</td></tr>`;
+  }).join("")+`</tbody>`;
+document.getElementById("book-list").innerHTML = bookList.length ? bookList.map(c=>`<li><a href="${c.url}" target="_blank" rel="noopener">${c.label}</a></li>`).join("") : "<li>予約ToDoは未設定です</li>";
+document.getElementById("decide-list").innerHTML = decideList.length ? decideList.map(d=>`<li>${d}</li>`).join("") : "<li>未確定事項は未設定です</li>";
+populateSummary();
+</script>
+</body>
+</html>
