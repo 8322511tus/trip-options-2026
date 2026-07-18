@@ -1,0 +1,727 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#007f9e">
+<title>夏の日帰り旅行 5案</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+  integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="">
+<style>
+  :root{
+    --color-brand:#0b5cab;
+    --color-brand-hover:#064a8a;
+    --color-brand-deep:#032d60;
+    --color-brand-soft:#eaf5ff;
+    --color-background:#eef4fb;
+    --color-surface:#ffffff;
+    --color-surface-alt:#f7f9fd;
+    --color-border:#c9d5e8;
+    --color-text-primary:#111827;
+    --color-text-secondary:#3f526d;
+    --color-text-muted:#6b778c;
+    --color-success:#2e844a;
+    --color-warning:#b76100;
+    --color-danger:#ba0517;
+    --color-info:#0176d3;
+    --space-1:4px;
+    --space-2:8px;
+    --space-3:12px;
+    --space-4:16px;
+    --space-6:24px;
+    --space-8:32px;
+    --radius-small:4px;
+    --radius-medium:8px;
+    --radius-large:12px;
+    --shadow-card:0 1px 2px rgba(10,31,68,.10),0 10px 28px rgba(10,31,68,.08);
+    --shadow-popover:0 12px 32px rgba(10,31,68,.20);
+    --shadow-modal:0 24px 60px rgba(10,31,68,.30);
+    --font-stack:"Segoe UI Variable","Segoe UI","Noto Sans JP","Yu Gothic UI","Yu Gothic",Meiryo,sans-serif;
+    --font-page-title:750 30px/1.16 var(--font-stack);
+    --font-section-title:750 18px/1.35 var(--font-stack);
+    --font-body:400 14px/1.65 var(--font-stack);
+    --font-caption:700 12px/1.4 var(--font-stack);
+    --z-header:100;
+    --z-dropdown:200;
+    --z-modal:500;
+    --z-toast:600;
+  }
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{margin:0;color:var(--color-text-primary);
+    background:linear-gradient(180deg,#fff 0,#fff 56px,#0b5cab 56px,#276f9f 172px,#eef4fb 172px,#eef4fb 100%);
+    font:var(--font-body);-webkit-text-size-adjust:100%}
+  a{color:var(--color-brand);text-underline-offset:.16em}
+  a:hover{color:var(--color-brand-hover)}
+  a:focus-visible,button:focus-visible{outline:3px solid rgba(1,118,211,.35);outline-offset:2px}
+  .app-shell{min-height:100vh;position:relative}
+  .app-shell::before{content:"";position:absolute;left:0;right:0;top:56px;height:156px;pointer-events:none;
+    background:
+      repeating-linear-gradient(135deg,rgba(255,255,255,.14) 0 1px,transparent 1px 18px),
+      linear-gradient(120deg,rgba(3,45,96,.92),rgba(11,92,171,.78) 54%,rgba(91,144,184,.52));
+    border-bottom:1px solid rgba(255,255,255,.28)}
+  .global-header{position:sticky;top:0;z-index:var(--z-header);height:56px;background:#fff;color:var(--color-text-primary);
+    border-bottom:1px solid #dfe5ef;display:flex;align-items:center;gap:var(--space-4);padding:0 var(--space-6);
+    box-shadow:0 1px 2px rgba(10,31,68,.08)}
+  .brand-home{display:flex;align-items:center;gap:var(--space-3);min-width:0;color:inherit;text-decoration:none}
+  .brand-home:hover{color:inherit}
+  .brand-mark{width:30px;height:30px;border-radius:var(--radius-medium);background:linear-gradient(135deg,#2b6cb0,#6c7ff2);
+    color:#fff;display:grid;place-items:center;font-weight:900;box-shadow:inset 0 0 0 1px rgba(255,255,255,.35)}
+  .brand-title{font-weight:800;letter-spacing:0}
+  .global-actions{margin-left:auto;display:flex;align-items:center;gap:var(--space-1);overflow:auto}
+  .global-actions a{display:inline-flex;align-items:center;min-height:32px;padding:0 10px;border-radius:var(--radius-small);
+    color:var(--color-text-secondary);font-size:13px;font-weight:750;text-decoration:none;white-space:nowrap}
+  .global-actions a:hover{background:var(--color-brand-soft);color:var(--color-brand)}
+  .global-actions .back-link{border:1px solid var(--color-border);background:var(--color-surface-alt);color:var(--color-brand-deep)}
+  .shell-body{position:relative;z-index:1;max-width:1440px;margin:0 auto;display:grid;grid-template-columns:220px minmax(0,1fr) 300px;gap:var(--space-4);padding:var(--space-4)}
+  .side-nav,.summary-panel{position:sticky;top:72px;align-self:start}
+  .side-nav,.summary-panel,.card{background:var(--color-surface);border:1px solid var(--color-border);border-radius:var(--radius-medium);box-shadow:var(--shadow-card)}
+  .side-nav{padding:var(--space-3);box-shadow:0 1px 2px rgba(10,31,68,.10),0 10px 22px rgba(10,31,68,.08)}
+  .side-nav-title,.summary-title{font:var(--font-caption);color:var(--color-text-muted);margin:0 0 var(--space-2)}
+  .side-nav a{display:flex;align-items:center;gap:var(--space-2);min-height:36px;padding:0 var(--space-3);border-radius:var(--radius-small);
+    color:var(--color-text-secondary);font-weight:700;text-decoration:none}
+  .side-nav a:hover,.side-nav a.active{background:var(--color-brand-soft);color:var(--color-brand)}
+  .main-content{min-width:0;display:grid;gap:var(--space-4)}
+  .summary-panel{padding:var(--space-4);display:grid;gap:var(--space-4)}
+  .summary-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:var(--space-2)}
+  .summary-metric{min-height:76px;display:grid;align-content:space-between;gap:var(--space-1);padding:var(--space-3);
+    border:1px solid #d7e3f5;border-radius:var(--radius-medium);background:linear-gradient(180deg,#fff,#f8fbff)}
+  .summary-metric span{color:var(--color-text-muted);font-size:11px;font-weight:750}
+  .summary-metric b{font-size:21px;line-height:1.1;color:var(--color-brand-deep);font-weight:750}
+  .summary-metric::after{content:"";display:block;width:100%;height:6px;border-radius:999px;background:linear-gradient(90deg,#2b6cb0,#6c7ff2)}
+  .utility-links{display:grid;gap:var(--space-2)}
+  .utility-links a{display:flex;justify-content:space-between;align-items:center;min-height:36px;padding:0 var(--space-3);
+    border:1px solid var(--color-border);border-radius:var(--radius-small);background:var(--color-surface-alt);
+    color:var(--color-text-primary);font-weight:750;text-decoration:none}
+  .utility-links a::after{content:"›";color:var(--color-brand);font-size:18px}
+  .utility-links a:hover{border-color:#9bbde6;background:var(--color-brand-soft);color:var(--color-brand)}
+  .hero{position:relative;overflow:hidden;background:linear-gradient(180deg,#fff,#f9fbff);border:1px solid #c4d4ea;
+    border-radius:var(--radius-medium);padding:0;box-shadow:0 2px 4px rgba(10,31,68,.10),0 16px 42px rgba(10,31,68,.12)}
+  .hero::before{content:"";position:absolute;left:0;right:0;top:0;height:6px;background:linear-gradient(90deg,#2b6cb0,#706eeb,#20a0d8)}
+  .hero-main{padding:var(--space-6)}
+  .title-cluster{display:flex;align-items:flex-start;gap:var(--space-3)}
+  .record-icon{width:42px;height:42px;border-radius:var(--radius-medium);display:grid;place-items:center;flex:0 0 auto;
+    background:linear-gradient(135deg,#5f7feb,#2b6cb0);color:#fff;font-weight:900;box-shadow:inset 0 0 0 1px rgba(255,255,255,.35)}
+  .kicker{font:var(--font-caption);color:var(--color-brand);margin-bottom:var(--space-1)}
+  .page-title-row{display:flex;align-items:flex-start;justify-content:space-between;gap:var(--space-4)}
+  h1{margin:0;font:var(--font-page-title)}
+  .lead{color:var(--color-text-secondary);margin:var(--space-2) 0 var(--space-4);max-width:74ch}
+  .badges{display:flex;gap:var(--space-2);flex-wrap:wrap}
+  .badge,.pill,.tag{display:inline-flex;align-items:center;gap:5px;border:1px solid var(--color-border);background:var(--color-surface-alt);
+    border-radius:999px;padding:5px 10px;font-size:12px;font-weight:800;color:var(--color-text-secondary)}
+  .badge.status-info{background:#eaf5ff;border-color:#b9dcff;color:#095da0}
+  .badge.status-success{background:#eaf7ee;border-color:#b7e1c1;color:#22683e}
+  .action-bar{display:flex;gap:var(--space-2);flex-wrap:wrap;margin-top:var(--space-4)}
+  .btn{display:inline-flex;align-items:center;justify-content:center;gap:var(--space-2);min-height:36px;border:1px solid var(--color-border);
+    border-radius:var(--radius-small);padding:0 var(--space-3);background:var(--color-surface);color:var(--color-text-primary);
+    text-decoration:none;font-weight:800;cursor:pointer;box-shadow:0 1px 1px rgba(10,31,68,.06)}
+  .btn:hover{border-color:#9bbde6;color:var(--color-brand);background:#f7fbff;box-shadow:0 2px 8px rgba(10,31,68,.10)}
+  .btn.primary{background:linear-gradient(180deg,#1677d2,#0b5cab);border-color:#084f99;color:#fff}
+  .btn.primary:hover{background:var(--color-brand-hover);color:#fff}
+  .btn.subtle{background:var(--color-surface-alt)}
+  .tabset{position:sticky;top:72px;z-index:50;background:var(--color-surface);border:1px solid var(--color-border);
+    border-radius:var(--radius-medium);box-shadow:var(--shadow-card);display:flex;gap:var(--space-1);padding:var(--space-1);overflow:auto}
+  .tabset a{white-space:nowrap;text-decoration:none;color:var(--color-text-secondary);font-weight:800;border-radius:var(--radius-small);padding:9px 12px}
+  .tabset a:hover{background:var(--color-brand-soft);color:var(--color-brand)}
+  section{scroll-margin-top:128px;margin-top:var(--space-4)}
+  .section-head{display:flex;align-items:flex-end;justify-content:space-between;gap:var(--space-4);margin-bottom:var(--space-3)}
+  h2{font:var(--font-section-title);margin:0;display:flex;align-items:center;gap:var(--space-2)}
+  h2 .dot{width:4px;height:18px;border-radius:999px;background:var(--color-brand)}
+  .sub{color:var(--color-text-muted);font-size:13px;margin:4px 0 0}
+  .card{padding:var(--space-4);margin-bottom:var(--space-3)}
+  .card:hover{box-shadow:0 2px 4px rgba(10,31,68,.10),0 12px 30px rgba(10,31,68,.08)}
+  #map{height:62vh;min-height:380px;max-height:560px;width:100%;border-radius:var(--radius-medium);border:1px solid var(--color-border);z-index:0;
+    background:linear-gradient(90deg,#eef2f7 25%,#f7f9fc 37%,#eef2f7 63%);background-size:400% 100%;animation:skeleton 1.25s ease-in-out infinite}
+  .mapfallback{height:100%;display:flex;align-items:center;justify-content:center;text-align:center;padding:24px;color:var(--color-text-secondary);background:#eef4f8}
+  .legend{display:flex;gap:14px;flex-wrap:wrap;margin-top:10px;font-size:13px;color:var(--color-text-secondary)}
+  .legend span{display:inline-flex;align-items:center;gap:6px}
+  .swatch{width:14px;height:14px;border-radius:50%;display:inline-block}
+  .routeline{width:22px;height:0;border-top:3px solid var(--color-danger);display:inline-block}
+  .pinindex{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+  .pinbtn{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--color-border);background:#fff;
+    border-radius:999px;padding:5px 11px 5px 6px;font-size:13px;font-weight:800;color:var(--color-text-primary);cursor:pointer}
+  .pinbtn:hover,.pinbtn.active{border-color:var(--color-danger);background:#fff4f2}
+  .pinbtn .num{width:20px;height:20px;border-radius:50%;background:var(--color-danger);color:#fff;font-size:12px;font-weight:800;
+    display:inline-flex;align-items:center;justify-content:center}
+  .pinbtn .num.hub{background:#16354a}
+  .pin{width:22px;height:22px;border-radius:50%;color:#fff;font-weight:800;font-size:12px;
+    display:flex;align-items:center;justify-content:center;border:2px solid #fff;box-shadow:0 2px 6px rgba(0,0,0,.35)}
+  .responsive-grid,.grid2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:var(--space-3)}
+  .access{display:grid;gap:10px}
+  .leg{display:grid;grid-template-columns:30px 1fr;gap:10px;padding:10px 0;border-bottom:1px dashed #e6ebee}
+  .leg:last-child{border-bottom:0}
+  .leg .ic{font-size:20px;text-align:center}
+  .leg .ttl{font-weight:800}
+  .leg .meta{font-size:13px;color:var(--color-text-secondary)}
+  .pillrow{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
+  .pill{text-decoration:none;background:#eef4f2;color:#27514a}
+  .pill.book{background:#eaf1f7;color:#1c537a}
+  .day{margin-bottom:14px}
+  .day h3{margin:0 0 12px;font-size:16px;color:var(--color-text-primary)}
+  .timeline{position:relative}
+  .stop{position:relative;padding:12px 0;border-bottom:1px solid #eef2f4}
+  .stop:last-child{border-bottom:0}
+  .stop .top{display:flex;gap:9px;align-items:baseline}
+  .stop .num{flex:0 0 auto;width:22px;height:22px;border-radius:50%;background:var(--color-danger);color:#fff;
+    font-size:12px;font-weight:800;display:inline-flex;align-items:center;justify-content:center;align-self:center}
+  .stop .num.hub{background:#16354a}
+  .stop .t{color:var(--color-brand);font-weight:800;font-variant-numeric:tabular-nums;min-width:46px}
+  .stop .p{font-weight:800}
+  .stop .hint{color:var(--color-text-muted);font-size:13px;margin-left:31px}
+  .movelink{margin:8px 0 2px 31px;display:inline-flex;align-items:center;gap:7px;font-size:13px;font-weight:700;
+    background:#f3f7f5;border:1px solid #e2ebe6;border-radius:10px;padding:5px 11px;color:#2f5a4c;text-decoration:none}
+  .mealgroup{margin-bottom:8px}
+  .mealgroup .when{font-weight:800;font-size:14px;color:var(--color-text-primary);margin:6px 2px 8px}
+  .item{border:1px solid var(--color-border);border-radius:var(--radius-medium);padding:var(--space-4);background:linear-gradient(180deg,#fff,#fbfdff);box-shadow:0 1px 1px rgba(10,31,68,.05)}
+  .item:hover{border-color:#9bbde6;box-shadow:var(--shadow-card);transform:translateY(-1px)}
+  .item .name{font-weight:800}
+  .item .price{font-weight:800;color:#123e5b;font-size:14px}
+  .item .hint{color:var(--color-text-muted);font-size:13px}
+  .tag{border-radius:var(--radius-small);padding:2px 7px;margin:0 6px 6px 0;color:#6a4a14;background:#fdf0d6}
+  .tag.sns{color:#8a2b6b;background:#fbe4f1}
+  .check-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:var(--space-3)}
+  .check-card{position:relative;border:1px solid #c7d8ea;border-radius:var(--radius-medium);padding:var(--space-4);
+    background:linear-gradient(180deg,#fff,#f8fbff);box-shadow:0 1px 1px rgba(10,31,68,.05)}
+  .check-card::before{content:"";position:absolute;left:0;top:0;bottom:0;width:4px;border-radius:var(--radius-medium) 0 0 var(--radius-medium);background:var(--color-warning)}
+  .check-label{font-size:12px;font-weight:850;color:var(--color-warning);margin-bottom:var(--space-1)}
+  .check-title{font-weight:850;color:var(--color-text-primary)}
+  .check-note{color:var(--color-text-muted);font-size:13px;margin-top:4px}
+  .check-status{display:inline-flex;margin-top:8px;border:1px solid #d9c6a0;background:#fff8ed;color:#7a4b00;border-radius:999px;padding:3px 8px;font-size:12px;font-weight:800}
+  .budget-card{padding:0;overflow:hidden}
+  .budget-head{display:flex;justify-content:space-between;gap:var(--space-4);align-items:flex-start;padding:var(--space-4);
+    background:linear-gradient(180deg,#f7fbff,#eef5ff);border-bottom:1px solid var(--color-border)}
+  .budget-head h3{margin:2px 0 0;font:var(--font-section-title)}
+  .budget-total{min-width:180px;border:1px solid #b9d6f4;background:#fff;border-radius:var(--radius-medium);padding:var(--space-3);text-align:right;
+    box-shadow:0 1px 2px rgba(10,31,68,.06)}
+  .budget-total span{display:block;color:var(--color-text-muted);font-size:11px;font-weight:750}
+  .budget-total b{display:block;color:var(--color-brand-deep);font-size:20px;line-height:1.2;margin-top:2px}
+  .budget-table-wrap{padding:var(--space-3);overflow-x:auto}
+  table{width:100%;border-collapse:separate;border-spacing:0;font-size:14px}
+  th,td{padding:12px 12px;border-bottom:1px solid #e3eaf5;text-align:left;vertical-align:top}
+  th{background:#f4f8fd;color:#314763;font-size:12px;font-weight:800}
+  th:first-child{border-top-left-radius:var(--radius-small)}
+  th:last-child{border-top-right-radius:var(--radius-small)}
+  tbody tr:hover td{background:#f8fbff}
+  td.r{text-align:right;font-variant-numeric:tabular-nums;font-weight:800;color:var(--color-brand-deep)}
+  .total-row td{background:#edf5ff!important;border-top:2px solid #9bbde6;border-bottom:0;font-weight:900}
+  .total-row td:first-child{border-bottom-left-radius:var(--radius-small)}
+  .total-row td:last-child{border-bottom-right-radius:var(--radius-small)}
+  .todo{list-style:none;padding:0;margin:0}
+  .todo li{padding:8px 0;border-bottom:1px solid #eef2f4}
+  .todo.book li:before{content:"□";color:var(--color-brand);font-weight:800;margin-right:6px}
+  .todo.decide li:before{content:"•";color:var(--color-warning);font-weight:800;margin-right:6px}
+  .twohead{font-weight:800;margin:2px 0 6px;font-size:14px}
+  .empty-state{border:1px dashed var(--color-border);border-radius:var(--radius-medium);background:var(--color-surface-alt);padding:var(--space-6);color:var(--color-text-muted);text-align:center}
+  .toast{position:fixed;right:var(--space-4);bottom:var(--space-4);z-index:var(--z-toast);background:#17324d;color:#fff;border-radius:var(--radius-medium);
+    box-shadow:var(--shadow-popover);padding:var(--space-3) var(--space-4);font-weight:800;opacity:0;transform:translateY(10px);pointer-events:none;transition:.18s ease}
+  .toast.show{opacity:1;transform:translateY(0)}
+  footer{margin-top:34px;color:var(--color-text-muted);font-size:12px;text-align:center}
+  @keyframes skeleton{0%{background-position:100% 0}100%{background-position:0 0}}
+  @media(max-width:1120px){
+    .shell-body{grid-template-columns:190px minmax(0,1fr)}
+    .summary-panel{position:static;grid-column:2}
+  }
+  @media(max-width:760px){
+    body{background:linear-gradient(180deg,#fff 0,#fff 56px,#0b5cab 56px,#276f9f 170px,#eef4fb 170px,#eef4fb 100%)}
+    .app-shell::before{top:56px;height:132px}
+    .global-header{position:relative;height:56px;min-height:56px;padding:0 12px;gap:8px}
+    .brand-home{gap:8px;min-width:0}
+    .brand-title{font-size:14px;line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .global-actions{margin-left:auto;flex:0 0 auto;max-width:44%;overflow:visible}
+    .global-actions a:not(.back-link){display:none}
+    .global-actions .back-link{min-height:34px;padding:0 9px;font-size:12px}
+    .shell-body{display:block;padding:14px 12px 12px}
+    .side-nav{display:none}
+    .summary-panel{margin-top:var(--space-3)}
+    .hero-main{padding:var(--space-4)}
+    .title-cluster{gap:var(--space-2)}
+    .record-icon{width:36px;height:36px}
+    .page-title-row{display:block}
+    .tabset{top:0}
+    .responsive-grid,.grid2,.check-grid{grid-template-columns:1fr}
+    table,thead,tbody,tr,th,td{display:block}
+    thead{display:none}
+    .budget-head{display:grid}
+    .budget-total{text-align:left;min-width:0}
+    tr{border:1px solid var(--color-border);border-radius:var(--radius-medium);padding:var(--space-2);margin-bottom:var(--space-2);background:#fff}
+    td{border:0;display:grid;grid-template-columns:96px 1fr;gap:var(--space-2)}
+    td:before{content:attr(data-label);font-weight:800;color:var(--color-text-muted)}
+    td.r{text-align:left}
+    #map{min-height:320px;height:52vh}
+  }
+  @media(prefers-reduced-motion:reduce){
+    html{scroll-behavior:auto}
+    *,*::before,*::after{animation:none!important;transition:none!important}
+  }
+
+  :root{
+    --color-brand:#007f9e;
+    --color-brand-hover:#00647e;
+    --color-brand-deep:#07485c;
+    --color-brand-soft:#e8f8fb;
+    --color-background:#edf7f8;
+    --color-summer:#ffbf3f;
+    --color-water:#35b8d4;
+    --color-leaf:#2d936c;
+    --color-route:#e44848;
+  }
+  body{
+    background:
+      radial-gradient(circle at 84% 74px,rgba(255,207,78,.42) 0 45px,transparent 46px),
+      linear-gradient(180deg,#fff 0,#fff 56px,#087f9e 56px,#31a7bf 194px,#edf7f8 194px,#edf7f8 100%);
+  }
+  .app-shell::before{
+    height:178px;
+    background:
+      radial-gradient(circle at 12% 34%,rgba(255,255,255,.22) 0 2px,transparent 3px),
+      radial-gradient(circle at 28% 68%,rgba(255,255,255,.18) 0 3px,transparent 4px),
+      repeating-radial-gradient(ellipse at 50% 105%,transparent 0 34px,rgba(255,255,255,.11) 35px 37px,transparent 38px 66px),
+      linear-gradient(120deg,rgba(2,72,92,.96),rgba(0,127,158,.88) 56%,rgba(53,184,212,.68));
+  }
+  .brand-mark{background:linear-gradient(135deg,#007f9e,#35b8d4)}
+  .summer-dot{display:inline-block;width:9px;height:9px;border-radius:999px;background:var(--color-summer);box-shadow:0 0 0 5px rgba(255,191,63,.18)}
+  .hero{
+    position:relative;overflow:hidden;padding:28px;border-radius:16px;color:#fff;
+    background:
+      radial-gradient(circle at 88% 15%,rgba(255,212,82,.95) 0 34px,rgba(255,212,82,.16) 35px 54px,transparent 55px),
+      linear-gradient(135deg,#075369,#007f9e 54%,#25a9c4);
+    box-shadow:0 18px 48px rgba(4,72,91,.24);
+  }
+  .hero::after{content:"";position:absolute;left:-6%;right:-6%;bottom:-38px;height:76px;border-radius:50%;border:2px solid rgba(255,255,255,.25);box-shadow:0 -14px 0 rgba(255,255,255,.08),0 -28px 0 rgba(255,255,255,.06)}
+  .hero-content{position:relative;z-index:1;max-width:820px}
+  .hero-kicker{display:flex;align-items:center;gap:10px;font-weight:850;letter-spacing:.08em;font-size:12px;color:#d9fbff}
+  .hero h1{margin:10px 0 8px;font-size:clamp(28px,5vw,48px);line-height:1.12;letter-spacing:-.025em}
+  .hero p{margin:0;max-width:760px;font-size:15px;line-height:1.75;color:rgba(255,255,255,.9)}
+  .hero-badges{display:flex;flex-wrap:wrap;gap:8px;margin-top:18px}
+  .hero-badge{display:inline-flex;align-items:center;min-height:30px;padding:0 11px;border:1px solid rgba(255,255,255,.34);border-radius:999px;background:rgba(255,255,255,.13);font-weight:750;font-size:12px;backdrop-filter:blur(8px)}
+  .notice{padding:13px 14px;border-left:4px solid var(--color-summer);border-radius:8px;background:#fff9e9;color:#574615}
+  .section-card{background:#fff;border:1px solid var(--color-border);border-radius:12px;box-shadow:var(--shadow-card);overflow:hidden}
+  .section-head{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;padding:18px 20px;border-bottom:1px solid var(--color-border);background:linear-gradient(180deg,#fff,#f8fcfd)}
+  .section-head h2{margin:0;font-size:20px;line-height:1.3;color:var(--color-brand-deep)}
+  .section-head p{margin:4px 0 0;color:var(--color-text-muted);font-size:13px}
+  .section-body{padding:20px}
+  .eyebrow{color:var(--color-brand);font-size:11px;font-weight:900;letter-spacing:.12em;text-transform:uppercase}
+  .candidate-grid{display:grid;grid-template-columns:repeat(5,minmax(190px,1fr));gap:12px;overflow-x:auto;padding-bottom:4px}
+  .candidate-card{appearance:none;text-align:left;min-width:190px;padding:16px;border:1px solid var(--color-border);border-radius:12px;background:#fff;color:inherit;cursor:pointer;transition:.18s ease;box-shadow:0 5px 16px rgba(10,31,68,.06)}
+  .candidate-card:hover{transform:translateY(-2px);border-color:#75c4d5;box-shadow:0 12px 24px rgba(0,102,126,.12)}
+  .candidate-card.active{border:2px solid var(--color-brand);padding:15px;background:linear-gradient(180deg,#fff,#ebfafc);box-shadow:0 10px 24px rgba(0,127,158,.18)}
+  .candidate-top{display:flex;align-items:center;justify-content:space-between;gap:8px}
+  .rank{display:grid;place-items:center;width:28px;height:28px;border-radius:9px;background:var(--color-brand-deep);color:#fff;font-weight:900}
+  .score{font-size:20px;font-weight:900;color:var(--color-brand)}
+  .score small{font-size:10px;color:var(--color-text-muted);font-weight:700}
+  .candidate-card h3{margin:12px 0 6px;font-size:16px}
+  .candidate-card p{margin:0;color:var(--color-text-secondary);font-size:12px;line-height:1.55}
+  .candidate-meta{display:grid;gap:5px;margin-top:12px;padding-top:10px;border-top:1px dashed var(--color-border);font-size:11px;color:var(--color-text-muted)}
+  .plan-switch{position:sticky;top:64px;z-index:80;display:flex;gap:8px;padding:9px;border:1px solid var(--color-border);border-radius:12px;background:rgba(255,255,255,.94);box-shadow:0 10px 26px rgba(10,31,68,.12);backdrop-filter:blur(12px);overflow-x:auto}
+  .plan-switch button{appearance:none;white-space:nowrap;border:1px solid transparent;border-radius:8px;background:transparent;color:var(--color-text-secondary);padding:9px 12px;font:700 12px/1 var(--font-stack);cursor:pointer}
+  .plan-switch button:hover{background:var(--color-brand-soft);color:var(--color-brand)}
+  .plan-switch button.active{background:var(--color-brand);color:#fff}
+  .plan-hero{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(260px,.65fr);gap:18px;padding:24px;background:linear-gradient(135deg,#073f50,#057f9d 62%,#28a9c2);color:#fff}
+  .plan-hero h2{margin:6px 0 8px;font-size:clamp(23px,4vw,34px);line-height:1.2}
+  .plan-hero p{margin:0;color:rgba(255,255,255,.88)}
+  .plan-rankline{display:flex;align-items:center;gap:10px;color:#d9fbff;font-size:12px;font-weight:850;letter-spacing:.08em}
+  .plan-rankline b{display:grid;place-items:center;width:28px;height:28px;border-radius:9px;background:#fff;color:var(--color-brand-deep);font-size:15px}
+  .metric-board{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+  .metric-board div{min-height:75px;padding:11px;border:1px solid rgba(255,255,255,.25);border-radius:10px;background:rgba(255,255,255,.11);backdrop-filter:blur(8px)}
+  .metric-board span{display:block;font-size:10px;color:#d9fbff;font-weight:800}
+  .metric-board b{display:block;margin-top:5px;font-size:15px;line-height:1.35}
+  .tag-row{display:flex;flex-wrap:wrap;gap:7px;margin-top:15px}
+  .tag{display:inline-flex;align-items:center;min-height:26px;padding:0 9px;border-radius:999px;background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.25);font-size:11px;font-weight:800}
+  .highlight-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+  .highlight{position:relative;padding:15px 14px 15px 40px;border:1px solid #cae7ed;border-radius:10px;background:#f2fbfc;color:var(--color-brand-deep);font-weight:700}
+  .highlight::before{content:"";position:absolute;left:15px;top:20px;width:11px;height:11px;border-radius:50% 50% 50% 0;background:var(--color-water);transform:rotate(-45deg)}
+  #map{height:440px;border-radius:10px;border:1px solid var(--color-border);z-index:1}
+  .map-note{display:flex;justify-content:space-between;gap:12px;margin:10px 0 0;color:var(--color-text-muted);font-size:11px}
+  .pin-index{display:flex;flex-wrap:wrap;gap:7px;margin-top:12px}
+  .pin-button{appearance:none;display:inline-flex;align-items:center;gap:7px;min-height:34px;padding:0 10px;border:1px solid var(--color-border);border-radius:8px;background:#fff;color:var(--color-text-primary);font:700 11px/1.2 var(--font-stack);cursor:pointer}
+  .pin-button:hover{border-color:var(--color-brand);background:var(--color-brand-soft)}
+  .pin-number{display:grid;place-items:center;width:20px;height:20px;border-radius:999px;background:var(--color-route);color:#fff;font-size:11px}
+  .route-marker{display:grid;place-items:center;width:28px;height:28px;border:3px solid #fff;border-radius:999px;background:var(--color-route);color:#fff;font-weight:900;box-shadow:0 3px 10px rgba(0,0,0,.3)}
+  .access-grid,.card-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+  .info-card{padding:16px;border:1px solid var(--color-border);border-radius:10px;background:#fff}
+  .info-card h3{margin:0 0 7px;font-size:15px;color:var(--color-brand-deep)}
+  .info-card p{margin:0;color:var(--color-text-secondary)}
+  .info-card .card-meta{display:flex;flex-wrap:wrap;gap:6px;margin:10px 0}
+  .pill{display:inline-flex;align-items:center;min-height:25px;padding:0 8px;border-radius:999px;background:var(--color-brand-soft);color:var(--color-brand-deep);font-size:10px;font-weight:850}
+  .pill.gold{background:#fff5d8;color:#765600}
+  .pill.green{background:#eaf8ef;color:#216a42}
+  .inline-link{display:inline-flex;align-items:center;gap:4px;margin-top:10px;font-weight:800;text-decoration:none}
+  .timeline{position:relative;display:grid;gap:12px}
+  .timeline::before{content:"";position:absolute;left:23px;top:26px;bottom:26px;width:3px;border-radius:999px;background:linear-gradient(var(--color-water),var(--color-route))}
+  .timeline-item{position:relative;display:grid;grid-template-columns:48px minmax(0,1fr);gap:13px}
+  .timeline-pin{position:relative;z-index:1;display:grid;place-items:center;width:46px;height:46px;border:4px solid #fff;border-radius:999px;background:var(--color-brand);color:#fff;font-size:16px;font-weight:900;box-shadow:0 4px 13px rgba(0,101,125,.24)}
+  .timeline-content{padding:14px 15px;border:1px solid var(--color-border);border-radius:10px;background:#fff}
+  .timeline-title{display:flex;align-items:baseline;justify-content:space-between;gap:12px}
+  .timeline-title h3{margin:0;font-size:16px}
+  .timeline-time{color:var(--color-brand);font-weight:900}
+  .transfer{display:flex;flex-wrap:wrap;gap:8px;margin:8px 0;color:var(--color-text-muted);font-size:11px}
+  .transfer a{font-weight:800}
+  .timeline-content p{margin:0;color:var(--color-text-secondary)}
+  .rating{font-weight:850;color:#8a5b00}
+  .budget-table{width:100%;border-collapse:collapse}
+  .budget-table th,.budget-table td{padding:11px 12px;border-bottom:1px solid var(--color-border);text-align:left}
+  .budget-table th{background:#f5fafb;color:var(--color-text-muted);font-size:11px}
+  .budget-table td:last-child{font-weight:850;color:var(--color-brand-deep)}
+  .foresight-grid{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:10px}
+  .foresight-item{padding:14px;border-radius:10px;border:1px solid var(--color-border);background:#fff}
+  .foresight-item b{display:block;margin-bottom:6px;color:var(--color-brand-deep)}
+  .foresight-item p{margin:0;color:var(--color-text-secondary);font-size:12px}
+  .decision-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+  .check-list{display:grid;gap:8px;margin:0;padding:0;list-style:none}
+  .check-list li{position:relative;padding:10px 12px 10px 38px;border:1px solid var(--color-border);border-radius:9px;background:#fff}
+  .check-list li::before{content:"";position:absolute;left:13px;top:13px;width:15px;height:15px;border:2px solid var(--color-brand);border-radius:4px;background:#fff}
+  .side-rank{display:grid;gap:8px}
+  .side-rank button{appearance:none;text-align:left;width:100%;padding:10px;border:1px solid var(--color-border);border-radius:8px;background:#fff;color:inherit;cursor:pointer}
+  .side-rank button.active{border-color:var(--color-brand);background:var(--color-brand-soft)}
+  .side-rank b{display:block;color:var(--color-brand-deep)}
+  .side-rank span{font-size:10px;color:var(--color-text-muted)}
+  .summary-callout{padding:13px;border-radius:9px;background:linear-gradient(135deg,#e8f8fb,#fff6d9);color:var(--color-brand-deep)}
+  .summary-callout b{display:block;margin-bottom:4px}
+  .foot-note{color:var(--color-text-muted);font-size:11px;line-height:1.65}
+  .leaflet-popup-content b{color:#07485c}
+  @media (max-width:1180px){
+    .shell-body{grid-template-columns:190px minmax(0,1fr)}
+    .summary-panel{display:none}
+    .foresight-grid{grid-template-columns:repeat(3,minmax(0,1fr))}
+  }
+  @media (max-width:820px){
+    body{background:linear-gradient(180deg,#fff 0,#fff 56px,#087f9e 56px,#31a7bf 164px,#edf7f8 164px)}
+    .app-shell::before{height:130px}
+    .global-header{padding:0 14px}
+    .brand-title{font-size:13px}
+    .global-actions a:not(.back-link){display:none}
+    .shell-body{display:block;padding:10px}
+    .side-nav{display:none}
+    .main-content{gap:12px}
+    .hero{padding:22px 18px}
+    .hero h1{font-size:30px}
+    .candidate-grid{grid-template-columns:repeat(5,220px)}
+    .plan-switch{top:60px;margin-inline:-2px}
+    .plan-hero{grid-template-columns:1fr;padding:19px}
+    .section-head{padding:15px 16px}
+    .section-body{padding:15px}
+    .highlight-grid,.access-grid,.card-grid{grid-template-columns:1fr}
+    .foresight-grid{grid-template-columns:1fr}
+    .decision-grid{grid-template-columns:1fr}
+    #map{height:350px}
+    .map-note{display:block}
+    .timeline-title{display:block}
+    .timeline-time{display:block;margin-bottom:3px}
+    .budget-table{font-size:12px}
+    .budget-table th,.budget-table td{padding:9px 7px}
+  }
+</style>
+</head>
+<body>
+<div class="app-shell">
+  <header class="global-header">
+    <a class="brand-home" href="#top" aria-label="ページ上部へ">
+      <span class="brand-mark">涼</span>
+      <span class="brand-title">SUMMER DAY TRIP 2026</span>
+    </a>
+    <nav class="global-actions" aria-label="ページ内メニュー">
+      <a href="#compare">5案比較</a>
+      <a href="#route">ルート</a>
+      <a href="#food">食事</a>
+      <a href="#decide" class="back-link">これから決めること</a>
+    </nav>
+  </header>
+
+  <div class="shell-body" id="top">
+    <aside class="side-nav" aria-label="セクション">
+      <p class="side-nav-title">REPORT</p>
+      <a href="#compare">5案の比較</a>
+      <a href="#plan">選択中のプラン</a>
+      <a href="#route">地図・行程</a>
+      <a href="#food">食事候補</a>
+      <a href="#activities">アクティビティ</a>
+      <a href="#budget">費用</a>
+      <a href="#foresight">先読みチェック</a>
+      <a href="#decide">これから決めること</a>
+    </aside>
+
+    <main class="main-content">
+      <section class="hero" aria-labelledby="page-title">
+        <div class="hero-content">
+          <div class="hero-kicker"><span class="summer-dot"></span> DAY TRIP OPTIONS</div>
+          <h1 id="page-title">夏の日帰り旅行 5案</h1>
+          <p>千葉・埼玉から、自然・ご当地グルメ・温泉を楽しむ5つの候補です。</p>
+          <div class="hero-badges">
+            <span class="hero-badge">4人</span>
+            <span class="hero-badge">レンタカー1台</span>
+            <span class="hero-badge">2026年8月中旬〜下旬</span>
+            <span class="hero-badge">自然＋ご当地グルメ＋温泉</span>
+          </div>
+        </div>
+      </section>
+
+      <div class="notice" id="assumption"></div>
+
+      <section class="section-card" id="compare">
+        <div class="section-head">
+          <div><span class="eyebrow">SHORTLIST</span><h2>5案を同じ基準で比較</h2><p id="ranking-note"></p></div>
+        </div>
+        <div class="section-body">
+          <div class="candidate-grid" id="candidate-grid"></div>
+        </div>
+      </section>
+
+      <div class="plan-switch" id="plan-switch" aria-label="表示するプラン"></div>
+
+      <section class="section-card" id="plan">
+        <div class="plan-hero">
+          <div>
+            <div class="plan-rankline"><b id="plan-rank"></b><span id="plan-area"></span></div>
+            <h2 id="plan-title"></h2>
+            <p id="plan-subtitle"></p>
+            <div class="tag-row" id="plan-tags"></div>
+          </div>
+          <div class="metric-board" id="metric-board"></div>
+        </div>
+        <div class="section-body">
+          <div class="highlight-grid" id="highlights"></div>
+        </div>
+      </section>
+
+      <section class="section-card" id="route">
+        <div class="section-head">
+          <div><span class="eyebrow">ROUTE MAP</span><h2>位置関係と訪問順</h2><p>赤線は訪問順の概略。実走行は各区間のGoogle マップを開いて確認します。</p></div>
+        </div>
+        <div class="section-body">
+          <div id="map" aria-label="選択した日帰りプランの地図"></div>
+          <div class="map-note"><span>番号ピンは下の行程番号と一致</span><span>地図 © OpenStreetMap contributors</span></div>
+          <div class="pin-index" id="pin-index"></div>
+        </div>
+      </section>
+
+      <section class="section-card" id="access">
+        <div class="section-head">
+          <div><span class="eyebrow">MEET & DRIVE</span><h2>集合と共通行程の始まり</h2><p>出発地が分かれるため、全員の行程は合流地点から開始します。</p></div>
+        </div>
+        <div class="section-body"><div class="access-grid" id="access-grid"></div></div>
+      </section>
+
+      <section class="section-card" id="itinerary">
+        <div class="section-head">
+          <div><span class="eyebrow">DAY PLAN</span><h2>夏の日帰りタイムライン</h2><p>車の所要時間は通常時の目安。8月は30〜90分の上振れを見込みます。</p></div>
+        </div>
+        <div class="section-body"><div class="timeline" id="timeline"></div></div>
+      </section>
+
+      <section class="section-card" id="food">
+        <div class="section-head">
+          <div><span class="eyebrow">LOCAL FOOD</span><h2>昼食候補は3店</h2><p>味・口コミ・話題性に加え、当日の導線と待ち時間で選べるようにしています。</p></div>
+        </div>
+        <div class="section-body"><div class="card-grid" id="meals-grid"></div></div>
+      </section>
+
+      <section class="section-card" id="activities">
+        <div class="section-head">
+          <div><span class="eyebrow">ACTIVITIES</span><h2>夏を感じるアクティビティ</h2><p>すべてを詰め込まず、主役を1〜2個に絞ると一日の密度が上がります。</p></div>
+        </div>
+        <div class="section-body"><div class="card-grid" id="activities-grid"></div></div>
+      </section>
+
+      <section class="section-card" id="others">
+        <div class="section-head">
+          <div><span class="eyebrow">MORE SPOTS</span><h2>他のおすすめスポット</h2><p>天気・混雑・体力に合わせた差し替え用です。</p></div>
+        </div>
+        <div class="section-body"><div class="card-grid" id="others-grid"></div></div>
+      </section>
+
+      <section class="section-card" id="budget">
+        <div class="section-head">
+          <div><span class="eyebrow">BUDGET</span><h2>4人で割った費用感</h2><p>レンタカー・免責補償・高速・燃料・駐車を含む概算。千葉側の合流駅までの鉄道運賃は含みません。</p></div>
+        </div>
+        <div class="section-body">
+          <div style="overflow:auto"><table class="budget-table"><thead><tr><th>項目</th><th>4人合計</th><th>1人あたり</th></tr></thead><tbody id="budget-body"></tbody></table></div>
+          <p class="foot-note">レンタカーはヤリス等の5人乗りコンパクト1台を、駅周辺店舗で09:00受取・20:00返却する11時間プランの仮置きです。料金は免責補償込み、高速・燃料は代表ルートによる概算。予約店舗・車種・実施日・返却時刻が決まったら実額へ置き換えます。食事・体験の申込前にはキャンセル・変更条件と決済手数料を確認します。</p>
+        </div>
+      </section>
+
+      <section class="section-card" id="foresight">
+        <div class="section-head">
+          <div><span class="eyebrow">BEFORE YOU GO</span><h2>先読みチェック</h2><p>予約前に、費用・安全・実行性・体験品質・代替案をまとめて確認。</p></div>
+        </div>
+        <div class="section-body"><div class="foresight-grid" id="foresight-grid"></div></div>
+      </section>
+
+      <section class="section-card" id="decide">
+        <div class="section-head">
+          <div><span class="eyebrow">NEXT DECISIONS</span><h2>これから決めること</h2><p>候補地を1つ選んだあと、ここを埋めると予約と時刻調整に進めます。</p></div>
+        </div>
+        <div class="section-body">
+          <div class="decision-grid">
+            <div><h3>予約・前日確認</h3><ul class="check-list" id="booking-list"></ul></div>
+            <div><h3>メンバーで決めること</h3><ul class="check-list" id="decision-list"></ul></div>
+          </div>
+          <p class="foot-note" style="margin-top:16px">営業時間、休業、料金、道路状況、天候は変わります。候補決定後に実施日ベースで再確認してください。飲酒はせず、運転交代と休憩を優先します。</p>
+        </div>
+      </section>
+    </main>
+
+    <aside class="summary-panel">
+      <div>
+        <p class="summary-title">5案ランキング</p>
+        <div class="side-rank" id="side-rank"></div>
+      </div>
+      <div class="summary-callout">
+        <b id="summary-best"></b>
+        <span id="summary-tradeoff"></span>
+      </div>
+      <div>
+        <p class="summary-title">選択中</p>
+        <div class="summary-grid">
+          <div class="summary-metric"><span>総合点</span><b id="summary-score"></b></div>
+          <div class="summary-metric"><span>費用</span><b id="summary-cost" style="font-size:15px"></b></div>
+        </div>
+      </div>
+      <p class="foot-note">更新：2026年7月18日<br>営業・料金は各リンク先で直前に再確認</p>
+    </aside>
+  </div>
+</div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+  integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+<script>
+const DATA = {"meta":{"title":"夏の日帰り旅行 5案","subtitle":"千葉・埼玉発｜自然・グルメ・温泉","updated":"2026-07-18","party":"4人・レンタカー1台","dateRange":"2026年8月中旬〜下旬","assumption":"北方面は大宮駅、西方面は武蔵浦和駅周辺でレンタカーを09:00に受け取り、19:20〜19:45に店舗へ戻って20:00に返却する仮置き案です。実際の予約票に合わせて受取店舗・返却時刻・料金を最終調整します。","rankingNote":"総合点は、夏らしさ・涼しさ・自然・食・温泉・移動負荷・雨天耐性を同じ基準で比較した目安です。"},"plans":[{"id":"okunikko","rank":1,"area":"奥日光","title":"静かな湖畔と小田代原、白濁湯をつなぐ","subtitle":"湖畔ボートハウス → 小田代原 → 湯元温泉","score":91,"start":"大宮駅","meetingTime":"08:45","returnTime":"19:45店舗帰着予定・20:00返却（仮）","driving":"往復 約5時間30分／約330km","cost":"10,000〜15,000円／人","theme":"静かな湖畔と森","coolProof":"奥日光の夏の平均気温は約18.5℃","bestFor":"混雑を避けて、静かな自然と温泉を楽しみたい日","tradeoff":"低公害バスの時刻に左右される。混雑時は西ノ湖ではなく小田代原を優先","tags":["穴場感◎","避暑力◎","温泉◎","雨天○"],"highlights":["中禅寺湖畔ボートハウスのデッキで、静かな湖と森を眺める","小田代原は低公害バスで入り、短時間でも湿原の奥行きを感じられる","華厳滝・戦場ヶ原の定番周遊は外し、最後は湯元の硫黄泉へ"],"access":[{"label":"千葉方面から","text":"千葉駅を7:00前後に出発し、大宮駅へ約1時間25分。08:40までの到着を目安にする。","url":"https://www.google.com/maps/dir/?api=1&origin=%E5%8D%83%E8%91%89%E9%A7%85&destination=%E5%A4%A7%E5%AE%AE%E9%A7%85&travelmode=transit"},{"label":"埼玉方面から","text":"大宮駅西口周辺のレンタカー店舗に08:45集合。09:00までに受取手続きを終える。","url":"https://www.google.com/maps/search/?api=1&query=%E5%A4%A7%E5%AE%AE%E9%A7%85%E8%A5%BF%E5%8F%A3"},{"label":"共通行程","text":"ヤリス等の5人乗りコンパクトを1台、09:00〜20:00の11時間で利用する仮設定。09:00出発、19:45店舗帰着予定、20:00返却（仮）。レンタカー代・免責補償・高速・燃料・駐車を4等分。","url":"https://cars.travel.rakuten.co.jp/cars/"}],"spots":[{"n":1,"time":"09:00","name":"大宮駅周辺レンタカー店舗","lat":35.9063,"lng":139.6239,"transfer":"受取手続き 15分","stay":"09:00出発","desc":"車体の傷・燃料・返却方法を確認し、仮置きした20:00返却から逆算して共通行程を開始。","url":"https://www.google.com/maps/search/?api=1&query=%E5%A4%A7%E5%AE%AE%E9%A7%85+%E3%83%AC%E3%83%B3%E3%82%BF%E3%82%AB%E3%83%BC"},{"n":2,"time":"11:35","name":"中禅寺湖畔ボートハウス","lat":36.7488,"lng":139.4568,"transfer":"車 約2時間35分","stay":"40分","desc":"入館無料の復元建築。2階デッキから湖を眺め、定番の観瀑台とは違う静かな奥日光から始める。","url":"https://www.nikko-nsm.co.jp/boathouse.html"},{"n":3,"time":"12:20","name":"中禅寺金谷ホテル周辺で昼食","lat":36.7478,"lng":139.4587,"transfer":"車 約3分","stay":"昼食 60分","desc":"ユーコンを本命に、混雑時は湖畔の別候補へ。午後の低公害バスに合わせて13:20までに出発。","url":"https://tabelog.com/tochigi/A0903/A090301/9001010/"},{"n":4,"time":"14:07","name":"小田代原","lat":36.7874,"lng":139.4209,"transfer":"車 約20分＋低公害バス 13:55→14:07（平日Bダイヤ例・12分）","fare":"低公害バス 大人500円／片道1回","transferUrl":"https://www.nikko-nsm.co.jp/bus.html","stay":"散策 80分","desc":"赤沼から低公害バスで入り、湿原の展望と短い散策を楽しむ。実施日が土日祝ならAダイヤへ差し替える。","url":"https://www.nikko-kankou.org/features/66"},{"n":5,"time":"15:55","name":"奥日光湯元温泉","lat":36.8065,"lng":139.4255,"transfer":"低公害バス 15:27→15:40（平日Bダイヤ例・13分）＋車 約15分","fare":"低公害バス 大人500円／片道1回","transferUrl":"https://www.nikko-nsm.co.jp/bus.html","stay":"入浴 60分","desc":"白濁の硫黄泉で締める。17:00には出発できるよう、日帰り受付時間が長い施設を選ぶ。","url":"https://www.nikkoyumoto.com/onsen/"},{"n":6,"time":"17:00","name":"大宮駅周辺レンタカー店舗へ","lat":35.909,"lng":139.627,"transfer":"車 約2時間45分","stay":"19:45店舗帰着予定・20:00返却（仮）","desc":"給油を済ませて19:45に店舗へ。渋滞が30分以上なら温泉滞在を短縮し、返却を優先。","url":"https://www.driveplaza.com/dp/SearchQuick"}],"meals":[{"name":"シェ・ホシノ","fit":"本命・湖畔でゆっくり","rating":"食べログ3.55／口コミ155件（7月閲覧）","price":"ランチ 2,750〜4,000円前後","note":"虹鱒などを選べる湖畔フレンチ。席数が限られるので4人なら予約優先。","booking":"予約推奨","url":"https://tabelog.com/tochigi/A0903/A090301/9002995/"},{"name":"龍頭之茶屋","fit":"夏景色・滝を見ながら","rating":"食べログ3.49／口コミ281件（6月更新）","price":"1,000円前後","note":"名物の雑煮や団子。竜頭滝と一緒に楽しめ、戦場ヶ原への導線が最もきれい。","booking":"予約なし・早め推奨","url":"https://www.nikko-kankou.org/public/product/691"},{"name":"コーヒーハウス ユーコン","fit":"混雑分散・洋食","rating":"食べログ3.44／口コミ138件（6月更新）","price":"1,000〜2,000円","note":"金谷ホテル系の百年ライスカレー。湖畔東側の混雑を避けたい日に使いやすい。","booking":"営業日を前日に確認","url":"https://tabelog.com/tochigi/A0903/A090301/9001010/"}],"activities":[{"name":"小田代原ショート散策","duration":"75〜90分","price":"低公害バス運賃","summer":"車が入れない湿原へバスで入り、静かな展望を楽しむ","booking":"予約不要","url":"https://www.nikko-kankou.org/features/66"},{"name":"西ノ湖","duration":"バス＋徒歩で約2時間30分","price":"低公害バス運賃","summer":"鳥の声と風だけが聞こえる小さな湖。時間が合う日の穴場本命","booking":"低公害バス時刻を確認","url":"https://www.nikko-kankou.org/spot/135"},{"name":"中禅寺湖畔ボートハウス","duration":"30〜45分","price":"入館無料","summer":"湖に張り出したデッキで、国際避暑地の静かな時間を味わう","booking":"5〜11月10日は無休","url":"https://www.nikko-nsm.co.jp/boathouse.html"}],"others":[{"name":"光徳牧場","why":"森と牧草地の短い散策やアイス休憩。小田代原のバス時刻が合わない時に使いやすい。","url":"https://www.nikko-kankou.org/spot/128"},{"name":"日光自然博物館","why":"雷雨時の屋内候補。9:00〜17:00、8月は無休。","url":"https://www.nikko-nsm.co.jp/index.html"},{"name":"湯ノ湖・兎島","why":"温泉前に湖畔を20〜30分だけ歩ける。観光客が集中する南岸から離れた静かな差し替え。","url":"https://www.nikko-kankou.org/spot/11"}],"budget":[{"item":"レンタカー・免責補償","group":"8,000〜15,000円","person":"2,000〜3,750円"},{"item":"高速・燃料・駐車","group":"11,000〜14,000円","person":"2,750〜3,500円"},{"item":"食事・カフェ","group":"8,000〜16,000円","person":"2,000〜4,000円"},{"item":"低公害バス・温泉","group":"6,000〜9,000円","person":"1,500〜2,250円"}],"foresight":{"cost":"レンタカー料金は予約票の免責補償・時間超過料まで含めて4等分。西ノ湖・小田代原は低公害バス代を追加。","safety":"午後の雷と急な気温低下に備え、薄手の雨具・羽織り・滑りにくい靴を持参。","feasibility":"09:00発では低公害バスの接続が重要。西ノ湖は時刻が合う日だけ、小田代原を基本にする。","quality":"定番の華厳滝・戦場ヶ原を外し、静かな湖畔と湿原に時間を使う。","alternative":"雨天はボートハウス＋自然博物館＋温泉。バス混雑時は小田代原を光徳牧場へ変更。帰路渋滞による返却遅延を避けるため17:00出発を守る。"},"bookings":["レンタカー予約票の店舗・車種・料金・20:00返却を確認","実施日確定後、低公害バスの時刻表で小田代原か西ノ湖を選ぶ","シェ・ホシノを選ぶ場合はランチを予約","湯元温泉の日帰り入浴先を前日と当日朝に確認","NEXCO・JARTIC・天気・暑さ指数を前夜に確認"],"decisions":["実施日","小田代原か西ノ湖か","ランチ候補","実際のレンタカー返却予約時刻"]},{"id":"minakami","rank":2,"area":"みなかみ・谷川岳","title":"雪解け水に飛び込み、標高1,500mの風に当たる","subtitle":"谷川岳ヨッホ または ラフティング → 水上グルメ → 温泉","score":88,"start":"大宮駅","meetingTime":"08:45","returnTime":"19:30店舗帰着予定・20:00返却（仮）","driving":"往復 約5時間／約300km","cost":"12,000〜17,000円／人","theme":"川遊びと山岳避暑","coolProof":"天神平は標高約1,500m。夏の川は水量が安定し水遊び向き","bestFor":"4人で一緒に体験して盛り上がりたい日","tradeoff":"ロープウェイとラフティングは二者択一。詰め込むと食と温泉が薄くなる","tags":["体験◎","避暑力◎","温泉◎","雨天△"],"highlights":["景色派は谷川岳ヨッホ、体験派は半日ラフティングに一本化","へぎそば・精肉店・山グルメから昼食を選べる","水上温泉で着替えと入浴を済ませ、さっぱり帰れる"],"access":[{"label":"千葉方面から","text":"千葉駅を7:00前後に出発し、大宮駅へ約1時間25分。08:40までの到着を目安にする。","url":"https://www.google.com/maps/dir/?api=1&origin=%E5%8D%83%E8%91%89%E9%A7%85&destination=%E5%A4%A7%E5%AE%AE%E9%A7%85&travelmode=transit"},{"label":"埼玉方面から","text":"大宮駅西口周辺のレンタカー店舗に08:45集合。09:00までに受取手続きを終える。","url":"https://www.google.com/maps/search/?api=1&query=%E5%A4%A7%E5%AE%AE%E9%A7%85%E8%A5%BF%E5%8F%A3"},{"label":"共通行程","text":"ヤリス等の5人乗りコンパクトを1台、09:00〜20:00の11時間で利用する仮設定。09:00出発、19:30店舗帰着予定、20:00返却（仮）。ラフティング案では濡れ物袋も積む。","url":"https://cars.travel.rakuten.co.jp/cars/"}],"spots":[{"n":1,"time":"09:00","name":"大宮駅周辺レンタカー店舗","lat":35.9063,"lng":139.6239,"transfer":"受取手続き 15分","stay":"09:00出発","desc":"関越道へ。車体・燃料・返却方法を確認し、赤城高原SAで短い休憩を取る。","url":"https://www.google.com/maps/search/?api=1&query=%E5%A4%A7%E5%AE%AE%E9%A7%85+%E3%83%AC%E3%83%B3%E3%82%BF%E3%82%AB%E3%83%BC"},{"n":2,"time":"11:30","name":"水上エリアで昼食","lat":36.789,"lng":138.97,"transfer":"車 約2時間30分","stay":"昼食 60分","desc":"育風堂・角弥・山上パングラタンから選択。12:30には谷川岳へ移動する。","url":"https://www.enjoy-minakami.jp/eat.php"},{"n":3,"time":"12:45","name":"谷川岳ヨッホ","lat":36.8366,"lng":138.9634,"transfer":"車 約20分","stay":"2時間","desc":"ロープウェイ＋リフトで標高約1,500mへ。ラフティングを選ぶ日は昼食とこの行程を午後便へ差し替える。","url":"https://tanigawadake-joch.com/"},{"n":4,"time":"14:55","name":"土合駅","lat":36.831,"lng":138.967,"transfer":"車 約10分","stay":"25分","desc":"地下ホームへ続く462段の階段を見学。体力を使いたくない場合は入口周辺だけにする。","url":"https://www.enjoy-minakami.jp/spot.php?itemid=721"},{"n":5,"time":"15:35","name":"坐山 みなかみ","lat":36.773,"lng":138.971,"transfer":"車 約10分","stay":"入浴 60分","desc":"日帰り入浴は13:00〜17:50、通常1,300円・お盆1,800円。16:35には上がり、帰路を優先する。","url":"https://www.minakamikan.com/day/"},{"n":6,"time":"16:45","name":"大宮駅周辺レンタカー店舗へ","lat":35.909,"lng":139.627,"transfer":"車 約3時間","stay":"19:30店舗帰着予定・20:00返却（仮）","desc":"給油を済ませて19:30に店舗へ。関越道の渋滞が強い日は土合駅か入浴を短縮する。","url":"https://www.driveplaza.com/dp/SearchQuick"}],"meals":[{"name":"育風堂精肉店","fit":"本命・肉をしっかり","rating":"食べログ3.55／口コミ284件（7月閲覧）","price":"1,000〜3,000円","note":"自家製ハム・ソーセージ、厚いカツ、ローストポーク。10:00受付開始、席予約不可。","booking":"10:00以降に現地受付","url":"https://ikufuudo.com/"},{"name":"そば処 角弥","fit":"涼味・4人でシェア","rating":"食べログ3.52／口コミ390件（7月閲覧）","price":"1,000〜2,000円","note":"へぎそばと夏野菜・鮎の天ぷら。木曜定休、売り切れ次第終了。","booking":"平日のみ予約可","url":"https://tabelog.com/gunma/A1003/A100302/10001181/"},{"name":"ビューテラスてんじん","fit":"絶景優先・移動ゼロ","rating":"公式施設／旅程合理性の例外候補","price":"1,000〜2,000円前後","note":"名物の谷川岳パングラタン。夏は食事11:00〜15:00で、山上時間を長く取れる。","booking":"予約不要","url":"https://tanigawadake-joch.com/facilities/"}],"activities":[{"name":"谷川岳ヨッホ ロープウェイ＋リフト","duration":"2〜3時間","price":"往復セット 3,600円","summer":"標高約1,500mの天神平で散策と山岳景色","booking":"当日の風・雷・運行を確認","url":"https://tanigawadake-joch.com/"},{"name":"利根川ラフティング半日","duration":"約3時間30分","price":"通常 8,800円前後","summer":"夏は水量が安定し、川に入る水遊び中心","booking":"事前予約必須","url":"https://tour.kappa-club.com/rafting_half.html"},{"name":"キャニオニング半日","duration":"半日","price":"予約画面で日別確認","summer":"天然の沢を滑る、最もアクティブな差し替え案","booking":"事前予約必須","url":"https://tour.kappa-club.com/canyoning_half.html"}],"others":[{"name":"土合駅","why":"無料で寄れる地下駅。雨でも楽しめるが、462段の往復は体力と時間を使う。","url":"https://www.enjoy-minakami.jp/spot.php?itemid=721"},{"name":"道の駅みなかみ水紀行館","why":"小雨・お土産・休憩の受け皿。温泉街から近い。","url":"https://www.enjoy-minakami.jp/spot/7413"},{"name":"諏訪峡","why":"川沿い散策を30分追加。猛暑や増水時は見送る。","url":"https://www.enjoy-minakami.jp/spot/7056"}],"budget":[{"item":"レンタカー・免責補償","group":"8,000〜15,000円","person":"2,000〜3,750円"},{"item":"高速・燃料・駐車","group":"10,000〜13,000円","person":"2,500〜3,250円"},{"item":"食事・カフェ","group":"7,000〜12,000円","person":"1,750〜3,000円"},{"item":"ヨッホ＋温泉","group":"19,600〜21,600円","person":"4,900〜5,400円"},{"item":"ラフティング差替え","group":"+20,800円前後","person":"+5,200円前後"}],"foresight":{"cost":"レンタカー込みでヨッホ案は1.2〜1.7万円、ラフティング案はさらに約5,200円を見込む。体験写真や靴レンタルは別料金。","safety":"川遊びはガイドの中止判断に従う。山上は雷・強風で運休があるため朝に公式を確認。","feasibility":"09:00発ではヨッホとラフティングを同日に両方入れない。どちらかを決め、16:45の帰路出発を守る。","quality":"4人での盛り上がりは5案で最上位。静かに景色を楽しみたい場合はヨッホ案。","alternative":"雨天は土合駅・水紀行館・温泉。混雑時は土合駅を外し、帰路渋滞による返却遅延を避けて20:00返却（仮）を優先。強雨や増水時はアウトドア予約の取消条件にも注意。"},"bookings":["レンタカー予約票の店舗・車種・料金・20:00返却を確認","ヨッホ案かラフティング案かを先に決める","ラフティングなら予約と持ち物・取消条件を確認","育風堂は予約不可のため、混雑時の角弥・山上食へ分岐を用意","坐山みなかみの日帰り受付とお盆料金を前日に再確認"],"decisions":["山景色か川遊びか","昼食の第一・第二候補","実施日","実際のレンタカー返却予約時刻"]},{"id":"fuji","rank":3,"area":"富士五湖・鳴沢","title":"湖面の青、富士の稜線、洞窟3℃。景色が切り替わる一日","subtitle":"河口湖 → 富岳風穴 → 富士眺望の湯","score":87,"start":"武蔵浦和駅","meetingTime":"08:45","returnTime":"19:30店舗帰着予定・20:00返却（仮）","driving":"往復 約6時間／約300km","cost":"11,000〜16,000円／人","theme":"湖と天然クーラー","coolProof":"富岳風穴の洞内平均は約3℃","bestFor":"写真・ドライブ・雨への強さをまとめて取りたい日","tradeoff":"中央道の渋滞が最大の弱点。富士山が雲に隠れる可能性もある","tags":["水辺◎","洞窟◎","温泉◎","雨天◎"],"highlights":["河口湖の湖畔で、富士山と夏の花を眺める","2026年7月開始の大石公園ラインで湖上移動も選べる","午後は平均3℃の風穴から温泉へ。暑さや小雨に強い"],"access":[{"label":"千葉方面から","text":"千葉駅を7:10前後に出発し、武蔵浦和駅へ約1時間15分。08:40までの到着を目安にする。","url":"https://www.google.com/maps/dir/?api=1&origin=%E5%8D%83%E8%91%89%E9%A7%85&destination=%E6%AD%A6%E8%94%B5%E6%B5%A6%E5%92%8C%E9%A7%85&travelmode=transit"},{"label":"埼玉方面から","text":"武蔵浦和駅周辺のレンタカー店舗に08:45集合。09:00までに受取手続きを終える。","url":"https://www.google.com/maps/search/?api=1&query=%E6%AD%A6%E8%94%B5%E6%B5%A6%E5%92%8C%E9%A7%85%E8%A5%BF%E5%8F%A3"},{"label":"共通行程","text":"ヤリス等の5人乗りコンパクトを1台、09:00〜20:00の11時間で利用する仮設定。09:00出発、19:30店舗帰着予定、20:00返却（仮）。前夜に中央道と圏央道経由を比較。","url":"https://cars.travel.rakuten.co.jp/cars/"}],"spots":[{"n":1,"time":"09:00","name":"武蔵浦和駅周辺レンタカー店舗","lat":35.8455,"lng":139.6477,"transfer":"受取手続き 15分","stay":"09:00出発","desc":"車体・燃料・返却方法を確認して中央道方面へ。談合坂SAで短く休憩する。","url":"https://www.google.com/maps/search/?api=1&query=%E6%AD%A6%E8%94%B5%E6%B5%A6%E5%92%8C%E9%A7%85+%E3%83%AC%E3%83%B3%E3%82%BF%E3%82%AB%E3%83%BC"},{"n":2,"time":"11:45","name":"富士吉田・河口湖で昼食","lat":35.488,"lng":138.807,"transfer":"車 約2時間45分","stay":"昼食 60分","desc":"歩成・不動・麺許皆伝から選択。混雑時は13:00までに切り上げる。","url":"https://www.fujiyoshida.net/gourmet"},{"n":3,"time":"13:00","name":"大石公園","lat":35.5227,"lng":138.7478,"transfer":"車 約30〜40分","stay":"60分","desc":"湖越しの富士山と花畑。新航路のシャトルを使う場合は船津側の駐車へ変更。","url":"https://www.fujisan.ne.jp/pages/380/"},{"n":4,"time":"14:15","name":"富岳風穴","lat":35.4777,"lng":138.6569,"transfer":"車 約35分","stay":"45分","desc":"洞内平均3℃、見学約15分、大人350円。濡れた階段に備え、スニーカーと薄手の羽織り。","url":"https://www.mtfuji-cave.com/contents/wind_cave/"},{"n":5,"time":"15:15","name":"富士眺望の湯 ゆらり","lat":35.4624,"lng":138.6846,"transfer":"車 約15分","stay":"75分","desc":"夏季は大人1,700円。富士山が見えなくても多種の風呂で満足度を確保。","url":"https://www.fuji-yurari.jp/charge-plan.html"},{"n":6,"time":"16:45","name":"武蔵浦和駅周辺レンタカー店舗へ","lat":35.848,"lng":139.651,"transfer":"車 約2時間45分〜","stay":"19:30店舗帰着予定・20:00返却（仮）","desc":"給油を済ませて19:30に店舗へ。小仏トンネルの渋滞が強い日は温泉を短縮し、返却を優先。","url":"https://www.driveplaza.com/dp/SearchQuick"}],"meals":[{"name":"ほうとう蔵 歩成 河口湖店","fit":"本命・味と席数","rating":"食べログ3.50／口コミ1,424件（7月閲覧）","price":"1,800〜2,800円前後","note":"黄金ほうとう。200席・駐車130台だが予約不可。11:00前到着が安全。","booking":"予約不可・早着","url":"https://tabelog.com/yamanashi/A1903/A190303/19010099/"},{"name":"ほうとう不動 河口湖北本店","fit":"定番・大石公園に近い","rating":"食べログ3.48／口コミ1,083件（7月閲覧）","price":"1,000〜2,000円","note":"年中無休・11:00〜20:00、麺終了で閉店。4人は予約対象外。","booking":"予約なし・11時台","url":"https://tabelog.com/yamanashi/A1903/A190303/19000116/"},{"name":"麺許皆伝","fit":"吉田うどん・価格重視","rating":"食べログ うどん百名店／口コミ785件","price":"1,000円未満","note":"太い吉田うどん。11:00〜14:00、日曜休、予約不可。忍野から河口湖への途中。","booking":"予約不可・日曜は除外","url":"https://tabelog.com/yamanashi/A1903/A190301/19000046/"}],"activities":[{"name":"富岳風穴","duration":"見学 約15分＋移動","price":"350円","summer":"洞内平均3℃の天然クーラー","booking":"予約不要・足元注意","url":"https://www.mtfuji-cave.com/contents/wind_cave/"},{"name":"大石公園ライン＋ロープウェイ","duration":"約1.5〜2時間","price":"往復セット 2,500円","summer":"2026年7月17日開始、湖上から富士山を見る新体験","booking":"当日の運航とダイヤ確認","url":"https://www.fujigokokisen.jp/"},{"name":"忍野八海めぐり","duration":"60〜90分","price":"中心部は無料","summer":"澄んだ湧水と木陰。朝の散策向き","booking":"予約不要","url":"https://www.vill.oshino.lg.jp/site/kanko/1587.html"}],"others":[{"name":"鳴沢氷穴","why":"風穴とセットにできるが、混雑時はどちらか一つで十分。","url":"https://www.mtfuji-cave.com/contents/ice_cave/"},{"name":"山梨県立富士山世界遺産センター","why":"強雨時の屋内差し替え。富士山が見えない日もテーマを保てる。","url":"https://www.fujisan-whc.jp/"},{"name":"河口湖 音楽と森の美術館","why":"雨天耐性をさらに上げる有料案。屋内外を行き来できる。","url":"https://kawaguchikomusicforest.jp/"}],"budget":[{"item":"レンタカー・免責補償","group":"8,000〜15,000円","person":"2,000〜3,750円"},{"item":"高速・燃料・駐車","group":"11,000〜14,000円","person":"2,750〜3,500円"},{"item":"食事・カフェ","group":"7,000〜12,000円","person":"1,750〜3,000円"},{"item":"風穴・温泉","group":"8,200円","person":"2,050円"},{"item":"船＋ロープウェイ追加","group":"+10,000円","person":"+2,500円"}],"foresight":{"cost":"レンタカー込みで1.1〜1.6万円。船とロープウェイを追加すると1人約2,500円上振れする。","safety":"洞窟内は濡れて滑りやすい。外気との温度差が大きいため薄手の上着を持つ。","feasibility":"09:00発では忍野八海を基本行程から外し、河口湖・風穴・温泉に絞る。中央道渋滞時は温泉を短縮。","quality":"富士山が見えれば景観は最上位。曇天でも風穴・食・温泉で満足度を維持できる。","alternative":"雨天は世界遺産センター＋風穴＋温泉。混雑時は大石公園を短縮し、小仏トンネル渋滞による返却遅延を避けて20:00返却（仮）を最優先。船とロープウェイは強風・雷で運休あり。"},"bookings":["レンタカー予約票の店舗・車種・料金・20:00返却を確認","実施日前日に中央道・圏央道の所要時間を比較","船を入れる場合は大石公園ラインのダイヤと運航状況を確認","麺許皆伝を選ぶ場合は日曜を除外","ゆらりの混雑・受付と夏季料金を再確認"],"decisions":["船とロープウェイを追加するか","ほうとうか吉田うどんか","集合を武蔵浦和にするか","実際のレンタカー返却予約時刻"]},{"id":"nasu","rank":4,"area":"那須高原","title":"高原ランチ、山上の風、熱い名湯をつなぐ","subtitle":"高原ランチ → 茶臼岳 → 鹿の湯","score":85,"start":"大宮駅","meetingTime":"08:45","returnTime":"19:30店舗帰着予定・20:00返却（仮）","driving":"往復 約6時間／約380km","cost":"11,000〜16,000円／人","theme":"高原と名湯","coolProof":"ロープウェイ山頂側の夏の平均気温は約23℃","bestFor":"自然だけでなく食と寄り道の選択肢も重視する日","tradeoff":"5案で走行距離が最長。人気施設間の那須街道も混みやすい","tags":["高原◎","グルメ◎","温泉◎","雨天◎"],"highlights":["午後のロープウェイで山上の涼しい風に当たる","肉・米・パンから昼食の方向性を選べる","山上散策のあと、46〜48℃浴槽もある鹿の湯で締める"],"access":[{"label":"千葉方面から","text":"千葉駅を7:00前後に出発し、大宮駅へ約1時間25分。08:40までの到着を目安にする。","url":"https://www.google.com/maps/dir/?api=1&origin=%E5%8D%83%E8%91%89%E9%A7%85&destination=%E5%A4%A7%E5%AE%AE%E9%A7%85&travelmode=transit"},{"label":"埼玉方面から","text":"大宮駅西口周辺のレンタカー店舗に08:45集合。09:00までに受取手続きを終える。","url":"https://www.google.com/maps/search/?api=1&query=%E5%A4%A7%E5%AE%AE%E9%A7%85%E8%A5%BF%E5%8F%A3"},{"label":"共通行程","text":"ヤリス等の5人乗りコンパクトを1台、09:00〜20:00の11時間で利用する仮設定。09:00出発、19:30店舗帰着予定、20:00返却（仮）。往復約380kmのため運転交代を決める。","url":"https://cars.travel.rakuten.co.jp/cars/"}],"spots":[{"n":1,"time":"09:00","name":"大宮駅周辺レンタカー店舗","lat":35.9063,"lng":139.6239,"transfer":"受取手続き 15分","stay":"09:00出発","desc":"車体・燃料・返却方法を確認して東北道へ。那須高原SAで短く休む。","url":"https://www.google.com/maps/search/?api=1&query=%E5%A4%A7%E5%AE%AE%E9%A7%85+%E3%83%AC%E3%83%B3%E3%82%BF%E3%82%AB%E3%83%BC"},{"n":2,"time":"11:45","name":"那須高原で昼食","lat":37.06,"lng":140.021,"transfer":"車 約2時間45分","stay":"昼食 60分","desc":"赤身ステーキ・田舎膳・ベーカリーから選択。13:00までに山麓へ向かう。","url":"https://www.nasukogen.org/eat/"},{"n":3,"time":"13:20","name":"那須ロープウェイ","lat":37.125,"lng":139.962,"transfer":"車 約30分","stay":"2時間","desc":"往復2,000円。山頂駅から無理のない範囲を散策し、15:20には下山する。","url":"https://www.nasu-ropeway.jp/information/"},{"n":4,"time":"15:40","name":"那須温泉 鹿の湯","lat":37.0967,"lng":140.002,"transfer":"車 約10分","stay":"入浴 50分","desc":"大人500円、8:00〜18:00。熱い湯が中心なので長湯せず、16:30には上がる。","url":"https://www.shikanoyu.jp/time-charge/"},{"n":5,"time":"16:40","name":"大宮駅周辺レンタカー店舗へ","lat":35.909,"lng":139.627,"transfer":"車 約2時間30分〜","stay":"19:30店舗帰着予定・20:00返却（仮）","desc":"給油を済ませて19:30に店舗へ。東北道の渋滞が30分以上なら鹿の湯を短縮し、返却を優先。","url":"https://www.driveplaza.com/dp/SearchQuick"}],"meals":[{"name":"レストラン ペニーレイン 那須店","fit":"本命・雰囲気と話題性","rating":"食べログ3.58／口コミ1,739件（7月閲覧）","price":"3,000〜4,000円前後","note":"森のテラスと洋食。予約可だが夏は混雑。ベーカリーだけの利用も可能。","booking":"レストランは予約推奨","url":"https://tabelog.com/tochigi/A0905/A090501/9000301/"},{"name":"Mr.BEEF DINING","fit":"肉・満腹優先","rating":"食べログ3.45／口コミ240件（7月閲覧）","price":"ランチ 1,700〜3,000円前後","note":"赤身ステーキが主役。火・水曜定休なので日付選びに注意。","booking":"4人なら予約推奨","url":"https://tabelog.com/tochigi/A0905/A090501/9010011/"},{"name":"水車の里 瑞穂蔵","fit":"地元米・和食","rating":"食べログ3.19／口コミ193件","price":"1,000〜2,000円","note":"評価基準未達だが、那須の米と味噌を味わえ、駐車・導線が良い例外候補。水曜休。","booking":"早着・混雑覚悟","url":"https://tabelog.com/tochigi/A0905/A090501/9002241/"}],"activities":[{"name":"那須ロープウェイ＋山頂散策","duration":"約2時間","price":"往復 2,000円","summer":"夏の平均23℃。2026年7月18日〜8月31日は8:00始発","booking":"風・雷・運行を朝確認","url":"https://www.nasu-ropeway.jp/news/293"},{"name":"那須平成の森","duration":"45〜90分","price":"散策無料／プログラム別","summer":"木陰と森のフィールド。短時間でも高原感が出る","booking":"ガイド企画は事前確認","url":"https://www.nasuheiseinomori.go.jp/"},{"name":"南ヶ丘牧場","duration":"60〜90分","price":"入場無料／乗馬等は別料金","summer":"ソフトクリーム・散策・釣りで夏休みらしさ","booking":"体験ごとに当日受付","url":"https://www.minamigaoka.co.jp/play/"}],"others":[{"name":"藤城清治美術館","why":"強雨時の屋内候補。鹿の湯・湯本エリアから近い。","url":"https://fujishiro-seiji-museum.jp/"},{"name":"那須ステンドグラス美術館","why":"雨天でも雰囲気を保ちやすく、ランチエリアへの導線上。","url":"https://sgm-nasu.com/"},{"name":"殺生石","why":"鹿の湯の直前に20〜30分で寄れる。立入範囲と火山情報に従う。","url":"https://www.nasukogen.org/spotsearch/detail.php?id=130"}],"budget":[{"item":"レンタカー・免責補償","group":"8,000〜15,000円","person":"2,000〜3,750円"},{"item":"高速・燃料・駐車","group":"13,000〜16,000円","person":"3,250〜4,000円"},{"item":"食事・カフェ","group":"8,000〜16,000円","person":"2,000〜4,000円"},{"item":"ロープウェイ・温泉","group":"10,000円","person":"2,500円"},{"item":"牧場の体験","group":"0〜4,000円","person":"0〜1,000円"}],"foresight":{"cost":"レンタカー込みで1.1〜1.6万円。ペニーレインを選ぶと上限寄り、瑞穂蔵なら食費を抑えやすい。","safety":"山上は風と雷、鹿の湯は高温浴に注意。運転者は入浴前後に十分な水分を取る。","feasibility":"09:00発かつ走行距離最長のため、基本行程は昼食・ロープウェイ・鹿の湯の3本に絞る。16:40出発を守る。","quality":"自然・食・雨天代替が豊富で、メンバーの好みが割れても調整しやすい。","alternative":"雨天は美術館＋人気ランチ＋鹿の湯。ランチ混雑時は滞在を短縮し、東北道渋滞による返却遅延を避けて20:00返却（仮）を優先。ロープウェイ運休分は食と屋内に振る。"},"bookings":["レンタカー予約票の店舗・車種・料金・20:00返却を確認","ペニーレインまたはMr.BEEFを選ぶ場合は定休日と予約枠を確認","ロープウェイの夏季営業と運行状況を当日朝に確認","鹿の湯の設備休止日・最終受付を前日に確認","帰路の運転交代担当を出発前に決める"],"decisions":["ランチの方向性","ロープウェイを優先するか","雨天時の美術館","実際のレンタカー返却予約時刻"]},{"id":"haruna","rank":5,"area":"榛名湖・伊香保","title":"湖上で遊び、冷たいうどんをすすり、石段の湯へ","subtitle":"榛名富士 → 榛名湖ボート → 水沢うどん → 伊香保温泉","score":84,"start":"大宮駅","meetingTime":"08:45","returnTime":"19:20店舗帰着予定・20:00返却（仮）","driving":"往復 約4時間45分／約270km","cost":"9,000〜14,000円／人","theme":"湖上ボートと涼味","coolProof":"榛名湖は標高約1,100m。湖風とボートを気軽に楽しめる","bestFor":"予算と運転負荷を抑え、夏・食・温泉を外したくない日","tradeoff":"体験の派手さは控えめ。ロープウェイは強風・雷で止まりやすい","tags":["コスパ◎","水辺◎","温泉◎","移動◎"],"highlights":["標高約1,100mの湖でボート。4人ならモーターボートも割りやすい","水沢うどんは高評価店が近接し、定休日に合わせて選べる","石段街を歩いたあと800円の共同浴場へ。帰着も最も早い"],"access":[{"label":"千葉方面から","text":"千葉駅を7:00前後に出発し、大宮駅へ約1時間25分。08:40までの到着を目安にする。","url":"https://www.google.com/maps/dir/?api=1&origin=%E5%8D%83%E8%91%89%E9%A7%85&destination=%E5%A4%A7%E5%AE%AE%E9%A7%85&travelmode=transit"},{"label":"埼玉方面から","text":"大宮駅西口周辺のレンタカー店舗に08:45集合。09:00までに受取手続きを終える。","url":"https://www.google.com/maps/search/?api=1&query=%E5%A4%A7%E5%AE%AE%E9%A7%85%E8%A5%BF%E5%8F%A3"},{"label":"共通行程","text":"ヤリス等の5人乗りコンパクトを1台、09:00〜20:00の11時間で利用する仮設定。09:00出発、19:20店舗帰着予定、20:00返却（仮）。榛名湖から伊香保へ下る一方向ルート。","url":"https://cars.travel.rakuten.co.jp/cars/"}],"spots":[{"n":1,"time":"09:00","name":"大宮駅周辺レンタカー店舗","lat":35.9063,"lng":139.6239,"transfer":"受取手続き 15分","stay":"09:00出発","desc":"車体・燃料・返却方法を確認して関越道へ。上里SAで短く休憩する。","url":"https://www.google.com/maps/search/?api=1&query=%E5%A4%A7%E5%AE%AE%E9%A7%85+%E3%83%AC%E3%83%B3%E3%82%BF%E3%82%AB%E3%83%BC"},{"n":2,"time":"11:15","name":"榛名山ロープウェイ","lat":36.476,"lng":138.879,"transfer":"車 約2時間15分","stay":"60〜75分","desc":"9:00〜17:00、往復1,200円。山頂から榛名湖と関東平野を眺める。","url":"https://www.tanigawadake-rw.com/haruna/"},{"n":3,"time":"12:30","name":"榛名湖ボート","lat":36.475,"lng":138.872,"transfer":"車 約5分","stay":"45分","desc":"手漕ぎ30分700円、ペダル30分1,500円、モーター1周4,000円。4人ならモーターも1人1,000円。","url":"https://www.takasaki-kankoukyoukai.or.jp/?p=7510"},{"n":4,"time":"13:40","name":"水沢うどん街道","lat":36.49,"lng":138.934,"transfer":"車 約35分","stay":"75分","desc":"田丸屋・大澤屋・清水屋から営業日で選ぶ。冷たいうどんと舞茸天で夏の昼食。","url":"https://ikaho-kankou.com/eat/udon/"},{"n":5,"time":"15:15","name":"河鹿橋・伊香保石段街","lat":36.5002,"lng":138.917,"transfer":"車 約20分","stay":"50分","desc":"河鹿橋から石段街へ。暑さが強い日は散策を30分にし、入浴と返却時間を優先。","url":"https://www.ikaho-kankou.com/aboutikaho/ishidangai/"},{"n":6,"time":"16:15","name":"石段の湯","lat":36.495,"lng":138.916,"transfer":"徒歩 約5〜10分","stay":"入浴 55分","desc":"2026年8月は全日営業、10:00〜20:00、大人800円。コンパクトな共同浴場。","url":"https://www.city.shibukawa.lg.jp/kankou-site/kankou/000357/000361/p003077.html"},{"n":7,"time":"17:20","name":"大宮駅周辺レンタカー店舗へ","lat":35.909,"lng":139.627,"transfer":"車 約2時間","stay":"19:20店舗帰着予定・20:00返却（仮）","desc":"給油を済ませて19:20に店舗へ。5案で最も返却余裕があり、関越道渋滞にも比較的対応しやすい。","url":"https://www.driveplaza.com/dp/SearchQuick"}],"meals":[{"name":"元祖 田丸屋","fit":"本命・老舗と総合力","rating":"食べログ3.62／口コミ2,007件","price":"1,000〜3,000円","note":"天正10年創業。二色つゆや舞茸天。水曜定休、広い店内でも夏は待ち時間あり。","booking":"営業日と受付を確認","url":"https://tabelog.com/gunma/A1004/A100401/10000017/"},{"name":"大澤屋 第一店舗","fit":"舞茸天・席数重視","rating":"食べログ3.59／口コミ1,161件","price":"1,000〜2,000円","note":"300席の大型店。冷たいうどんと大きな舞茸天が定番。木曜定休。","booking":"団体以外は早着","url":"https://osawaya.co.jp/index.html"},{"name":"始祖 清水屋","fit":"手打ち・会話を楽しむ","rating":"食べログ3.58／口コミ472件","price":"1,000〜2,000円","note":"400年以上続く手打ち。白うどんと地粉の相盛り。火曜定休。","booking":"小規模のため早着","url":"https://tabelog.com/gunma/A1004/A100401/10000216/"}],"activities":[{"name":"榛名湖ボート","duration":"30〜60分","price":"700〜4,000円／艇","summer":"標高約1,100mの湖面へ。4人ならモーターボートも好相性","booking":"風・雷・営業を当日確認","url":"https://www.takasaki-kankoukyoukai.or.jp/?p=7510"},{"name":"榛名山ロープウェイ","duration":"60〜75分","price":"往復 1,200円","summer":"湖を上から見る短時間の高原体験","booking":"強風・雷で運休あり","url":"https://www.tanigawadake-rw.com/haruna/"},{"name":"伊香保石段街散策","duration":"60〜90分","price":"無料＋食べ歩き","summer":"石段・湯の花まんじゅう・河鹿橋で温泉街の夏","booking":"予約不要","url":"https://www.ikaho-kankou.com/aboutikaho/ishidangai/"}],"others":[{"name":"伊香保おもちゃと人形 自動車博物館","why":"強雨時の屋内代替。4人で見て回りやすく、伊香保から車約15分。","url":"https://www.ikaho-omocha.jp/"},{"name":"水澤観世音","why":"うどん街道の中心。昼食待ちの時間調整に使える。","url":"https://mizusawakannon.or.jp/"},{"name":"伊香保露天風呂","why":"自然の中の入浴を優先する差し替え。営業状況を当日確認。","url":"https://www.ikaho-kankou.com/spa/roten/"}],"budget":[{"item":"レンタカー・免責補償","group":"8,000〜15,000円","person":"2,000〜3,750円"},{"item":"高速・燃料・駐車","group":"9,000〜12,000円","person":"2,250〜3,000円"},{"item":"食事・カフェ","group":"7,000〜11,000円","person":"1,750〜2,750円"},{"item":"ロープウェイ・温泉","group":"8,000円","person":"2,000円"},{"item":"ボート","group":"700〜4,000円","person":"175〜1,000円"}],"foresight":{"cost":"レンタカー込みで9千〜1.4万円。モーターボートも4人なら割高感が少ない。","safety":"榛名山は午後の雷に注意。石段街は急勾配なので、入浴後の脱水と足元に気をつける。","feasibility":"09:00発でも成立しやすい。食事店は曜日で選び、17:20の帰路出発を守る。","quality":"派手さより安定感。運転疲れを抑え、会話・食・温泉をゆっくり楽しめる。","alternative":"雨天は自動車博物館＋水沢うどん＋石段の湯。うどん店の混雑時は散策を短縮し、関越道渋滞による返却遅延を避けて20:00返却（仮）を優先。強雨なら榛名湖を外す。"},"bookings":["レンタカー予約票の店舗・車種・料金・20:00返却を確認","実施曜日に合わせて田丸屋・大澤屋・清水屋を選ぶ","ボートとロープウェイの営業を当日朝に確認","石段の湯の混雑時は伊香保露天風呂等の第二候補を用意","伊香保周辺の駐車場を前日に共有"],"decisions":["うどん店","ボートの種類","温泉の第一・第二候補","実際のレンタカー返却予約時刻"]}]};
+let activeId = DATA.plans[0].id;
+let map;
+let markerLayer;
+let routeLine;
+let markers = [];
+
+const $ = (id) => document.getElementById(id);
+const esc = (value) => String(value ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#039;"}[c]));
+const dirUrl = (from, to, mode="driving") => `https://www.google.com/maps/dir/?api=1&origin=${encodeURIComponent(`${from.lat},${from.lng}`)}&destination=${encodeURIComponent(`${to.lat},${to.lng}`)}&travelmode=${mode}`;
+
+function candidateButton(plan, compact=false){
+  if(compact){
+    return `<button type="button" data-plan="${esc(plan.id)}"><b>${plan.rank}. ${esc(plan.area)}</b><span>${esc(plan.theme)} ・ ${plan.score}点</span></button>`;
+  }
+  return `<button type="button" class="candidate-card" data-plan="${esc(plan.id)}">
+    <span class="candidate-top"><span class="rank">${plan.rank}</span><span class="score">${plan.score}<small>/100</small></span></span>
+    <h3>${esc(plan.area)}</h3><p>${esc(plan.theme)}</p>
+    <span class="candidate-meta"><span>${esc(plan.cost)}</span><span>${esc(plan.driving)}</span></span>
+  </button>`;
+}
+
+function renderNavigation(){
+  $("candidate-grid").innerHTML = DATA.plans.map(p => candidateButton(p)).join("");
+  $("plan-switch").innerHTML = DATA.plans.map(p => `<button type="button" data-plan="${esc(p.id)}">${p.rank}. ${esc(p.area)}</button>`).join("");
+  $("side-rank").innerHTML = DATA.plans.map(p => candidateButton(p, true)).join("");
+  document.querySelectorAll("[data-plan]").forEach(button => button.addEventListener("click", () => selectPlan(button.dataset.plan, button.closest("#candidate-grid") !== null)));
+}
+
+function selectPlan(id, shouldScroll=false){
+  activeId = id;
+  renderPlan();
+  if(shouldScroll) $("plan").scrollIntoView({behavior:"smooth", block:"start"});
+}
+
+function renderPlan(){
+  const plan = DATA.plans.find(p => p.id === activeId);
+  document.querySelectorAll("[data-plan]").forEach(el => el.classList.toggle("active", el.dataset.plan === activeId));
+  $("plan-rank").textContent = plan.rank;
+  $("plan-area").textContent = `${plan.area} ・ ${plan.theme}`;
+  $("plan-title").textContent = plan.title;
+  $("plan-subtitle").textContent = plan.subtitle;
+  $("plan-tags").innerHTML = plan.tags.map(x => `<span class="tag">${esc(x)}</span>`).join("");
+  $("metric-board").innerHTML = [
+    ["集合", `${plan.start} ${plan.meetingTime}`],
+    ["帰着", plan.returnTime],
+    ["費用", plan.cost],
+    ["涼しさ", plan.coolProof]
+  ].map(([a,b]) => `<div><span>${esc(a)}</span><b>${esc(b)}</b></div>`).join("");
+  $("highlights").innerHTML = plan.highlights.map(x => `<div class="highlight">${esc(x)}</div>`).join("");
+  $("access-grid").innerHTML = plan.access.map(x => `<article class="info-card"><h3>${esc(x.label)}</h3><p>${esc(x.text)}</p><a class="inline-link" href="${esc(x.url)}" target="_blank" rel="noopener">経路・詳細 ↗</a></article>`).join("");
+  $("timeline").innerHTML = plan.spots.map((spot, i) => {
+    const previous = plan.spots[i-1];
+    const mode = spot.transfer.startsWith("徒歩") ? "walking" : "driving";
+    const routeHref = spot.transferUrl || (previous ? dirUrl(previous, spot, mode) : "");
+    const route = previous ? `<a href="${esc(routeHref)}" target="_blank" rel="noopener">${spot.transferUrl ? "公式時刻・区間を開く" : "この区間を開く"} ↗</a>` : "";
+    const fare = !previous
+      ? "料金：なし（集合）"
+      : spot.fare
+        ? `料金：${spot.fare}`
+      : mode === "walking"
+        ? "料金：0円"
+        : "料金：高速・燃料・駐車は費用表に一括";
+    return `<article class="timeline-item">
+      <div class="timeline-pin">${spot.n}</div>
+      <div class="timeline-content">
+        <div class="timeline-title"><span class="timeline-time">${esc(spot.time)}</span><h3><a href="${esc(spot.url)}" target="_blank" rel="noopener">${esc(spot.name)}</a></h3></div>
+        <div class="transfer"><span>${esc(spot.transfer)}</span><span>${esc(fare)}</span><span>${esc(spot.stay)}</span>${route}</div>
+        <p>${esc(spot.desc)}</p>
+      </div>
+    </article>`;
+  }).join("");
+  $("meals-grid").innerHTML = plan.meals.map(x => `<article class="info-card">
+    <span class="eyebrow">${esc(x.fit)}</span><h3>${esc(x.name)}</h3>
+    <div class="rating">${esc(x.rating)}</div>
+    <div class="card-meta"><span class="pill gold">${esc(x.price)}</span><span class="pill">${esc(x.booking)}</span></div>
+    <p>${esc(x.note)}</p><a class="inline-link" href="${esc(x.url)}" target="_blank" rel="noopener">店舗・予約前情報 ↗</a>
+  </article>`).join("");
+  $("activities-grid").innerHTML = plan.activities.map(x => `<article class="info-card">
+    <span class="eyebrow">SUMMER ACTIVITY</span><h3>${esc(x.name)}</h3>
+    <div class="card-meta"><span class="pill">${esc(x.duration)}</span><span class="pill gold">${esc(x.price)}</span></div>
+    <p>${esc(x.summer)}</p><span class="pill green" style="margin-top:10px">${esc(x.booking)}</span><br>
+    <a class="inline-link" href="${esc(x.url)}" target="_blank" rel="noopener">公式・予約前情報 ↗</a>
+  </article>`).join("");
+  $("others-grid").innerHTML = plan.others.map(x => `<article class="info-card"><h3>${esc(x.name)}</h3><p>${esc(x.why)}</p><a class="inline-link" href="${esc(x.url)}" target="_blank" rel="noopener">施設情報 ↗</a></article>`).join("");
+  $("budget-body").innerHTML = plan.budget.map(x => `<tr><td>${esc(x.item)}</td><td>${esc(x.group)}</td><td>${esc(x.person)}</td></tr>`).join("");
+  const foresightLabels = {cost:"費用", safety:"安全・天候", feasibility:"実行性", quality:"体験品質", alternative:"代替案"};
+  $("foresight-grid").innerHTML = Object.entries(foresightLabels).map(([key,label]) => `<article class="foresight-item"><b>${label}</b><p>${esc(plan.foresight[key])}</p></article>`).join("");
+  $("booking-list").innerHTML = plan.bookings.map(x => `<li>${esc(x)}</li>`).join("");
+  $("decision-list").innerHTML = plan.decisions.map(x => `<li>${esc(x)}</li>`).join("");
+  $("summary-best").textContent = plan.bestFor;
+  $("summary-tradeoff").textContent = plan.tradeoff;
+  $("summary-score").textContent = `${plan.score}点`;
+  $("summary-cost").textContent = plan.cost.replace("／人","");
+  renderMap(plan);
+}
+
+function initMap(){
+  map = L.map("map", {scrollWheelZoom:false, zoomControl:true});
+  L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+    maxZoom:19,
+    attribution:'&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+  }).addTo(map);
+  markerLayer = L.layerGroup().addTo(map);
+}
+
+function renderMap(plan){
+  if(!map) initMap();
+  markerLayer.clearLayers();
+  if(routeLine) routeLine.remove();
+  markers = [];
+  const coords = plan.spots.map(s => [s.lat,s.lng]);
+  routeLine = L.polyline(coords, {color:"#e44848", weight:4, opacity:.88, dashArray:"1 0"}).addTo(map);
+  plan.spots.forEach(spot => {
+    const icon = L.divIcon({className:"", html:`<div class="route-marker">${spot.n}</div>`, iconSize:[28,28], iconAnchor:[14,14]});
+    const marker = L.marker([spot.lat,spot.lng], {icon}).addTo(markerLayer)
+      .bindPopup(`<b>${spot.n}. ${esc(spot.name)}</b><br>${esc(spot.time)}・${esc(spot.stay)}<br><a href="${esc(spot.url)}" target="_blank" rel="noopener">詳細を開く</a>`);
+    markers.push(marker);
+  });
+  const bounds = L.latLngBounds(coords);
+  map.fitBounds(bounds, {padding:[28,28], maxZoom:11});
+  setTimeout(() => map.invalidateSize(), 50);
+  $("pin-index").innerHTML = plan.spots.map(s => `<button type="button" class="pin-button" data-pin="${s.n}"><span class="pin-number">${s.n}</span>${esc(s.name)}</button>`).join("");
+  document.querySelectorAll("[data-pin]").forEach(button => button.addEventListener("click", () => {
+    const index = Number(button.dataset.pin)-1;
+    map.setView(markers[index].getLatLng(), 13, {animate:true});
+    markers[index].openPopup();
+  }));
+}
+
+function init(){
+  $("assumption").textContent = DATA.meta.assumption;
+  $("ranking-note").textContent = DATA.meta.rankingNote;
+  renderNavigation();
+  renderPlan();
+}
+
+window.addEventListener("DOMContentLoaded", init);
+</script>
+</body>
+</html>
