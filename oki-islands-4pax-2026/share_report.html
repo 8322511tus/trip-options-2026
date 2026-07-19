@@ -1,0 +1,803 @@
+<!doctype html>
+<!--
+  ============================================================================
+  共有用 旅行レポート テンプレート（スマホ最適化・1ファイル自己完結）
+  ----------------------------------------------------------------------------
+  使い方:
+    下の「DATA」ブロックだけを案件に合わせて書き換える。CSS/描画ロジックは触らない。
+    OpenStreetMap + Leaflet で「実地図＋訪問順の赤い経路線＋番号ピン」を描く。
+
+  必守ルール（memory/global_rules.yaml の share_report_rules と一致させること）:
+    - 地図はOSM等の実地図の上に描く。白地図に点だけはNG。
+    - 訪問順に赤い経路線でつなぎ、番号ピン＝行程の番号を1:1で一致させる。
+    - ピンは実在地に置く。完全に同座標の地点だけ約400mずらす。重なりは
+      地図下の番号インデックス（クリックで拡大）で見分けられればよい。
+    - 行程の各スポットはURL（地図/公式）をインラインで持たせる。
+    - 区間ごとに所要時間を書く。バス/フェリー/飛行機/新幹線は「何時発→何時着・
+      所要◯分・運賃」まで具体便で。車はGoogleマップ経路リンク。
+    - 食事は別セクションで、タイミングごとに3候補程度（厚め）。SNSの話題性も加味。
+    - アクティビティは別セクションで、候補ごとに内容・所要・費用感・予約前URLを載せる。
+    - 「他のおすすめスポット」は別セクション。
+    - 飛行機/レンタカー/宿/フェリー等は価格が見える「予約前のプランページURL」を提示。
+      宿は楽天/じゃらん/agodaを基本。レンタカーは車種・定員・料金・受取場所まで。
+      現地直営＋（その土地で使えるなら）大手/比較も併記。実際の予約はしない。
+    - レンタカー台数は人数で決める（例: 6人なら1台＝8〜10人乗りワゴン）。
+    - 費用・混雑/天候・交通リスク・予約条件・代替案は「先読みチェック」に短くまとめる。
+    - 本人向けの解説・意図・使い方・選定理由のメタ文や「根拠/要確認」等は本文に出さない。
+      常に同行者全員に見せる前提で書く。出典の羅列・LINE貼付文は載せない。
+    - 末尾に「これから決めること（未確定の観点）」を客観的に置く。
+    - 完成したらWeb公開（GitHub Pages等）でURL1本にし、作成側がブラウザで開いて確認。
+  ============================================================================
+-->
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>隠岐諸島 島前・島後 2泊3日（4人・2026/9/12-14）</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+  integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="">
+<style>
+  :root{
+    --color-brand:#0b5cab;
+    --color-brand-hover:#064a8a;
+    --color-brand-deep:#032d60;
+    --color-brand-soft:#eaf5ff;
+    --color-background:#eef4fb;
+    --color-surface:#ffffff;
+    --color-surface-alt:#f7f9fd;
+    --color-border:#c9d5e8;
+    --color-text-primary:#111827;
+    --color-text-secondary:#3f526d;
+    --color-text-muted:#6b778c;
+    --color-success:#2e844a;
+    --color-warning:#b76100;
+    --color-danger:#ba0517;
+    --color-info:#0176d3;
+    --space-1:4px;
+    --space-2:8px;
+    --space-3:12px;
+    --space-4:16px;
+    --space-6:24px;
+    --space-8:32px;
+    --radius-small:4px;
+    --radius-medium:8px;
+    --radius-large:12px;
+    --shadow-card:0 1px 2px rgba(10,31,68,.10),0 10px 28px rgba(10,31,68,.08);
+    --shadow-popover:0 12px 32px rgba(10,31,68,.20);
+    --shadow-modal:0 24px 60px rgba(10,31,68,.30);
+    --font-stack:"Segoe UI Variable","Segoe UI","Noto Sans JP","Yu Gothic UI","Yu Gothic",Meiryo,sans-serif;
+    --font-page-title:750 30px/1.16 var(--font-stack);
+    --font-section-title:750 18px/1.35 var(--font-stack);
+    --font-body:400 14px/1.65 var(--font-stack);
+    --font-caption:700 12px/1.4 var(--font-stack);
+    --z-header:100;
+    --z-dropdown:200;
+    --z-modal:500;
+    --z-toast:600;
+  }
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{margin:0;color:var(--color-text-primary);
+    background:linear-gradient(180deg,#fff 0,#fff 56px,#0b5cab 56px,#276f9f 172px,#eef4fb 172px,#eef4fb 100%);
+    font:var(--font-body);-webkit-text-size-adjust:100%}
+  a{color:var(--color-brand);text-underline-offset:.16em}
+  a:hover{color:var(--color-brand-hover)}
+  a:focus-visible,button:focus-visible{outline:3px solid rgba(1,118,211,.35);outline-offset:2px}
+  .app-shell{min-height:100vh;position:relative}
+  .app-shell::before{content:"";position:absolute;left:0;right:0;top:56px;height:156px;pointer-events:none;
+    background:
+      repeating-linear-gradient(135deg,rgba(255,255,255,.14) 0 1px,transparent 1px 18px),
+      linear-gradient(120deg,rgba(3,45,96,.92),rgba(11,92,171,.78) 54%,rgba(91,144,184,.52));
+    border-bottom:1px solid rgba(255,255,255,.28)}
+  .global-header{position:sticky;top:0;z-index:var(--z-header);height:56px;background:#fff;color:var(--color-text-primary);
+    border-bottom:1px solid #dfe5ef;display:flex;align-items:center;gap:var(--space-4);padding:0 var(--space-6);
+    box-shadow:0 1px 2px rgba(10,31,68,.08)}
+  .brand-home{display:flex;align-items:center;gap:var(--space-3);min-width:0;color:inherit;text-decoration:none}
+  .brand-home:hover{color:inherit}
+  .brand-mark{width:30px;height:30px;border-radius:var(--radius-medium);background:linear-gradient(135deg,#2b6cb0,#6c7ff2);
+    color:#fff;display:grid;place-items:center;font-weight:900;box-shadow:inset 0 0 0 1px rgba(255,255,255,.35)}
+  .brand-title{font-weight:800;letter-spacing:0}
+  .global-actions{margin-left:auto;display:flex;align-items:center;gap:var(--space-1);overflow:auto}
+  .global-actions a{display:inline-flex;align-items:center;min-height:32px;padding:0 10px;border-radius:var(--radius-small);
+    color:var(--color-text-secondary);font-size:13px;font-weight:750;text-decoration:none;white-space:nowrap}
+  .global-actions a:hover{background:var(--color-brand-soft);color:var(--color-brand)}
+  .global-actions .back-link{border:1px solid var(--color-border);background:var(--color-surface-alt);color:var(--color-brand-deep)}
+  .shell-body{position:relative;z-index:1;max-width:1440px;margin:0 auto;display:grid;grid-template-columns:220px minmax(0,1fr) 300px;gap:var(--space-4);padding:var(--space-4)}
+  .side-nav,.summary-panel{position:sticky;top:72px;align-self:start}
+  .side-nav,.summary-panel,.card{background:var(--color-surface);border:1px solid var(--color-border);border-radius:var(--radius-medium);box-shadow:var(--shadow-card)}
+  .side-nav{padding:var(--space-3);box-shadow:0 1px 2px rgba(10,31,68,.10),0 10px 22px rgba(10,31,68,.08)}
+  .side-nav-title,.summary-title{font:var(--font-caption);color:var(--color-text-muted);margin:0 0 var(--space-2)}
+  .side-nav a{display:flex;align-items:center;gap:var(--space-2);min-height:36px;padding:0 var(--space-3);border-radius:var(--radius-small);
+    color:var(--color-text-secondary);font-weight:700;text-decoration:none}
+  .side-nav a:hover,.side-nav a.active{background:var(--color-brand-soft);color:var(--color-brand)}
+  .main-content{min-width:0;display:grid;gap:var(--space-4)}
+  .summary-panel{padding:var(--space-4);display:grid;gap:var(--space-4)}
+  .summary-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:var(--space-2)}
+  .summary-metric{min-height:76px;display:grid;align-content:space-between;gap:var(--space-1);padding:var(--space-3);
+    border:1px solid #d7e3f5;border-radius:var(--radius-medium);background:linear-gradient(180deg,#fff,#f8fbff)}
+  .summary-metric span{color:var(--color-text-muted);font-size:11px;font-weight:750}
+  .summary-metric b{font-size:21px;line-height:1.1;color:var(--color-brand-deep);font-weight:750}
+  .summary-metric::after{content:"";display:block;width:100%;height:6px;border-radius:999px;background:linear-gradient(90deg,#2b6cb0,#6c7ff2)}
+  .utility-links{display:grid;gap:var(--space-2)}
+  .utility-links a{display:flex;justify-content:space-between;align-items:center;min-height:36px;padding:0 var(--space-3);
+    border:1px solid var(--color-border);border-radius:var(--radius-small);background:var(--color-surface-alt);
+    color:var(--color-text-primary);font-weight:750;text-decoration:none}
+  .utility-links a::after{content:"›";color:var(--color-brand);font-size:18px}
+  .utility-links a:hover{border-color:#9bbde6;background:var(--color-brand-soft);color:var(--color-brand)}
+  .hero{position:relative;overflow:hidden;background:linear-gradient(180deg,#fff,#f9fbff);border:1px solid #c4d4ea;
+    border-radius:var(--radius-medium);padding:0;box-shadow:0 2px 4px rgba(10,31,68,.10),0 16px 42px rgba(10,31,68,.12)}
+  .hero::before{content:"";position:absolute;left:0;right:0;top:0;height:6px;background:linear-gradient(90deg,#2b6cb0,#706eeb,#20a0d8)}
+  .hero-main{padding:var(--space-6)}
+  .title-cluster{display:flex;align-items:flex-start;gap:var(--space-3)}
+  .record-icon{width:42px;height:42px;border-radius:var(--radius-medium);display:grid;place-items:center;flex:0 0 auto;
+    background:linear-gradient(135deg,#5f7feb,#2b6cb0);color:#fff;font-weight:900;box-shadow:inset 0 0 0 1px rgba(255,255,255,.35)}
+  .kicker{font:var(--font-caption);color:var(--color-brand);margin-bottom:var(--space-1)}
+  .page-title-row{display:flex;align-items:flex-start;justify-content:space-between;gap:var(--space-4)}
+  h1{margin:0;font:var(--font-page-title)}
+  .lead{color:var(--color-text-secondary);margin:var(--space-2) 0 var(--space-4);max-width:74ch}
+  .badges{display:flex;gap:var(--space-2);flex-wrap:wrap}
+  .badge,.pill,.tag{display:inline-flex;align-items:center;gap:5px;border:1px solid var(--color-border);background:var(--color-surface-alt);
+    border-radius:999px;padding:5px 10px;font-size:12px;font-weight:800;color:var(--color-text-secondary)}
+  .badge.status-info{background:#eaf5ff;border-color:#b9dcff;color:#095da0}
+  .badge.status-success{background:#eaf7ee;border-color:#b7e1c1;color:#22683e}
+  .action-bar{display:flex;gap:var(--space-2);flex-wrap:wrap;margin-top:var(--space-4)}
+  .btn{display:inline-flex;align-items:center;justify-content:center;gap:var(--space-2);min-height:36px;border:1px solid var(--color-border);
+    border-radius:var(--radius-small);padding:0 var(--space-3);background:var(--color-surface);color:var(--color-text-primary);
+    text-decoration:none;font-weight:800;cursor:pointer;box-shadow:0 1px 1px rgba(10,31,68,.06)}
+  .btn:hover{border-color:#9bbde6;color:var(--color-brand);background:#f7fbff;box-shadow:0 2px 8px rgba(10,31,68,.10)}
+  .btn.primary{background:linear-gradient(180deg,#1677d2,#0b5cab);border-color:#084f99;color:#fff}
+  .btn.primary:hover{background:var(--color-brand-hover);color:#fff}
+  .btn.subtle{background:var(--color-surface-alt)}
+  .tabset{position:sticky;top:72px;z-index:50;background:var(--color-surface);border:1px solid var(--color-border);
+    border-radius:var(--radius-medium);box-shadow:var(--shadow-card);display:flex;gap:var(--space-1);padding:var(--space-1);overflow:auto}
+  .tabset a{white-space:nowrap;text-decoration:none;color:var(--color-text-secondary);font-weight:800;border-radius:var(--radius-small);padding:9px 12px}
+  .tabset a:hover{background:var(--color-brand-soft);color:var(--color-brand)}
+  section{scroll-margin-top:128px;margin-top:var(--space-4)}
+  .section-head{display:flex;align-items:flex-end;justify-content:space-between;gap:var(--space-4);margin-bottom:var(--space-3)}
+  h2{font:var(--font-section-title);margin:0;display:flex;align-items:center;gap:var(--space-2)}
+  h2 .dot{width:4px;height:18px;border-radius:999px;background:var(--color-brand)}
+  .sub{color:var(--color-text-muted);font-size:13px;margin:4px 0 0}
+  .card{padding:var(--space-4);margin-bottom:var(--space-3)}
+  .card:hover{box-shadow:0 2px 4px rgba(10,31,68,.10),0 12px 30px rgba(10,31,68,.08)}
+  #map{height:62vh;min-height:380px;max-height:560px;width:100%;border-radius:var(--radius-medium);border:1px solid var(--color-border);z-index:0;
+    background:linear-gradient(90deg,#eef2f7 25%,#f7f9fc 37%,#eef2f7 63%);background-size:400% 100%;animation:skeleton 1.25s ease-in-out infinite}
+  .mapfallback{height:100%;display:flex;align-items:center;justify-content:center;text-align:center;padding:24px;color:var(--color-text-secondary);background:#eef4f8}
+  .legend{display:flex;gap:14px;flex-wrap:wrap;margin-top:10px;font-size:13px;color:var(--color-text-secondary)}
+  .legend span{display:inline-flex;align-items:center;gap:6px}
+  .swatch{width:14px;height:14px;border-radius:50%;display:inline-block}
+  .routeline{width:22px;height:0;border-top:3px solid var(--color-danger);display:inline-block}
+  .pinindex{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+  .pinbtn{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--color-border);background:#fff;
+    border-radius:999px;padding:5px 11px 5px 6px;font-size:13px;font-weight:800;color:var(--color-text-primary);cursor:pointer}
+  .pinbtn:hover,.pinbtn.active{border-color:var(--color-danger);background:#fff4f2}
+  .pinbtn .num{width:20px;height:20px;border-radius:50%;background:var(--color-danger);color:#fff;font-size:12px;font-weight:800;
+    display:inline-flex;align-items:center;justify-content:center}
+  .pinbtn .num.hub{background:#16354a}
+  .pin{width:22px;height:22px;border-radius:50%;color:#fff;font-weight:800;font-size:12px;
+    display:flex;align-items:center;justify-content:center;border:2px solid #fff;box-shadow:0 2px 6px rgba(0,0,0,.35)}
+  .responsive-grid,.grid2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:var(--space-3)}
+  .access{display:grid;gap:10px}
+  .leg{display:grid;grid-template-columns:30px 1fr;gap:10px;padding:10px 0;border-bottom:1px dashed #e6ebee}
+  .leg:last-child{border-bottom:0}
+  .leg .ic{font-size:20px;text-align:center}
+  .leg .ttl{font-weight:800}
+  .leg .meta{font-size:13px;color:var(--color-text-secondary)}
+  .pillrow{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
+  .pill{text-decoration:none;background:#eef4f2;color:#27514a}
+  .pill.book{background:#eaf1f7;color:#1c537a}
+  .day{margin-bottom:14px}
+  .day h3{margin:0 0 12px;font-size:16px;color:var(--color-text-primary)}
+  .timeline{position:relative}
+  .stop{position:relative;padding:12px 0;border-bottom:1px solid #eef2f4}
+  .stop:last-child{border-bottom:0}
+  .stop .top{display:flex;gap:9px;align-items:baseline}
+  .stop .num{flex:0 0 auto;width:22px;height:22px;border-radius:50%;background:var(--color-danger);color:#fff;
+    font-size:12px;font-weight:800;display:inline-flex;align-items:center;justify-content:center;align-self:center}
+  .stop .num.hub{background:#16354a}
+  .stop .t{color:var(--color-brand);font-weight:800;font-variant-numeric:tabular-nums;min-width:46px}
+  .stop .p{font-weight:800}
+  .stop .hint{color:var(--color-text-muted);font-size:13px;margin-left:31px}
+  .movelink{margin:8px 0 2px 31px;display:inline-flex;align-items:center;gap:7px;font-size:13px;font-weight:700;
+    background:#f3f7f5;border:1px solid #e2ebe6;border-radius:10px;padding:5px 11px;color:#2f5a4c;text-decoration:none}
+  .mealgroup{margin-bottom:8px}
+  .mealgroup .when{font-weight:800;font-size:14px;color:var(--color-text-primary);margin:6px 2px 8px}
+  .item{border:1px solid var(--color-border);border-radius:var(--radius-medium);padding:var(--space-4);background:linear-gradient(180deg,#fff,#fbfdff);box-shadow:0 1px 1px rgba(10,31,68,.05)}
+  .item:hover{border-color:#9bbde6;box-shadow:var(--shadow-card);transform:translateY(-1px)}
+  .item .name{font-weight:800}
+  .item .price{font-weight:800;color:#123e5b;font-size:14px}
+  .item .hint{color:var(--color-text-muted);font-size:13px}
+  .tag{border-radius:var(--radius-small);padding:2px 7px;margin:0 6px 6px 0;color:#6a4a14;background:#fdf0d6}
+  .tag.sns{color:#8a2b6b;background:#fbe4f1}
+  .check-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:var(--space-3)}
+  .check-card{position:relative;border:1px solid #c7d8ea;border-radius:var(--radius-medium);padding:var(--space-4);
+    background:linear-gradient(180deg,#fff,#f8fbff);box-shadow:0 1px 1px rgba(10,31,68,.05)}
+  .check-card::before{content:"";position:absolute;left:0;top:0;bottom:0;width:4px;border-radius:var(--radius-medium) 0 0 var(--radius-medium);background:var(--color-warning)}
+  .check-label{font-size:12px;font-weight:850;color:var(--color-warning);margin-bottom:var(--space-1)}
+  .check-title{font-weight:850;color:var(--color-text-primary)}
+  .check-note{color:var(--color-text-muted);font-size:13px;margin-top:4px}
+  .check-status{display:inline-flex;margin-top:8px;border:1px solid #d9c6a0;background:#fff8ed;color:#7a4b00;border-radius:999px;padding:3px 8px;font-size:12px;font-weight:800}
+  .budget-card{padding:0;overflow:hidden}
+  .budget-head{display:flex;justify-content:space-between;gap:var(--space-4);align-items:flex-start;padding:var(--space-4);
+    background:linear-gradient(180deg,#f7fbff,#eef5ff);border-bottom:1px solid var(--color-border)}
+  .budget-head h3{margin:2px 0 0;font:var(--font-section-title)}
+  .budget-total{min-width:180px;border:1px solid #b9d6f4;background:#fff;border-radius:var(--radius-medium);padding:var(--space-3);text-align:right;
+    box-shadow:0 1px 2px rgba(10,31,68,.06)}
+  .budget-total span{display:block;color:var(--color-text-muted);font-size:11px;font-weight:750}
+  .budget-total b{display:block;color:var(--color-brand-deep);font-size:20px;line-height:1.2;margin-top:2px}
+  .budget-table-wrap{padding:var(--space-3);overflow-x:auto}
+  table{width:100%;border-collapse:separate;border-spacing:0;font-size:14px}
+  th,td{padding:12px 12px;border-bottom:1px solid #e3eaf5;text-align:left;vertical-align:top}
+  th{background:#f4f8fd;color:#314763;font-size:12px;font-weight:800}
+  th:first-child{border-top-left-radius:var(--radius-small)}
+  th:last-child{border-top-right-radius:var(--radius-small)}
+  tbody tr:hover td{background:#f8fbff}
+  td.r{text-align:right;font-variant-numeric:tabular-nums;font-weight:800;color:var(--color-brand-deep)}
+  .total-row td{background:#edf5ff!important;border-top:2px solid #9bbde6;border-bottom:0;font-weight:900}
+  .total-row td:first-child{border-bottom-left-radius:var(--radius-small)}
+  .total-row td:last-child{border-bottom-right-radius:var(--radius-small)}
+  .todo{list-style:none;padding:0;margin:0}
+  .todo li{padding:8px 0;border-bottom:1px solid #eef2f4}
+  .todo.book li:before{content:"□";color:var(--color-brand);font-weight:800;margin-right:6px}
+  .todo.decide li:before{content:"•";color:var(--color-warning);font-weight:800;margin-right:6px}
+  .twohead{font-weight:800;margin:2px 0 6px;font-size:14px}
+  .empty-state{border:1px dashed var(--color-border);border-radius:var(--radius-medium);background:var(--color-surface-alt);padding:var(--space-6);color:var(--color-text-muted);text-align:center}
+  .toast{position:fixed;right:var(--space-4);bottom:var(--space-4);z-index:var(--z-toast);background:#17324d;color:#fff;border-radius:var(--radius-medium);
+    box-shadow:var(--shadow-popover);padding:var(--space-3) var(--space-4);font-weight:800;opacity:0;transform:translateY(10px);pointer-events:none;transition:.18s ease}
+  .toast.show{opacity:1;transform:translateY(0)}
+  footer{margin-top:34px;color:var(--color-text-muted);font-size:12px;text-align:center}
+  @keyframes skeleton{0%{background-position:100% 0}100%{background-position:0 0}}
+  @media(max-width:1120px){
+    .shell-body{grid-template-columns:190px minmax(0,1fr)}
+    .summary-panel{position:static;grid-column:2}
+  }
+  @media(max-width:760px){
+    body{background:linear-gradient(180deg,#fff 0,#fff 56px,#0b5cab 56px,#276f9f 170px,#eef4fb 170px,#eef4fb 100%)}
+    .app-shell::before{top:56px;height:132px}
+    .global-header{position:relative;height:56px;min-height:56px;padding:0 12px;gap:8px}
+    .brand-home{gap:8px;min-width:0}
+    .brand-title{font-size:14px;line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .global-actions{margin-left:auto;flex:0 0 auto;max-width:44%;overflow:visible}
+    .global-actions a:not(.back-link){display:none}
+    .global-actions .back-link{min-height:34px;padding:0 9px;font-size:12px}
+    .shell-body{display:block;padding:14px 12px 12px}
+    .side-nav{display:none}
+    .summary-panel{margin-top:var(--space-3)}
+    .hero-main{padding:var(--space-4)}
+    .title-cluster{gap:var(--space-2)}
+    .record-icon{width:36px;height:36px}
+    .page-title-row{display:block}
+    .tabset{top:0}
+    .responsive-grid,.grid2,.check-grid{grid-template-columns:1fr}
+    table,thead,tbody,tr,th,td{display:block}
+    thead{display:none}
+    .budget-head{display:grid}
+    .budget-total{text-align:left;min-width:0}
+    tr{border:1px solid var(--color-border);border-radius:var(--radius-medium);padding:var(--space-2);margin-bottom:var(--space-2);background:#fff}
+    td{border:0;display:grid;grid-template-columns:96px 1fr;gap:var(--space-2)}
+    td:before{content:attr(data-label);font-weight:800;color:var(--color-text-muted)}
+    td.r{text-align:left}
+    #map{min-height:320px;height:52vh}
+  }
+  @media(prefers-reduced-motion:reduce){
+    html{scroll-behavior:auto}
+    *,*::before,*::after{animation:none!important;transition:none!important}
+  }
+</style>
+</head>
+<body>
+<div class="app-shell">
+  <header class="global-header">
+    <a class="brand-home" href="index.html" aria-label="5案一覧へ戻る">
+      <div class="brand-mark" aria-hidden="true">T</div>
+      <div class="brand-title">Travel Planning Console</div>
+    </a>
+    <nav class="global-actions" aria-label="クイックリンク">
+      <a class="back-link" href="index.html">← 5案一覧</a>
+      <a href="#route">地図</a>
+      <a href="#itinerary">行程</a>
+      <a href="#checks">先読み</a>
+      <a href="#budget">費用</a>
+      <a href="#next">予約</a>
+    </nav>
+  </header>
+
+  <div class="shell-body">
+    <nav class="side-nav" aria-label="セクションナビ">
+      <p class="side-nav-title">ページ内ナビ</p>
+      <a href="#route">ルート</a>
+      <a href="#access">アクセス</a>
+      <a href="#itinerary">行程</a>
+      <a href="#meals">食事</a>
+      <a href="#activities">アクティビティ</a>
+      <a href="#checks">先読みチェック</a>
+      <a href="#budget">費用</a>
+      <a href="#next">予約ToDo</a>
+    </nav>
+
+<main class="main-content" id="main-content">
+  <header class="hero">
+    <div class="hero-main">
+    <div class="page-title-row">
+      <div class="title-cluster">
+        <div class="record-icon" aria-hidden="true">旅</div>
+        <div>
+          <div class="kicker">4人・2泊3日・2026年9月12日〜14日</div>
+          <h1>隠岐諸島 島前・島後 2泊3日</h1>
+        </div>
+      </div>
+    </div>
+    <p class="lead">島根の沖合80km、隠岐諸島へ。初日は島後に降りて昼の船で海士町へ渡り、2日目は西ノ島の摩天崖と国賀海岸をまるごと1日。夜は海辺のドームで隠岐牛のBBQと、月明かりのない空の星。最終日は本土に戻って出雲大社に寄って帰ります。</p>
+    <div class="badges"><!-- 例 --><span class="badge">🗓 2泊3日</span><span class="badge">👥 4人</span><span class="badge">✈️ 羽田発</span><span class="badge">🏝 島前2泊</span><span class="badge">🌙 新月直後の星空</span><span class="badge">📅 年休は9/14の1日だけ</span></div>
+    <div class="action-bar" aria-label="主要アクション">
+      
+      <a class="btn primary" href="#next">予約ToDoを見る</a>
+      <a class="btn" href="#map">地図を確認</a>
+      <a class="btn" href="#checks">先読みチェック</a>
+      <a class="btn" href="#budget">費用を見る</a>
+    </div>
+    </div>
+  </header>
+
+  <nav class="tabset" aria-label="レポートタブ">
+    <a href="#route">概要</a>
+    <a href="#itinerary">行程</a>
+    <a href="#meals">食事</a>
+    <a href="#activities">体験</a>
+    <a href="#stay">宿</a>
+    <a href="#checks">先読み</a>
+    <a href="#budget">費用</a>
+    <a href="#next">予約</a>
+  </nav>
+
+  <section id="route">
+    <h2><span class="dot"></span>ルート地図</h2>
+    <p class="sub">番号順に巡るルート。赤い線が実際の移動経路です。</p>
+    <div id="map"></div>
+    <div class="legend">
+      <span><i class="routeline"></i>順路</span>
+      <span><i class="swatch" style="background:#16354a"></i>集合・拠点</span>
+      <span><i class="swatch" style="background:#d23b2c"></i>観光スポット</span>
+      <span><i class="swatch" style="background:#b07d24"></i>食事の街</span>
+    </div>
+    <div class="pinindex" id="pinindex"></div>
+    <p class="sub" style="margin-top:8px">番号をタップすると、地図のその場所に移動します。</p>
+  </section>
+
+  <section id="access">
+    <h2><span class="dot"></span>行き帰りのアクセス</h2>
+    <p class="sub">4人とも羽田発なので、羽田07:10のJAL277に全員で乗るところからが共通行程です。出雲での乗り継ぎは30分。帰りは海士町から船で本土に渡り、松江・出雲を経由して出雲空港から帰ります。</p>
+    <div class="card"><div class="twohead">往路（9/12 土）羽田 → 海士町</div><div class="access" id="acc-a"></div></div>
+    <div class="card"><div class="twohead">復路（9/14 月）海士町 → 羽田</div><div class="access" id="acc-b"></div></div>
+  </section>
+
+  <section id="itinerary">
+    <h2><span class="dot"></span>行程</h2>
+    <p class="sub">番号は上の地図のピンと同じ順番です。スポット名は地図リンク、区間リンクは公式時刻・料金ページまたは経路地図に飛びます。</p>
+    <div id="days"></div>
+  </section>
+
+  <section id="meals">
+    <h2><span class="dot"></span>食事候補</h2>
+    <p class="sub">タイミング別の候補。気分と予約状況で選べます。</p>
+    <div id="meal-list"></div>
+  </section>
+
+  <section id="activities">
+    <h2><span class="dot"></span>アクティビティ候補</h2>
+    <p class="sub">行程に入れるかを相談しやすい体験候補です。天気・体力・予約状況で選べます。</p>
+    <div class="grid2" id="activity-list"></div>
+  </section>
+
+  <section id="other">
+    <h2><span class="dot"></span>他にもおすすめのスポット</h2>
+    <p class="sub">天気や気分で順路に足せる候補です。</p>
+    <div class="grid2" id="other-list"></div>
+  </section>
+
+  <section id="car">
+    <h2><span class="dot"></span>レンタカー</h2>
+    <p class="sub">4人で1台。荷物は宿に置いていくので、必要なのはDay2に西ノ島を回る半日ぶんです。西ノ島は普通車の在庫が3台しかないため、ここだけ早めに動きたいところ。</p>
+    <div class="grid2" id="car-list"></div>
+  </section>
+
+  <section id="stay">
+    <h2><span class="dot"></span>宿</h2>
+    <p class="sub">2泊とも海士町・菱浦港の徒歩5分圏で、性格の違う宿を1泊ずつ。宿を変えても移動の手間がかかりません。1泊目は海向きのホテル、2泊目は海辺のドームでBBQという組み立てです。</p>
+    <div class="grid2" id="stay-list"></div>
+  </section>
+
+  <section id="checks">
+    <h2><span class="dot"></span>先読みチェック</h2>
+    <p class="sub">予約前に見落としやすい費用・リスク・代替案です。</p>
+    <div class="check-grid" id="check-list"></div>
+  </section>
+
+  <section id="budget">
+    <h2><span class="dot"></span>費用のめやす（1人あたり）</h2>
+    <div class="card budget-card">
+      <div class="budget-head">
+        <div>
+          <p class="summary-title">費用サマリー</p>
+          <h3>1人あたりの概算</h3>
+        </div>
+        <div class="budget-total">
+          <span>合計めやす</span>
+          <b id="budget-total-pill">-</b>
+        </div>
+      </div>
+      <div class="budget-table-wrap"><table id="budget-table"></table></div>
+    </div>
+  </section>
+
+  <section id="next">
+    <h2><span class="dot"></span>これから決める・予約すること</h2>
+    <div class="card"><div class="twohead">予約するもの</div><ul class="todo book" id="book-list"></ul></div>
+    <div class="card"><div class="twohead">グループで決めること（まだ未確定）</div><ul class="todo decide" id="decide-list"></ul></div>
+  </section>
+
+  <footer>所要時間・便は作成時点の各社公式時刻表・地図経路に基づくめやすです。</footer>
+</main>
+
+    <aside class="summary-panel" aria-label="旅の要点">
+      <div>
+        <p class="summary-title">旅の要点</p>
+        <div class="summary-grid">
+          <div class="summary-metric"><span>日数</span><b id="summary-days">-</b></div>
+          <div class="summary-metric"><span>訪問地</span><b id="summary-spots">-</b></div>
+          <div class="summary-metric"><span>食事候補</span><b id="summary-meals">-</b></div>
+          <div class="summary-metric"><span>確認項目</span><b id="summary-checks">-</b></div>
+          <div class="summary-metric"><span>予約項目</span><b id="summary-todos">-</b></div>
+        </div>
+      </div>
+      <div class="utility-links">
+        <p class="summary-title">すぐ確認</p>
+        <a href="index.html">5案一覧へ戻る</a>
+        <a href="#route">ルート地図</a>
+        <a href="#itinerary">当日の流れ</a>
+        <a href="#checks">先読みチェック</a>
+        <a href="#budget">費用のめやす</a>
+        <a href="#next">これから決めること</a>
+      </div>
+    </aside>
+  </div>
+</div>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+  integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+<script>
+/* =================== DATA（ここだけ案件ごとに差し替える） =================== */
+const G  = (from,to)=>`https://www.google.com/maps/dir/?api=1&origin=${encodeURIComponent(from)}&destination=${encodeURIComponent(to)}&travelmode=driving`;
+const Gt = (from,to)=>`https://www.google.com/maps/dir/?api=1&origin=${encodeURIComponent(from)}&destination=${encodeURIComponent(to)}&travelmode=transit`;
+const M  = q => `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(q)}`;
+
+const TT = "https://www.oki-kisen.co.jp/timetable/?day=2026-09-12";
+const TT3 = "https://www.oki-kisen.co.jp/timetable/?day=2026-09-14";
+const FARE = "https://www.oki-kisen.co.jp/fare/";
+const AIR = "https://www.izumo-airport.co.jp/flight/flight-time";
+const NAIKO = "https://www.okikankou.com/inter-island-ferry/";
+
+// 地図ピン＝行程番号（1:1）。kind: "hub"(集合/港/空港) または "spot"
+const mapSpots = [
+  {n:1,  name:"出雲縁結び空港", short:"出雲空港", lat:35.4131, lng:132.8878, kind:"hub",  time:"Day1 08:30"},
+  {n:2,  name:"隠岐世界ジオパーク空港", short:"隠岐空港", lat:36.1783, lng:133.3251, kind:"hub", time:"Day1 09:30"},
+  {n:3,  name:"隠岐自然館（隠岐ジオゲートウェイ2F）", short:"隠岐自然館", lat:36.2035, lng:133.3351, kind:"spot", time:"Day1 10:00"},
+  {n:4,  name:"西郷港フェリーターミナル", short:"西郷港", lat:36.2035, lng:133.3351, kind:"hub", time:"Day1 12:00"},
+  {n:5,  name:"菱浦港（Entô）", short:"菱浦港", lat:36.1054, lng:133.0766, kind:"hub", time:"Day1 13:10"},
+  {n:6,  name:"明屋海岸", short:"明屋海岸", lat:36.1112, lng:133.1279, kind:"spot", time:"Day1 13:50"},
+  {n:7,  name:"隠岐神社", short:"隠岐神社", lat:36.0957, lng:133.1012, kind:"spot", time:"Day1 14:30"},
+  {n:8,  name:"別府港（西ノ島）", short:"別府港", lat:36.1077, lng:133.0416, kind:"hub", time:"Day2 09:33"},
+  {n:9,  name:"浦郷港", short:"浦郷港", lat:36.0925, lng:132.9930, kind:"hub", time:"Day2 10:30"},
+  {n:10, name:"国賀海岸（国賀めぐり観光船）", short:"国賀海岸", lat:36.0976, lng:132.9662, kind:"spot", time:"Day2 10:50"},
+  {n:11, name:"摩天崖", short:"摩天崖", lat:36.1066, lng:132.9718, kind:"spot", time:"Day2 14:00"},
+  {n:12, name:"通天橋", short:"通天橋", lat:36.1005, lng:132.9652, kind:"spot", time:"Day2 15:30"},
+  {n:13, name:"由良比女神社", short:"由良比女神社", lat:36.0922, lng:132.9878, kind:"spot", time:"Day2 16:20"},
+  {n:14, name:"船引運河", short:"船引運河", lat:36.1074, lng:133.0046, kind:"spot", time:"Day2 17:10"},
+  {n:15, name:"海士グランピング TADAYOI", short:"TADAYOI", lat:36.1050, lng:133.0790, kind:"hub", time:"Day2 18:40"},
+  {n:16, name:"七類港", short:"七類港", lat:35.5712, lng:133.2292, kind:"hub", time:"Day3 10:03"},
+  {n:17, name:"松江駅", short:"松江駅", lat:35.4623, lng:133.0625, kind:"hub", time:"Day3 10:43"},
+  {n:18, name:"出雲大社", short:"出雲大社", lat:35.4018, lng:132.6857, kind:"spot", time:"Day3 12:00"},
+  {n:19, name:"出雲縁結び空港（復路）", short:"出雲空港", lat:35.4131, lng:132.8878, kind:"hub", time:"Day3 15:40"},
+];
+
+const foodTowns = [
+  {name:"菱浦（海士町）の飲食店エリア", lat:36.1060, lng:133.0780},
+  {name:"西郷港まわりの飲食店エリア", lat:36.2045, lng:133.3340},
+  {name:"別府（西ノ島）の飲食店エリア", lat:36.1085, lng:133.0425},
+];
+
+// アクセス: 区間ごとに具体便（何時発→何時着・所要・運賃）。pillsに時刻表/予約前URL。
+const access = {
+  a:[
+    {ic:"✈️", ttl:"羽田 → 出雲縁結び空港", meta:"JAL277　07:10発 → 08:30着／1時間20分。4人ともこの便に乗るのが前提です", pills:[{cls:"book",label:"時刻表",url:AIR},{cls:"book",label:"航空券を見る",url:"https://www.jal.co.jp/jp/ja/dom/"}]},
+    {ic:"✈️", ttl:"出雲 → 隠岐（乗継30分）", meta:"JAL3433（JAC）　09:00発 → 09:30着／30分。出雲⇔隠岐は1日1往復しかないので、この1本を逃すと当日中に空路で島へ入れません", pills:[{cls:"book",label:"時刻表",url:AIR}]},
+    {ic:"🚌", ttl:"隠岐空港 → 西郷港", meta:"空港連絡バス／約10分。各便の到着から約10分後に発車します", pills:[{cls:"book",label:"連絡バス案内",url:"https://oki.ichibata.co.jp/airport.html"}]},
+    {ic:"⛴", ttl:"西郷港 → 菱浦港（海士町）", meta:"隠岐汽船フェリー　12:00発 → 13:10着／1時間10分・2等 1,760円", pills:[{cls:"book",label:"時刻表（9/12）",url:TT},{cls:"book",label:"運賃",url:FARE}]},
+  ],
+  b:[
+    {ic:"🚤", ttl:"菱浦港 → 七類港（本土）", meta:"高速船レインボージェット　08:14発 → 10:03着（西郷経由）／1時間49分・2等3,870円＋急行3,490円＝7,360円", pills:[{cls:"book",label:"時刻表（9/14）",url:TT3},{cls:"book",label:"運賃",url:FARE}]},
+    {ic:"🚌", ttl:"七類港 → 松江駅", meta:"高速船接続バス　10:03発 → 10:43着／40分・1,200円。船の到着後、乗車が済んでから発車します", pills:[{cls:"book",label:"連絡バス",url:"https://bus.ichibata.co.jp/oki-kisen/oki-kisen-sichirui/"}]},
+    {ic:"🚆", ttl:"松江駅 → 出雲市駅 → 出雲大社", meta:"JR山陰本線 約30〜40分（約590円）＋ 一畑バス/一畑電車 約25〜30分（約510〜720円）", pills:[{cls:"book",label:"一畑バス",url:"https://www.ichibata.co.jp/bus/"},{cls:"book",label:"経路",url:Gt("松江駅","出雲大社")}]},
+    {ic:"✈️", ttl:"出雲大社 → 出雲空港 → 羽田", meta:"空港連絡バス 約35分（約1,080円）／ JAL284　17:15発 → 羽田18:50着", pills:[{cls:"book",label:"空港バス",url:"https://www.izumo-airport.co.jp/access/bus"},{cls:"book",label:"時刻表",url:AIR}]},
+  ],
+};
+
+// 行程: numのある行が地図ピンと対応。move=次区間の所要。
+const days = [
+  {label:"Day1（9/12 土）羽田発 → 島後をつまみ食い → 海士町へ", stops:[
+    {num:1, kind:"hub", t:"08:30", p:"出雲縁結び空港 着", url:M("出雲縁結び空港"), hint:"JAL277で羽田07:10発。ここで隠岐行きに乗り継ぎます", move:{ic:"✈️", label:"JAL3433／30分（乗継30分）", url:AIR}},
+    {num:2, kind:"hub", t:"09:30", p:"隠岐世界ジオパーク空港 着", url:M("隠岐世界ジオパーク空港"), hint:"降り立つのは島後（隠岐の島町）。宿のある島前へは、このあと船で渡ります", move:{ic:"🚌", label:"空港連絡バス／約10分", url:"https://oki.ichibata.co.jp/airport.html"}},
+    {num:3, t:"10:00", p:"隠岐自然館（隠岐ジオゲートウェイ2F）", url:M("隠岐ジオゲートウェイ 隠岐自然館"), hint:"10:00からの解説ツアー（30分・500円）が船の待ち時間にちょうど収まります。入館500円。オキサンショウウオの展示あり", move:{ic:"🚶", label:"徒歩2分（0.3km）", url:G("隠岐ジオゲートウェイ","西郷港フェリーターミナル")}},
+    {num:4, kind:"hub", t:"12:00", p:"西郷港 発", url:M("西郷港フェリーターミナル"), hint:"昼は港前で。さざえ村 汽船場店ならターミナル目の前です", move:{ic:"⛴", label:"フェリー／1時間10分・1,760円", url:TT}},
+    {num:5, kind:"hub", t:"13:10", p:"菱浦港 着（海士町）", url:M("菱浦港 海士町"), hint:"Entôもレンタカーも港のすぐそば。荷物を先に預けられます", move:{ic:"🚗", label:"約12分", url:G("菱浦港 海士町","明屋海岸")}},
+    {num:6, t:"13:50", p:"明屋海岸", url:M("明屋海岸 海士町"), hint:"太古の火山活動でできた赤い崖。たらい岩・屏風岩。無料", move:{ic:"🚗", label:"約15分", url:G("明屋海岸","隠岐神社")}},
+    {num:7, t:"14:30", p:"隠岐神社", url:M("隠岐神社 海士町"), hint:"後鳥羽上皇を祀る社。隣の後鳥羽院資料館（300円・16:30最終入館）とセットで30〜40分", move:{ic:"🚗", label:"約10分", url:G("隠岐神社 海士町","菱浦港 海士町")}},
+    {t:"15:00", p:"Entô チェックイン", url:"#stay", hint:"全36室が海向き。大浴場でひと息ついてから夜へ"},
+    {t:"18:00", p:"夕食", url:"#meals", hint:"土曜だけ開く店があります。下の候補から予約を"},
+    {t:"20:30", p:"星空クルージング", url:"#activities", hint:"新月の翌日で月明かりがほぼゼロ。貸切なので気兼ねなく。2日前までの予約が必要です"},
+  ]},
+  {label:"Day2（9/13 日）西ノ島でまる1日／夜はドームでBBQ", stops:[
+    {num:8, kind:"hub", t:"09:26", p:"菱浦港 発 → 別府港（西ノ島）", url:M("別府港 西ノ島町"), hint:"島前内航船で7分・300円。ここでレンタカーを受け取ります", move:{ic:"🚗", label:"約15分", url:G("別府港 西ノ島町","浦郷港 西ノ島町")}},
+    {num:9, kind:"hub", t:"10:30", p:"浦郷港", url:M("浦郷港 西ノ島町"), hint:"国賀めぐり定期観光船の発着港。乗船受付を済ませます", move:{ic:"⛴", label:"観光船／90分・4,000円", url:"https://www.okikankou.com/sightseeing-boat/"}},
+    {num:10, t:"10:50", p:"国賀海岸（国賀めぐり観光船 Aコース）", url:M("国賀海岸 西ノ島町"), hint:"10:50〜12:20の90分。海側から摩天崖・通天橋・明暗の岩屋を見る、隠岐で一番の見どころ", move:{ic:"🚗", label:"約20分", url:G("浦郷港 西ノ島町","摩天崖")}},
+    {num:11, t:"14:00", p:"摩天崖", url:M("摩天崖 西ノ島町"), hint:"高さ257mの海食崖。牛馬が放牧されています。国賀浜まで2.8km・約70分の下り道を歩けます", move:{ic:"🚶", label:"徒歩約70分（2.8km）", url:G("摩天崖","国賀浜")}},
+    {num:12, t:"15:30", p:"通天橋", url:M("通天橋 西ノ島町"), hint:"波が岩を貫いてできた自然のアーチ。国賀浜側から", move:{ic:"🚗", label:"約12分", url:G("通天橋 西ノ島町","由良比女神社")}},
+    {num:13, t:"16:20", p:"由良比女神社", url:M("由良比女神社 西ノ島町"), hint:"隠岐国一ノ宮。目の前がイカ寄せの浜。無料", move:{ic:"🚗", label:"約20分", url:G("由良比女神社","船引運河")}},
+    {num:14, t:"17:10", p:"船引運河", url:M("船引運河 西ノ島町"), hint:"島を横切る人工運河。ここを見てから別府港へ戻ります", move:{ic:"⛴", label:"内航船 18:19発／7分・300円", url:NAIKO}},
+    {num:15, kind:"hub", t:"18:40", p:"海士グランピング TADAYOI", url:M("海士グランピング TADAYOI"), hint:"菱浦港から徒歩5分。ドーム前の専用スペースで隠岐牛BBQ。テントサウナと星空つき"},
+  ]},
+  {label:"Day3（9/14 月）島を出て、出雲大社に寄って帰る", stops:[
+    {t:"07:00", p:"TADAYOI 朝食 → 出発", url:"#stay", hint:"島前から本土へ抜ける船は朝しかありません。前夜は飲みすぎ注意です"},
+    {num:16, kind:"hub", t:"08:14", p:"菱浦港 発 → 七類港 10:03着", url:M("七類港"), hint:"高速船レインボージェット。西郷を経由して1時間49分・7,360円", move:{ic:"🚌", label:"接続バス／40分・1,200円", url:"https://bus.ichibata.co.jp/oki-kisen/oki-kisen-sichirui/"}},
+    {num:17, kind:"hub", t:"10:43", p:"松江駅", url:M("松江駅"), hint:"時間を短く切り上げるなら、ここで松江城・堀川めぐりに振り替えても成立します", move:{ic:"🚆", label:"JR＋バス／約60分", url:Gt("松江駅","出雲大社")}},
+    {num:18, t:"12:00", p:"出雲大社", url:M("出雲大社"), hint:"参拝と門前の出雲そばで2〜3時間。隠岐は後鳥羽上皇が流された島なので、出雲と続けて回ると筋が通ります", move:{ic:"🚌", label:"空港連絡バス／約35分", url:"https://www.izumo-airport.co.jp/access/bus"}},
+    {num:19, kind:"hub", t:"15:40", p:"出雲縁結び空港", url:M("出雲縁結び空港"), hint:"JAL284　17:15発 → 羽田18:50着"},
+  ]},
+];
+
+// 食事: タイミングごとに3候補程度。
+const meals = [
+  {when:"Day1（9/12 土）昼｜西郷港のまわり", items:[
+    {name:"さざえ村 汽船場店", url:"https://tabelog.com/shimane/A3205/A320501/32007363/", price:"900〜1,400円", hint:"西郷港ターミナル目の前。9月は禁漁明けでサザエが一番いい時期で、さざえ丼1,000円が本命。出汁は全部あごだし。予約不要でテーブル席", tag:"9月の旬", sns:true},
+    {name:"味乃蔵", url:"https://tabelog.com/shimane/A3205/A320501/32000273/", price:"2,000〜2,999円", hint:"隠岐で口コミが最も厚い店（98件）。個室があって4人でも余裕。隠岐そばと海鮮の両方。港から徒歩5分・昼のL.O.13:30。08512-2-3975"},
+    {name:"フィッシャーマンズ・ワーフ隠岐", url:"https://www.oki-suehiro.com/fishermans", price:"1,500〜3,000円台", hint:"港から徒歩1分。初日の昼に隠岐牛を入れたいならここ。売店が併設なので土産も同時に済みます。08512-2-6600"},
+  ]},
+  {when:"Day1（9/12 土）夜｜菱浦（海士町）", items:[
+    {name:"島生まれ島育ち 隠岐牛店", url:"https://okigyu.com/shop-okigyu/", price:"5,000〜8,000円", hint:"生産者直営でA5・A4の雌牛だけを出す島唯一の店。掘り炬燵の座敷なので4人で向き合えます。菱浦港から徒歩1分。日曜が定休なので土曜のこの日しか行けません。L.O.20:45・要予約 08514-2-1522", tag:"土曜だけ", sns:true},
+    {name:"きくらげちゃかぽん Motekoiyo", url:"https://tabelog.com/shimane/A3205/A320501/32006532/", price:"2,000〜2,999円", hint:"島の発酵ビストロ＋図書館分館という複合空間。テーブルと座敷があって4人向き、隠岐誉など山陰の地酒が揃います。港から徒歩1〜2分。夜は予約が入らない日は17時に閉めるので予約必須 090-6538-0826"},
+    {name:"海鮮処 味蔵", url:"https://www.e-oki.net/localfood/5460/", price:"3,000〜4,500円", hint:"海士町で最も遅い22時まで（L.O.21:30）。釣り好きの大将が自分で釣った魚が並ぶことも。港から徒歩15分で夜道は暗いので、行き帰りの足は考えておきたいところ。08514-2-1539"},
+    {name:"Entô Dining（宿で完結させるなら）", url:"https://www.tablecheck.com/ja/ento-dining/reserve", price:"11,000〜21,900円", hint:"18:30か19:30の一斉スタート、席数が限られる事前予約制。個室が取れれば理想的。キャンセル料が3日前から発生する点だけ先に把握を"},
+  ]},
+  {when:"Day2（9/13 日）昼｜西ノ島（別府・浦郷）", items:[
+    {name:"にしわき鮮魚店", url:"https://nkk-oki.com/japan/information/nishiwaki-sengyoten/", price:"1,200〜1,800円", hint:"浦郷にある鮮魚店直営。ご縁定食さざなみ1,800円で9月の旬のさざえつぼ焼きと天然あわびが一皿に。営業は11:00〜13:00の2時間だけなので、10:50の観光船から戻ってすぐ向かう形。08514-6-0518", tag:"9月の旬", sns:true},
+    {name:"コンセーユ", url:"https://nkk-oki.com/japan/information/conseil/", price:"1,000〜1,500円", hint:"隠岐のご当地グルメ「さざえ丼」発祥の店。別府港から徒歩5分。11:30〜13:30の2時間営業で不定休なので、前日に電話を 08514-7-8671"},
+    {name:"磯四季", url:"https://nkk-oki.com/japan/information/isoshiki/", price:"1,000〜2,000円", hint:"40席あって西ノ島では4人が最も確実に入れる店。漁師の賄い飯だった「えり焼き定食」が名物。別府港から徒歩2〜3分・水曜休。天気が崩れて予定が動いた時の受け皿にも 08514-7-8000"},
+  ]},
+  {when:"Day2（9/13 日）夜｜TADAYOIのドームで", items:[
+    {name:"グランピングBBQ（宿泊プランに込み）", url:"https://ama-tadayoi.jp/", price:"プランに含む", hint:"隠岐牛・鶏・豚に、ブランド牡蠣「春香」、イカ、旬野菜、海士町産米のおにぎり。ドームごとに専用のBBQスペースがあるので他の組と一緒になりません", tag:"飲み放題つき", sns:true},
+    {name:"隠岐牛ステーキ「極」BBQに変更する場合", url:"https://resv.e-oki.net/ama-tadayoi/plan/", price:"27,100円〜/人", hint:"隠岐牛ステーキが主役になるプラン。飲み放題つきのインクルーシブ（26,600円〜）との差は500円なので、予約の時点でどちらにするか決めておくのが得策"},
+    {name:"外で飲みたくなった場合の逃げ道", url:"https://tabelog.com/shimane/A3205/A320501/32000212/", price:"3,000〜5,000円", hint:"日曜は隠岐牛店・味蔵・Radiceが揃って定休。開いているのは八千代（座敷あり・21時閉店・08514-2-0643）ときくらげちゃかぽんくらいです"},
+  ]},
+  {when:"Day3（9/14 月）昼｜出雲大社の門前", items:[
+    {name:"出雲そば（門前の神門通り）", url:M("出雲大社 神門通り 出雲そば"), hint:"割子そばが名物。参拝のあと門前通りで。バスの時間まで2〜3時間あるので落ち着いて食べられます", price:"1,000〜2,000円"},
+    {name:"島でもう一食とるなら", url:"https://www.e-oki.net/localfood/", price:"1,000〜1,500円", hint:"菱浦港ターミナル2Fの船渡来流亭は8:30から開いていますが、この日は08:14の船に乗るので朝食はTADAYOIで済ませる形になります"},
+    {name:"松江に切り替えた場合", url:M("松江 郷土料理"), price:"1,500〜3,000円", hint:"出雲大社に行かず松江城まわりにする場合は、宍道湖七珍（すずき・うなぎ・しじみ等）を出す店が城下にまとまっています"},
+  ]},
+];
+
+const activities = [
+  {name:"星空クルージング（島前プライベートクルージング）", url:"https://www.e-oki.net/experience/6347/", price:"1グループ30,000円（4人なら1人7,500円）", hint:"菱浦港からクルーザーで夜の島前湾へ。1〜6名の貸切なので4人がちょうどいいサイズです。約1時間。9/11の12:27が新月なので、9/12は月齢1・9/13は月齢2で月明かりがほぼありません。予約は乗船日の2日前まで（当日・前日は不可）。050-3172-1521", tag:"今回の目玉", sns:true},
+  {name:"国賀めぐり定期観光船（Aコース）", url:"https://www.okikankou.com/sightseeing-boat/", price:"4,000円", hint:"浦郷港発、10:50／13:00／15:00の3便・90分。海側から摩天崖と通天橋を見上げる隠岐の代表格。荒天のときは「船長おまかせコース」約1時間・3,000円に変更されます。予約 08514-7-8412", tag:"Day2の主役"},
+  {name:"クリアカヤック／SUP ＋ テントサウナ（TADAYOI）", url:"https://www.e-oki.net/experience/6352/", price:"カヤックorSUP 2,000円／サウナ 1,500円", hint:"船底が透明なカヤックで海中を見る、または初心者向けSUP。隣の海辺のテントサウナ（隠岐のハーブ「ふくぎ」のロウリュ）とセットに。各60分。定員1〜4名でちょうど上限。サウナのあとEntôの大浴場も使えます。070-7581-8583", tag:"泊まる場所で完結"},
+  {name:"洞窟探検カヤック（クラブノア隠岐・西ノ島）", url:"https://oki.club-noah.net/kayaking", price:"6,500円", hint:"海からしか入れない洞窟にカヤックで漕ぎ入る2時間（9:00〜11:00／13:00〜15:00）。4人ならタンデム2艇で並走できます。集合は別府港から車10分。Day2に入れるなら9:00の回で、そのあと13:00か15:00の国賀めぐりに繋ぐ形。要予約 08514-6-0825"},
+  {name:"船釣り・遊漁船（海士町）", url:"https://www.e-oki.net/experience/6348/", price:"体験3時間 30,000円（3名）〜", hint:"菱浦港から出船。マダイ・イシダイ・ヒラマサなど。1〜6名で4人はちょうど良いサイズ。ただし9月末までは熱中症対策で開始が朝5:00〜6:30なので、今回の行程だと組み込みは難しめ。予約は乗船日の2日前まで"},
+  {name:"マリンスポーツクラブ あそぼー！（西ノ島）", url:"https://www.e-oki.net/experience/10601/", price:"1時間 全員で6,000円〜", hint:"トーイングチューブやウェイクボードを美田湾・浦郷湾で。最大5名まで全員で6,000円という破格。ただし土日祝のみの営業なので、使えるのは9/12・9/13だけで9/14は不可。090-7593-7480"},
+  {name:"E-bike（西ノ島町観光協会）", url:"https://nkk-oki.com/japan/information/bicycle-rental/", price:"2,400円/3時間", hint:"別府港のとなり、9台保有なので4人分そろいます。9月は最高26℃前後で自転車に一番いい時期。ただし推奨身長159cm以上という条件があるので、4人の中に届かない人がいないか先に確認を。9月の貸出は9:00〜17:30"},
+  {name:"後醍醐天皇脱出ツアー（観光タクシー・西ノ島）", url:"https://www.e-oki.net/experience/6327/", price:"普通車1台 11,100円（定員4名）", hint:"運転手のガイド付きで黒木御所跡などを90分。4人でちょうど1台に収まります。車中心なので雨でも成立するのが強みで、天気が崩れた日の差し替えとして持っておくと安心"},
+  {name:"海中展望船あまんぼう（昼便）", url:"https://experience.e-oki.net/876101", price:"大人2,500円", hint:"半潜水型の船で菱浦港から三郎岩を往復、船底の窓から海中の魚を見る約50分。8:40／10:20／13:30／14:40の4便。最終受付は3日前"},
+  {name:"あまんぼうナイトクルーズ（4人だけでは成立しません）", url:"https://www.e-oki.net/experience/7521/", price:"2,000円", hint:"Entô主催の21:30〜22:15。ただし5〜22名で催行なので、4人単独では人数が足りません。他の宿泊客と相乗りになれば動く可能性はあるので、狙うなら宿のフロントで当日の集まり具合を聞く形。夜の主役は星空クルージングに置くのが確実です"},
+];
+
+const other = [
+  {name:"焼火神社（西ノ島）", url:M("焼火神社 西ノ島町"), hint:"焼火山の中腹にある国の重要文化財で、海上信仰の対象。駐車場から片道20分の山道を登ります。周辺に飲食店も自販機もなく、遊歩道にトイレもないので、時間と天気に余裕がある時だけ"},
+  {name:"後鳥羽院資料館（海士町）", url:M("後鳥羽院資料館 海士町"), hint:"隠岐神社のとなり。大人300円、9:00〜17:00（最終入館16:30）。3/1〜11/30の開館。Day1の午後に隠岐神社とまとめて回るのが自然です"},
+  {name:"Entô Geo Room \"Discover\"", url:"https://ento-oki.jp/", hint:"Entô本館1階のジオパーク展示で入場無料。30〜60分。9月は雨が多い月なので、天気が崩れた時にすぐ逃げ込める場所として覚えておくと便利"},
+  {name:"玉若酢命神社・八百杉（島後）", url:"https://visit-okiislands.e-oki.net/spots/6065/", hint:"隠岐の総社。境内に樹齢約2000年といわれる御神木。Day1午前に隠岐自然館の解説ツアーを取らないなら、代わりにこちらへ寄る選択肢があります。西郷港から車5〜10分・無料"},
+  {name:"知夫里島の赤壁・赤ハゲ山", url:M("赤壁 知夫村"), hint:"内航船の往復で半日かかるため今回は行程に入れていません。4人なら観光タクシー（普通車4名まで・60〜120分で4,000〜12,000円、来居港発、2日前締切）で効率よく回れるので、Day2を西ノ島でなく知夫里島に振る別プランは成立します"},
+  {name:"ローソク島遊覧船（島後）", url:"https://www.e-oki.net/experience/6313/", hint:"岩の先端に夕日が乗る瞬間を狙う船で、日没に合わせた夕方出航しかありません。西郷港から車40分以上の重栖港発。島後に泊まる組み方に変えない限り入らないので、今回は見送りです"},
+  {name:"VRゴーグル体験 OKI-360（西ノ島町観光協会）", url:"https://www.e-oki.net/experience/17597/", hint:"定期観光船のダイジェストや国賀の遊覧飛行を8〜9分で。500円。1回1〜2名なので4人だと2回に分ける形。船が荒天で欠航した時のつなぎとして案内されています"},
+  {name:"松江城・堀川めぐり（Day3の差し替え）", url:M("松江城"), hint:"Day3に出雲大社まで足を伸ばさない場合の選択肢。七類からのバスが着く松江駅から近く、乗り継ぎが1本減るぶん行程に余裕が生まれます"},
+];
+
+// レンタカー: 車種・定員・プラン(時間/料金)・受取場所。
+const cars = [
+  {name:"くにがレンタカー 普通自動車（西ノ島）", url:"http://kunigarentacar.com/", price:"24時間 10,000円＋ガソリン30円/km", hint:"Day2に4人で1台。別府営業所は別府港から約240m、受付8:00〜17:00。普通車の保有が3台しかないので早めに電話を。乗車定員は予約時に確認を。TEL 08514-7-8088", tag:"第1候補"},
+  {name:"どうぜんレンタカー 軽自動車（西ノ島）", url:"https://nkk-oki.com/japan/information/douzen-rent-a-car/", price:"6時間 7,000円／24時間 9,000円", hint:"別府港ターミナルから徒歩1分、18台保有で8:30〜17:30。免責補償・休業補償・レッカー込みでカーナビ付き。ただし軽自動車のみの取り扱いで、定員4名なので大人4人だと車内は窮屈です。WEB予約は利用日の3日前まで。TEL 08514-2-2292", tag:"台数は潤沢"},
+  {name:"海士町観光協会レンタカー（Day1に使う場合）", url:"https://oki-ama.org/rentacar/", price:"ソリオ（5人乗り）6時間 7,000円／24時間 9,000円", hint:"菱浦港フェリーターミナル1階で8:00〜17:00の受渡。Day1午後に明屋海岸・隠岐神社を回るなら半日だけ借りる手もあります。軽のワゴンRは4人乗りで3時間5,000円〜"},
+  {name:"車を借りずに済ませる場合", url:"https://www.okikankou.com/sightseeing-bus/", price:"国賀めぐり定期観光バス 4,000円", hint:"浦郷港発13:00／15:00の1時間45分。摩天崖から国賀浜への2.8km・約70分のウォーキングが含まれます。運転役を作らなくていいので、Day2の昼から全員飲みたい場合はこちらが正解"},
+];
+
+// 宿
+const stays = [
+  {name:"Entô ／ SUPERIOR WA（9/12 土）", url:"https://resv.e-oki.net/ento/", price:"1室46,000円〜（大人2名時・朝食付）", hint:"52㎡で大人4名が1室に入れる部屋。全36室すべて海向きで、大浴場とEntô Diningがあり、1階のジオ展示は無料。チェックイン15:00／アウト10:00。注意点として、93㎡のNEST SU SUITEは「最大4名」表記でも大人は2名までなので4人では取れません。大人4名可はこのSUPERIOR WAと和洋室の2タイプだけです", tag:"1泊目"},
+  {name:"海士グランピング TADAYOI ／ ジオドーム海側（9/13 日）", url:"https://resv.e-oki.net/ama-tadayoi/plan/", price:"インクルーシブ 26,600円〜/人", hint:"菱浦港から徒歩5分、1日5組限定のドームテント。1棟あたり2〜4名でセミダブル3台＋エキストラ。各棟に専用のシャワー・トイレ・BBQスペースがあり、隣のEntôの大浴場も使えます。夕食BBQ＋飲み放題＋朝食つき。チェックイン15:00／アウト10:00", tag:"2泊目"},
+  {name:"Entô 客室の仕様を確認する", url:"https://ento-oki.jp/rooms", price:"部屋タイプ別の定員", hint:"大人4名で予約できるかは部屋タイプで決まります。SUPERIOR WA（52㎡・大人4名）と和洋室（52㎡・大人5名）が該当。埋まっていた場合はNEST DXを2室に分ける形が代替になります"},
+  {name:"一休で空室と総額を見る", url:"https://www.ikyu.com/00002928/", price:"日付・人数で検索", hint:"4名利用の実額と客室タイプ別の空きを確認できます。楽天トラベル・JTBにも同じ宿の掲載があります"},
+  {name:"TADAYOI 公式（プラン比較）", url:"https://ama-tadayoi.jp/information", price:"14,500〜33,200円/人", hint:"朝食付き14,500円／島のごちそう19,600円／インクルーシブ26,600円／隠岐牛ステーキ極BBQ 27,100円。飲み放題が付くインクルーシブと、隠岐牛ステーキの極は500円しか違わないので予約時に決め切るのがおすすめ"},
+];
+
+const budget = [
+  ["航空（羽田⇔出雲・出雲→隠岐）","約4.8万円","1人。早割前提。予約時期で±1.5万円は動きます"],
+  ["隠岐汽船（フェリー＋高速船）","9,120円","西郷→菱浦 1,760円＋菱浦→七類 7,360円"],
+  ["島前内航船（往復）","600円","菱浦⇔別府 各300円"],
+  ["バス・JR（空港連絡／七類→松江／松江→出雲大社→空港）","約3,700円","Day3は乗継が4本続きます"],
+  ["レンタカー（Day2・1台を4人で按分）","約2,900円","普通車10,000円＋ガソリン約1,600円"],
+  ["交通 小計","約6.4万円","1人あたり"],
+  ["宿1泊目 Entô（4名1室・朝食付）","約2.0万円","1室約8万円からの按分。4名利用の実額は予約時に確認を"],
+  ["宿2泊目 TADAYOI（夕食BBQ＋飲み放題＋朝食）","約2.7万円","インクルーシブプラン"],
+  ["宿 小計","約4.7万円","1人あたり"],
+  ["国賀めぐり定期観光船","4,000円",""],
+  ["星空クルージング","7,500円","1グループ30,000円を4人で"],
+  ["クリアカヤック／SUP＋テントサウナ","3,500円",""],
+  ["隠岐自然館（入館＋解説ツアー）","1,000円",""],
+  ["体験 小計","約1.6万円","1人あたり"],
+  ["食事（昼3回＋夜1回＋間食）","約1.5万円","Day2の夜は宿のBBQに含まれます"],
+  ["予備費（土産・タクシー・入館料）","約8,000円",""],
+  ["合計めやす","約15万円","1人あたり／4人で約60万円"],
+];
+
+const foresightList = [
+  {category:"交通", title:"出雲⇔隠岐は1日1往復しかない", status:"往路の乗継が30分", note:"羽田07:10発 → 出雲08:30着 → 出雲09:00発の隠岐行きに乗り継ぎます。この1本を逃すと、その日のうちに空路で島へ入る手段がありません。振替は境港14:10発のフェリー（別府17:10着）になり、初日がほぼ移動で終わります。"},
+  {category:"交通", title:"帰りの船は朝しかない", status:"Day3は08:14発", note:"9月のダイヤでは、島前から本土へ渡る船は高速船08:14発か、フェリー09:50発（境港13:20着）の二択です。昼過ぎに島を出る便は存在しないので、最終日の朝はゆっくりできません。前夜の飲み方はここを見越して。"},
+  {category:"混雑/天候", title:"9月は隠岐の雨が最も多い月", status:"代替を2本用意", note:"西郷の平年降水量は9月が234.9mm（8月は154.8mm）で、日照も8月の4分の3程度。屋外の予定を3日とも野外に振らず、観光タクシーやジオ展示など雨でも成立する枠を持っておくと崩れません。"},
+  {category:"交通", title:"台風で船が止まると行程が崩れる", status:"出発3〜4日前に確認", note:"隠岐汽船は波高で欠航します。Day3の高速船が欠航した場合、同日中に本土へ渡る代替は別府14:00→西郷、西郷15:40→七類18:05のフェリー乗継だけで、この場合は出雲発の最終便に間に合いません。松江泊と翌朝便への振替を想定しておくと安全です。"},
+  {category:"予約", title:"先に埋まるものから押さえる", status:"順番が大事", note:"TADAYOIは1日5組限定、Entôで大人4名が入れる部屋は2タイプだけ、西ノ島の普通車レンタカーは3台のみ。星空クルージングは乗船日の2日前が締切で、当日・前日の予約はできません。この4つが今回のボトルネックです。"},
+  {category:"日程", title:"シルバーウィークを1週外している", status:"意図的な選択", note:"2026年は9/19〜23が5連休です。隠岐は宿も船もレンタカーも供給が小さいため、あえてその前週に置いています。おかげで年休は9/14（月）の1日で済み、混雑と料金の両方を避けられます。"},
+  {category:"費用", title:"「おき得乗船券」は今回は使えない", status:"往路が空路のため", note:"島内で1泊＋体験1つのスタンプを集めると復路のフェリー2等が無料になる制度があり、9/12〜14は対象期間内です。ただし往路も七類港か境港から乗船する必要があり、羽田からの始発では朝の船に間に合いません。4人で15,480円ぶんですが、初日を1日失うほうが痛いので見送っています。"},
+  {category:"食事", title:"日曜は海士町の店が揃って休む", status:"2泊目は宿で解決", note:"9/13（日）は隠岐牛店・味蔵・Radiceが定休です。この日の夜をTADAYOIのBBQ（飲み放題つき）に置いているのは、島の店の定休を避ける意味もあります。逆に隠岐牛店に行けるのは土曜の初日だけです。"},
+];
+
+const bookList = [
+  {label:"TADAYOI ジオドーム（9/13・1日5組限定なので最優先）", url:"https://resv.e-oki.net/ama-tadayoi/plan/"},
+  {label:"Entô SUPERIOR WA または和洋室（9/12・大人4名可の部屋は2タイプのみ）", url:"https://resv.e-oki.net/ento/"},
+  {label:"航空券 JAL277／JAL3433／JAL284（早割ほど安い）", url:"https://www.jal.co.jp/jp/ja/dom/"},
+  {label:"星空クルージング（乗船日の2日前が締切）", url:"https://www.e-oki.net/experience/6347/"},
+  {label:"国賀めぐり定期観光船 10:50の回（08514-7-8412）", url:"https://www.okikankou.com/sightseeing-boat/"},
+  {label:"くにがレンタカー 普通車（保有3台・08514-7-8088）", url:"http://kunigarentacar.com/"},
+  {label:"隠岐汽船 西郷→菱浦（9/12）と 菱浦→七類（9/14）", url:"https://www.oki-kisen.co.jp/reservation/"},
+  {label:"Day1の夜の店（隠岐牛店 08514-2-1522 ほか）", url:"https://okigyu.com/shop-okigyu/"},
+  {label:"隠岐自然館の解説ツアー10:00（来館3日前まで）", url:"https://www.e-oki.net/experience/9036/"},
+  {label:"クリアカヤック／SUP＋テントサウナ（070-7581-8583）", url:"https://www.e-oki.net/experience/6352/"},
+];
+
+const decideList = [
+  "Day2の車を普通車（くにが・3台のみ）にするか、軽（どうぜん・18台）にするか。取れなければ定期観光バス4,000円に切り替える",
+  "Day2の昼から全員飲みたいなら、車をやめて定期観光バスにする判断",
+  "Day1の夜を隠岐牛店にするか、宿のEntô Diningにするか。Entô Diningはキャンセル料が3日前から発生する",
+  "TADAYOIのプランを飲み放題つきのインクルーシブにするか、隠岐牛ステーキの極BBQにするか（差は500円）",
+  "Day3を出雲大社まで行くか、松江城・堀川めぐりで軽く切り上げるか",
+  "Day3の出発を08:14の高速船にするか、09:50のフェリーで境港へ抜けて米子から帰るか（後者は朝が1時間半ゆっくりだが往路と復路で空港が変わる）",
+  "洞窟探検カヤックをDay2の午前に入れるか。入れる場合は9:00の回になり、国賀めぐりを13:00か15:00へ後ろ倒しする",
+  "E-bikeを使うなら、4人全員が推奨身長159cm以上に該当するか",
+  "航空券を変更可能な運賃にするか。台風で船が止まった場合の振替に効いてくる",
+];
+/* =================== /DATA =================== */
+
+
+/* =================== 描画（触らない） =================== */
+function colorOf(k){return k==="hub"?"#16354a":"#d23b2c";}
+function pinIcon(n,color){return L.divIcon({className:"",iconSize:[22,22],iconAnchor:[11,11],
+  html:`<div class="pin" style="background:${color}">${n}</div>`});}
+
+// ピンは実在地に置く。完全同座標の地点だけ約400m離す（拡大時に2つと分かるため）。
+function spread(items,thr=0.0015,r=0.004){
+  const placed=[];
+  return items.map(s=>{
+    let lat=s.lat,lng=s.lng,k=0;
+    while(placed.some(p=>Math.hypot(p[0]-lat,p[1]-lng)<thr)&&k<8){
+      const a=k*Math.PI/3; lat=s.lat+r*Math.sin(a); lng=s.lng+r*Math.cos(a); k++;
+    }
+    placed.push([lat,lng]);
+    return Object.assign({},s,{dlat:lat,dlng:lng});
+  });
+}
+const spots = spread(mapSpots);
+const markers={};
+let routeMap=null;
+
+function showToast(message){
+  const toast=document.getElementById("toast");
+  if(!toast)return;
+  toast.textContent=message;
+  toast.classList.add("show");
+  clearTimeout(showToast._timer);
+  showToast._timer=setTimeout(()=>toast.classList.remove("show"),2200);
+}
+
+function emptyState(label){
+  return `<div class="empty-state">${label}</div>`;
+}
+
+function populateSummary(){
+  const set=(id,value)=>{ const el=document.getElementById(id); if(el)el.textContent=value; };
+  set("summary-days", `${days.length}日`);
+  set("summary-spots", `${spots.length}件`);
+  set("summary-meals", `${meals.reduce((sum,g)=>sum+(g.items||[]).length,0)}件`);
+  set("summary-checks", `${(foresightList||[]).length}件`);
+  set("summary-todos", `${(bookList||[]).length}件`);
+}
+
+document.querySelectorAll(".side-nav a,.tabset a").forEach(link=>{
+  link.addEventListener("click",()=>showToast(`${link.textContent.trim()}を開きます`));
+});
+
+function initMap(){
+  const mapEl=document.getElementById("map");
+  if(!window.L){
+    mapEl.innerHTML='<div class="mapfallback">地図を読み込み中です。表示されない場合は通信環境を確認してください。</div>';
+    return;
+  }
+  mapEl.style.animation="none";
+  routeMap = L.map("map",{scrollWheelZoom:false});
+  L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",{maxZoom:18,attribution:'&copy; OpenStreetMap contributors'}).addTo(routeMap);
+  const latlngs = spots.map(s=>[s.dlat,s.dlng]);
+  L.polyline(latlngs,{color:"#d23b2c",weight:4,opacity:.9,lineJoin:"round"}).addTo(routeMap);
+  spots.forEach(s=>{ markers[s.n]=L.marker([s.dlat,s.dlng],{icon:pinIcon(s.n,colorOf(s.kind))}).addTo(routeMap).bindPopup(`<b>${s.n}. ${s.name}</b><br>${s.time}`); });
+  foodTowns.forEach(f=>{ L.marker([f.lat,f.lng],{icon:L.divIcon({className:"",iconSize:[14,14],iconAnchor:[7,7],
+    html:`<div style="width:14px;height:14px;border-radius:50%;background:#b07d24;border:2px solid #fff;box-shadow:0 1px 4px rgba(0,0,0,.3)"></div>`})}).addTo(routeMap).bindPopup(`<b>🍽 ${f.name}</b>`); });
+  if(latlngs.length) routeMap.fitBounds(L.latLngBounds(latlngs).pad(0.2)); else routeMap.setView([36,138],5);
+}
+
+window.focusPin=(n)=>{ const s=spots.find(x=>x.n===n); if(!s)return;
+  if(routeMap&&markers[n]){ routeMap.setView([s.dlat,s.dlng],14,{animate:true}); markers[n].openPopup(); }
+  document.querySelectorAll(".pinbtn").forEach(b=>b.classList.toggle("active",Number(b.dataset.n)===n));
+  showToast(`${s.short||s.name}へ地図を移動しました`);
+};
+document.getElementById("pinindex").innerHTML = spots.map(s=>
+  `<button class="pinbtn" data-n="${s.n}" onclick="focusPin(${s.n})"><span class="num ${s.kind==='hub'?'hub':''}">${s.n}</span>${s.short}</button>`).join("");
+initMap();
+
+function legRow(l){ const pills=(l.pills||[]).map(p=>`<a class="pill ${p.cls}" href="${p.url}" target="_blank" rel="noopener">${p.label}</a>`).join("");
+  return `<div class="leg"><div class="ic">${l.ic}</div><div><div class="ttl">${l.ttl}</div><div class="meta">${l.meta}</div><div class="pillrow">${pills}</div></div></div>`; }
+document.getElementById("acc-a").innerHTML = (access.a||[]).length ? access.a.map(legRow).join("") : emptyState("アクセス情報は未設定です");
+document.getElementById("acc-b").innerHTML = (access.b||[]).length ? access.b.map(legRow).join("") : emptyState("アクセス情報は未設定です");
+
+document.getElementById("days").innerHTML = days.length ? days.map(d=>`
+  <div class="card day timeline"><h3>${d.label}</h3>
+  ${d.stops.map(s=>`<div class="stop"><div class="top">
+    ${s.num?`<span class="num ${s.kind==='hub'?'hub':''}">${s.num}</span>`:`<span style="width:22px;flex:0 0 auto"></span>`}
+    <div class="t">${s.t}</div>
+    <div class="p">${s.url?`<a href="${s.url}" target="_blank" rel="noopener">${s.p}</a>`:s.p}</div></div>
+    ${s.hint?`<div class="hint">${s.hint}</div>`:""}
+    ${s.move?`<a class="movelink" href="${s.move.url}" target="_blank" rel="noopener">${s.move.ic} ${s.move.label}</a>`:""}
+  </div>`).join("")}</div>`).join("") : emptyState("行程は未設定です");
+
+const itemCard=(o)=>`<div class="item">${o.tag?`<span class="tag ${o.sns?'sns':''}">${o.tag}</span>`:""}
+  <div class="name"><a href="${o.url}" target="_blank" rel="noopener">${o.name}</a></div>
+  ${o.price?`<div class="price">${o.price}</div>`:""}${o.hint?`<div class="hint">${o.hint}</div>`:""}</div>`;
+document.getElementById("meal-list").innerHTML = meals.length ? meals.map(g=>`<div class="mealgroup"><div class="when">${g.when}</div><div class="grid2">${g.items.map(itemCard).join("")}</div></div>`).join("") : emptyState("食事候補は未設定です");
+document.getElementById("activity-list").innerHTML = activities.length ? activities.map(itemCard).join("") : emptyState("アクティビティ候補は未設定です");
+document.getElementById("other-list").innerHTML = other.length ? other.map(itemCard).join("") : emptyState("追加スポットは未設定です");
+document.getElementById("car-list").innerHTML   = cars.length ? cars.map(itemCard).join("") : emptyState("レンタカー候補は未設定です");
+document.getElementById("stay-list").innerHTML  = stays.length ? stays.map(itemCard).join("") : emptyState("宿候補は未設定です");
+const checkCard=(o)=>`<div class="check-card">
+  <div class="check-label">${o.category||"確認"}</div>
+  <div class="check-title">${o.url?`<a href="${o.url}" target="_blank" rel="noopener">${o.title}</a>`:o.title}</div>
+  ${o.note?`<div class="check-note">${o.note}</div>`:""}
+  ${o.status?`<span class="check-status">${o.status}</span>`:""}
+</div>`;
+document.getElementById("check-list").innerHTML = foresightList.length ? foresightList.map(checkCard).join("") : emptyState("先読みチェックは未設定です");
+const totalBudgetRow = budget.find(r=>String(r[0]).includes("合計"));
+const totalBudgetEl = document.getElementById("budget-total-pill");
+if(totalBudgetEl) totalBudgetEl.textContent = totalBudgetRow ? totalBudgetRow[1] : "調整中";
+document.getElementById("budget-table").innerHTML = `<thead><tr><th>項目</th><th>1人あたり</th><th>メモ</th></tr></thead><tbody>`+
+  budget.map(r=>{
+    const isTotal = String(r[0]).includes("合計");
+    return `<tr class="${isTotal ? "total-row" : ""}"><td data-label="項目">${r[0]}</td><td data-label="1人あたり" class="r">${r[1]}</td><td data-label="メモ">${r[2]}</td></tr>`;
+  }).join("")+`</tbody>`;
+document.getElementById("book-list").innerHTML = bookList.length ? bookList.map(c=>`<li><a href="${c.url}" target="_blank" rel="noopener">${c.label}</a></li>`).join("") : "<li>予約ToDoは未設定です</li>";
+document.getElementById("decide-list").innerHTML = decideList.length ? decideList.map(d=>`<li>${d}</li>`).join("") : "<li>未確定事項は未設定です</li>";
+populateSummary();
+</script>
+</body>
+</html>
