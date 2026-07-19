@@ -518,7 +518,7 @@ const access = {
     {ic:"🚤", ttl:"菱浦港 → 七類港（本土）", meta:"高速船レインボージェット　08:14発 → 10:03着（西郷経由）／1時間49分・2等3,870円＋急行3,490円＝7,360円", pills:[{cls:"book",label:"時刻表（9/14）",url:TT3},{cls:"book",label:"運賃",url:FARE}]},
     {ic:"🚌", ttl:"七類港 → 松江駅", meta:"高速船接続バス　10:03発 → 10:43着／40分・1,200円。船の到着後、乗車が済んでから発車します", pills:[{cls:"book",label:"連絡バス",url:"https://bus.ichibata.co.jp/oki-kisen/oki-kisen-sichirui/"}]},
     {ic:"🚆", ttl:"松江駅 → 出雲市駅 → 出雲大社", meta:"JR山陰本線 約30〜40分（約590円）＋ 一畑バス/一畑電車 約25〜30分（約510〜720円）", pills:[{cls:"book",label:"一畑バス",url:"https://www.ichibata.co.jp/bus/"},{cls:"book",label:"経路",url:Gt("松江駅","出雲大社")}]},
-    {ic:"✈️", ttl:"出雲大社 → 出雲空港 → 羽田", meta:"空港連絡バス 約35分（約1,080円）／ JAL284　17:15発 → 羽田18:50着", pills:[{cls:"book",label:"空港バス",url:"https://www.izumo-airport.co.jp/access/bus"},{cls:"book",label:"時刻表",url:AIR}]},
+    {ic:"✈️", ttl:"出雲大社 → 出雲空港 → 羽田", meta:"空港連絡バス 約35分（約1,080円）／ JAL284　17:15発 → 羽田18:50着", pills:[{cls:"book",label:"空港バス",url:"https://www.izumo-airport.co.jp/airport-guide/traffic#bge-bus"},{cls:"book",label:"時刻表",url:AIR}]},
   ],
 };
 
@@ -550,7 +550,7 @@ const days = [
     {t:"07:00", p:"TADAYOI 朝食 → 出発", url:"#stay", hint:"島前から本土へ抜ける船は朝しかありません。前夜は飲みすぎ注意です"},
     {num:16, kind:"hub", t:"08:14", p:"菱浦港 発 → 七類港 10:03着", url:M("七類港"), hint:"高速船レインボージェット。西郷を経由して1時間49分・7,360円", move:{ic:"🚌", label:"接続バス／40分・1,200円", url:"https://bus.ichibata.co.jp/oki-kisen/oki-kisen-sichirui/"}},
     {num:17, kind:"hub", t:"10:43", p:"松江駅", url:M("松江駅"), hint:"時間を短く切り上げるなら、ここで松江城・堀川めぐりに振り替えても成立します", move:{ic:"🚆", label:"JR＋バス／約60分", url:Gt("松江駅","出雲大社")}},
-    {num:18, t:"12:00", p:"出雲大社", url:M("出雲大社"), hint:"参拝と門前の出雲そばで2〜3時間。隠岐は後鳥羽上皇が流された島なので、出雲と続けて回ると筋が通ります", move:{ic:"🚌", label:"空港連絡バス／約35分", url:"https://www.izumo-airport.co.jp/access/bus"}},
+    {num:18, t:"12:00", p:"出雲大社", url:M("出雲大社"), hint:"参拝と門前の出雲そばで2〜3時間。隠岐は後鳥羽上皇が流された島なので、出雲と続けて回ると筋が通ります", move:{ic:"🚌", label:"空港連絡バス／約35分", url:"https://www.izumo-airport.co.jp/airport-guide/traffic#bge-bus"}},
     {num:19, kind:"hub", t:"15:40", p:"出雲縁結び空港", url:M("出雲縁結び空港"), hint:"JAL284　17:15発 → 羽田18:50着"},
   ]},
 ];
