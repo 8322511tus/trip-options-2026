@@ -1,0 +1,1157 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>越後湯沢・清津峡 1泊2日</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+  integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="">
+<style>
+  :root{
+    --color-brand:#0b5cab;
+    --color-brand-hover:#064a8a;
+    --color-brand-deep:#032d60;
+    --color-brand-soft:#eaf5ff;
+    --color-background:#eef4fb;
+    --color-surface:#ffffff;
+    --color-surface-alt:#f7f9fd;
+    --color-border:#c9d5e8;
+    --color-text-primary:#111827;
+    --color-text-secondary:#3f526d;
+    --color-text-muted:#6b778c;
+    --color-success:#2e844a;
+    --color-warning:#b76100;
+    --color-danger:#ba0517;
+    --color-info:#0176d3;
+    --space-1:4px;
+    --space-2:8px;
+    --space-3:12px;
+    --space-4:16px;
+    --space-6:24px;
+    --space-8:32px;
+    --radius-small:4px;
+    --radius-medium:8px;
+    --radius-large:12px;
+    --shadow-card:0 1px 2px rgba(10,31,68,.10),0 10px 28px rgba(10,31,68,.08);
+    --shadow-popover:0 12px 32px rgba(10,31,68,.20);
+    --shadow-modal:0 24px 60px rgba(10,31,68,.30);
+    --font-stack:"Segoe UI Variable","Segoe UI","Noto Sans JP","Yu Gothic UI","Yu Gothic",Meiryo,sans-serif;
+    --font-page-title:750 30px/1.16 var(--font-stack);
+    --font-section-title:750 18px/1.35 var(--font-stack);
+    --font-body:400 14px/1.65 var(--font-stack);
+    --font-caption:700 12px/1.4 var(--font-stack);
+    --z-header:100;
+    --z-dropdown:200;
+    --z-modal:500;
+    --z-toast:600;
+  }
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{margin:0;color:var(--color-text-primary);
+    background:linear-gradient(180deg,#fff 0,#fff 56px,#0b5cab 56px,#276f9f 172px,#eef4fb 172px,#eef4fb 100%);
+    font:var(--font-body);-webkit-text-size-adjust:100%}
+  a{color:var(--color-brand);text-underline-offset:.16em}
+  a:hover{color:var(--color-brand-hover)}
+  a:focus-visible,button:focus-visible{outline:3px solid rgba(1,118,211,.35);outline-offset:2px}
+  .app-shell{min-height:100vh;position:relative}
+  .app-shell::before{content:"";position:absolute;left:0;right:0;top:56px;height:156px;pointer-events:none;
+    background:
+      repeating-linear-gradient(135deg,rgba(255,255,255,.14) 0 1px,transparent 1px 18px),
+      linear-gradient(120deg,rgba(3,45,96,.92),rgba(11,92,171,.78) 54%,rgba(91,144,184,.52));
+    border-bottom:1px solid rgba(255,255,255,.28)}
+  .global-header{position:sticky;top:0;z-index:var(--z-header);height:56px;background:#fff;color:var(--color-text-primary);
+    border-bottom:1px solid #dfe5ef;display:flex;align-items:center;gap:var(--space-4);padding:0 var(--space-6);
+    box-shadow:0 1px 2px rgba(10,31,68,.08)}
+  .brand-home{display:flex;align-items:center;gap:var(--space-3);min-width:0;color:inherit;text-decoration:none}
+  .brand-home:hover{color:inherit}
+  .brand-mark{width:30px;height:30px;border-radius:var(--radius-medium);background:linear-gradient(135deg,#2b6cb0,#6c7ff2);
+    color:#fff;display:grid;place-items:center;font-weight:900;box-shadow:inset 0 0 0 1px rgba(255,255,255,.35)}
+  .brand-title{font-weight:800;letter-spacing:0}
+  .global-actions{margin-left:auto;display:flex;align-items:center;gap:var(--space-1);overflow:auto}
+  .global-actions a{display:inline-flex;align-items:center;min-height:32px;padding:0 10px;border-radius:var(--radius-small);
+    color:var(--color-text-secondary);font-size:13px;font-weight:750;text-decoration:none;white-space:nowrap}
+  .global-actions a:hover{background:var(--color-brand-soft);color:var(--color-brand)}
+  .global-actions .back-link{border:1px solid var(--color-border);background:var(--color-surface-alt);color:var(--color-brand-deep)}
+  .shell-body{position:relative;z-index:1;max-width:1440px;margin:0 auto;display:grid;grid-template-columns:220px minmax(0,1fr) 300px;gap:var(--space-4);padding:var(--space-4)}
+  .side-nav,.summary-panel{position:sticky;top:72px;align-self:start}
+  .side-nav,.summary-panel,.card{background:var(--color-surface);border:1px solid var(--color-border);border-radius:var(--radius-medium);box-shadow:var(--shadow-card)}
+  .side-nav{padding:var(--space-3);box-shadow:0 1px 2px rgba(10,31,68,.10),0 10px 22px rgba(10,31,68,.08)}
+  .side-nav-title,.summary-title{font:var(--font-caption);color:var(--color-text-muted);margin:0 0 var(--space-2)}
+  .side-nav a{display:flex;align-items:center;gap:var(--space-2);min-height:36px;padding:0 var(--space-3);border-radius:var(--radius-small);
+    color:var(--color-text-secondary);font-weight:700;text-decoration:none}
+  .side-nav a:hover,.side-nav a.active{background:var(--color-brand-soft);color:var(--color-brand)}
+  .main-content{min-width:0;display:grid;gap:var(--space-4)}
+  .summary-panel{padding:var(--space-4);display:grid;gap:var(--space-4)}
+  .summary-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:var(--space-2)}
+  .summary-metric{min-height:76px;display:grid;align-content:space-between;gap:var(--space-1);padding:var(--space-3);
+    border:1px solid #d7e3f5;border-radius:var(--radius-medium);background:linear-gradient(180deg,#fff,#f8fbff)}
+  .summary-metric span{color:var(--color-text-muted);font-size:11px;font-weight:750}
+  .summary-metric b{font-size:21px;line-height:1.1;color:var(--color-brand-deep);font-weight:750}
+  .summary-metric::after{content:"";display:block;width:100%;height:6px;border-radius:999px;background:linear-gradient(90deg,#2b6cb0,#6c7ff2)}
+  .utility-links{display:grid;gap:var(--space-2)}
+  .utility-links a{display:flex;justify-content:space-between;align-items:center;min-height:36px;padding:0 var(--space-3);
+    border:1px solid var(--color-border);border-radius:var(--radius-small);background:var(--color-surface-alt);
+    color:var(--color-text-primary);font-weight:750;text-decoration:none}
+  .utility-links a::after{content:"›";color:var(--color-brand);font-size:18px}
+  .utility-links a:hover{border-color:#9bbde6;background:var(--color-brand-soft);color:var(--color-brand)}
+  .hero{position:relative;overflow:hidden;background:linear-gradient(180deg,#fff,#f9fbff);border:1px solid #c4d4ea;
+    border-radius:var(--radius-medium);padding:0;box-shadow:0 2px 4px rgba(10,31,68,.10),0 16px 42px rgba(10,31,68,.12)}
+  .hero::before{content:"";position:absolute;left:0;right:0;top:0;height:6px;background:linear-gradient(90deg,#2b6cb0,#706eeb,#20a0d8)}
+  .hero-main{padding:var(--space-6)}
+  .title-cluster{display:flex;align-items:flex-start;gap:var(--space-3)}
+  .record-icon{width:42px;height:42px;border-radius:var(--radius-medium);display:grid;place-items:center;flex:0 0 auto;
+    background:linear-gradient(135deg,#5f7feb,#2b6cb0);color:#fff;font-weight:900;box-shadow:inset 0 0 0 1px rgba(255,255,255,.35)}
+  .kicker{font:var(--font-caption);color:var(--color-brand);margin-bottom:var(--space-1)}
+  .page-title-row{display:flex;align-items:flex-start;justify-content:space-between;gap:var(--space-4)}
+  h1{margin:0;font:var(--font-page-title)}
+  .lead{color:var(--color-text-secondary);margin:var(--space-2) 0 var(--space-4);max-width:74ch}
+  .badges{display:flex;gap:var(--space-2);flex-wrap:wrap}
+  .badge,.pill,.tag{display:inline-flex;align-items:center;gap:5px;border:1px solid var(--color-border);background:var(--color-surface-alt);
+    border-radius:999px;padding:5px 10px;font-size:12px;font-weight:800;color:var(--color-text-secondary)}
+  .badge.status-info{background:#eaf5ff;border-color:#b9dcff;color:#095da0}
+  .badge.status-success{background:#eaf7ee;border-color:#b7e1c1;color:#22683e}
+  .action-bar{display:flex;gap:var(--space-2);flex-wrap:wrap;margin-top:var(--space-4)}
+  .btn{display:inline-flex;align-items:center;justify-content:center;gap:var(--space-2);min-height:36px;border:1px solid var(--color-border);
+    border-radius:var(--radius-small);padding:0 var(--space-3);background:var(--color-surface);color:var(--color-text-primary);
+    text-decoration:none;font-weight:800;cursor:pointer;box-shadow:0 1px 1px rgba(10,31,68,.06)}
+  .btn:hover{border-color:#9bbde6;color:var(--color-brand);background:#f7fbff;box-shadow:0 2px 8px rgba(10,31,68,.10)}
+  .btn.primary{background:linear-gradient(180deg,#1677d2,#0b5cab);border-color:#084f99;color:#fff}
+  .btn.primary:hover{background:var(--color-brand-hover);color:#fff}
+  .btn.subtle{background:var(--color-surface-alt)}
+  .tabset{position:sticky;top:72px;z-index:50;background:var(--color-surface);border:1px solid var(--color-border);
+    border-radius:var(--radius-medium);box-shadow:var(--shadow-card);display:flex;gap:var(--space-1);padding:var(--space-1);overflow:auto}
+  .tabset a{white-space:nowrap;text-decoration:none;color:var(--color-text-secondary);font-weight:800;border-radius:var(--radius-small);padding:9px 12px}
+  .tabset a:hover{background:var(--color-brand-soft);color:var(--color-brand)}
+  section{scroll-margin-top:128px;margin-top:var(--space-4)}
+  .section-head{display:flex;align-items:flex-end;justify-content:space-between;gap:var(--space-4);margin-bottom:var(--space-3)}
+  h2{font:var(--font-section-title);margin:0;display:flex;align-items:center;gap:var(--space-2)}
+  h2 .dot{width:4px;height:18px;border-radius:999px;background:var(--color-brand)}
+  .sub{color:var(--color-text-muted);font-size:13px;margin:4px 0 0}
+  .card{padding:var(--space-4);margin-bottom:var(--space-3)}
+  .card:hover{box-shadow:0 2px 4px rgba(10,31,68,.10),0 12px 30px rgba(10,31,68,.08)}
+  #map{height:62vh;min-height:380px;max-height:560px;width:100%;border-radius:var(--radius-medium);border:1px solid var(--color-border);z-index:0;
+    background:linear-gradient(90deg,#eef2f7 25%,#f7f9fc 37%,#eef2f7 63%);background-size:400% 100%;animation:skeleton 1.25s ease-in-out infinite}
+  .mapfallback{height:100%;display:flex;align-items:center;justify-content:center;text-align:center;padding:24px;color:var(--color-text-secondary);background:#eef4f8}
+  .legend{display:flex;gap:14px;flex-wrap:wrap;margin-top:10px;font-size:13px;color:var(--color-text-secondary)}
+  .legend span{display:inline-flex;align-items:center;gap:6px}
+  .swatch{width:14px;height:14px;border-radius:50%;display:inline-block}
+  .routeline{width:22px;height:0;border-top:3px solid var(--color-danger);display:inline-block}
+  .pinindex{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+  .pinbtn{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--color-border);background:#fff;
+    border-radius:999px;padding:5px 11px 5px 6px;font-size:13px;font-weight:800;color:var(--color-text-primary);cursor:pointer}
+  .pinbtn:hover,.pinbtn.active{border-color:var(--color-danger);background:#fff4f2}
+  .pinbtn .num{width:20px;height:20px;border-radius:50%;background:var(--color-danger);color:#fff;font-size:12px;font-weight:800;
+    display:inline-flex;align-items:center;justify-content:center}
+  .pinbtn .num.hub{background:#16354a}
+  .pin{width:22px;height:22px;border-radius:50%;color:#fff;font-weight:800;font-size:12px;
+    display:flex;align-items:center;justify-content:center;border:2px solid #fff;box-shadow:0 2px 6px rgba(0,0,0,.35)}
+  .responsive-grid,.grid2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:var(--space-3)}
+  .access{display:grid;gap:10px}
+  .leg{display:grid;grid-template-columns:30px 1fr;gap:10px;padding:10px 0;border-bottom:1px dashed #e6ebee}
+  .leg:last-child{border-bottom:0}
+  .leg .ic{font-size:20px;text-align:center}
+  .leg .ttl{font-weight:800}
+  .leg .meta{font-size:13px;color:var(--color-text-secondary)}
+  .pillrow{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
+  .pill{text-decoration:none;background:#eef4f2;color:#27514a}
+  .pill.book{background:#eaf1f7;color:#1c537a}
+  .day{margin-bottom:14px}
+  .day h3{margin:0 0 12px;font-size:16px;color:var(--color-text-primary)}
+  .timeline{position:relative}
+  .stop{position:relative;padding:12px 0;border-bottom:1px solid #eef2f4}
+  .stop:last-child{border-bottom:0}
+  .stop .top{display:flex;gap:9px;align-items:baseline}
+  .stop .num{flex:0 0 auto;width:22px;height:22px;border-radius:50%;background:var(--color-danger);color:#fff;
+    font-size:12px;font-weight:800;display:inline-flex;align-items:center;justify-content:center;align-self:center}
+  .stop .num.hub{background:#16354a}
+  .stop .t{color:var(--color-brand);font-weight:800;font-variant-numeric:tabular-nums;min-width:46px}
+  .stop .p{font-weight:800}
+  .stop .hint{color:var(--color-text-muted);font-size:13px;margin-left:31px}
+  .movelink{margin:8px 0 2px 31px;display:inline-flex;align-items:center;gap:7px;font-size:13px;font-weight:700;
+    background:#f3f7f5;border:1px solid #e2ebe6;border-radius:10px;padding:5px 11px;color:#2f5a4c;text-decoration:none}
+  .mealgroup{margin-bottom:8px}
+  .mealgroup .when{font-weight:800;font-size:14px;color:var(--color-text-primary);margin:6px 2px 8px}
+  .item{border:1px solid var(--color-border);border-radius:var(--radius-medium);padding:var(--space-4);background:linear-gradient(180deg,#fff,#fbfdff);box-shadow:0 1px 1px rgba(10,31,68,.05)}
+  .item:hover{border-color:#9bbde6;box-shadow:var(--shadow-card);transform:translateY(-1px)}
+  .item .name{font-weight:800}
+  .item .price{font-weight:800;color:#123e5b;font-size:14px}
+  .item .hint{color:var(--color-text-muted);font-size:13px}
+  .tag{border-radius:var(--radius-small);padding:2px 7px;margin:0 6px 6px 0;color:#6a4a14;background:#fdf0d6}
+  .tag.sns{color:#8a2b6b;background:#fbe4f1}
+  .check-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:var(--space-3)}
+  .check-card{position:relative;border:1px solid #c7d8ea;border-radius:var(--radius-medium);padding:var(--space-4);
+    background:linear-gradient(180deg,#fff,#f8fbff);box-shadow:0 1px 1px rgba(10,31,68,.05)}
+  .check-card::before{content:"";position:absolute;left:0;top:0;bottom:0;width:4px;border-radius:var(--radius-medium) 0 0 var(--radius-medium);background:var(--color-warning)}
+  .check-label{font-size:12px;font-weight:850;color:var(--color-warning);margin-bottom:var(--space-1)}
+  .check-title{font-weight:850;color:var(--color-text-primary)}
+  .check-note{color:var(--color-text-muted);font-size:13px;margin-top:4px}
+  .check-status{display:inline-flex;margin-top:8px;border:1px solid #d9c6a0;background:#fff8ed;color:#7a4b00;border-radius:999px;padding:3px 8px;font-size:12px;font-weight:800}
+  .budget-card{padding:0;overflow:hidden}
+  .budget-head{display:flex;justify-content:space-between;gap:var(--space-4);align-items:flex-start;padding:var(--space-4);
+    background:linear-gradient(180deg,#f7fbff,#eef5ff);border-bottom:1px solid var(--color-border)}
+  .budget-head h3{margin:2px 0 0;font:var(--font-section-title)}
+  .budget-total{min-width:180px;border:1px solid #b9d6f4;background:#fff;border-radius:var(--radius-medium);padding:var(--space-3);text-align:right;
+    box-shadow:0 1px 2px rgba(10,31,68,.06)}
+  .budget-total span{display:block;color:var(--color-text-muted);font-size:11px;font-weight:750}
+  .budget-total b{display:block;color:var(--color-brand-deep);font-size:20px;line-height:1.2;margin-top:2px}
+  .budget-table-wrap{padding:var(--space-3);overflow-x:auto}
+  table{width:100%;border-collapse:separate;border-spacing:0;font-size:14px}
+  th,td{padding:12px 12px;border-bottom:1px solid #e3eaf5;text-align:left;vertical-align:top}
+  th{background:#f4f8fd;color:#314763;font-size:12px;font-weight:800}
+  th:first-child{border-top-left-radius:var(--radius-small)}
+  th:last-child{border-top-right-radius:var(--radius-small)}
+  tbody tr:hover td{background:#f8fbff}
+  td.r{text-align:right;font-variant-numeric:tabular-nums;font-weight:800;color:var(--color-brand-deep)}
+  .total-row td{background:#edf5ff!important;border-top:2px solid #9bbde6;border-bottom:0;font-weight:900}
+  .total-row td:first-child{border-bottom-left-radius:var(--radius-small)}
+  .total-row td:last-child{border-bottom-right-radius:var(--radius-small)}
+  .todo{list-style:none;padding:0;margin:0}
+  .todo li{padding:8px 0;border-bottom:1px solid #eef2f4}
+  .todo.book li:before{content:"□";color:var(--color-brand);font-weight:800;margin-right:6px}
+  .todo.decide li:before{content:"•";color:var(--color-warning);font-weight:800;margin-right:6px}
+  .twohead{font-weight:800;margin:2px 0 6px;font-size:14px}
+  .empty-state{border:1px dashed var(--color-border);border-radius:var(--radius-medium);background:var(--color-surface-alt);padding:var(--space-6);color:var(--color-text-muted);text-align:center}
+  .toast{position:fixed;right:var(--space-4);bottom:var(--space-4);z-index:var(--z-toast);background:#17324d;color:#fff;border-radius:var(--radius-medium);
+    box-shadow:var(--shadow-popover);padding:var(--space-3) var(--space-4);font-weight:800;opacity:0;transform:translateY(10px);pointer-events:none;transition:.18s ease}
+  .toast.show{opacity:1;transform:translateY(0)}
+  footer{margin-top:34px;color:var(--color-text-muted);font-size:12px;text-align:center}
+  @keyframes skeleton{0%{background-position:100% 0}100%{background-position:0 0}}
+  @media(max-width:1120px){
+    .shell-body{grid-template-columns:190px minmax(0,1fr)}
+    .summary-panel{position:static;grid-column:2}
+  }
+  @media(max-width:760px){
+    body{background:linear-gradient(180deg,#fff 0,#fff 56px,#0b5cab 56px,#276f9f 170px,#eef4fb 170px,#eef4fb 100%)}
+    .app-shell::before{top:56px;height:132px}
+    .global-header{position:relative;height:56px;min-height:56px;padding:0 12px;gap:8px}
+    .brand-home{gap:8px;min-width:0}
+    .brand-title{font-size:14px;line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .global-actions{margin-left:auto;flex:0 0 auto;max-width:44%;overflow:visible}
+    .global-actions a:not(.back-link){display:none}
+    .global-actions .back-link{min-height:34px;padding:0 9px;font-size:12px}
+    .shell-body{display:block;padding:14px 12px 12px}
+    .side-nav{display:none}
+    .summary-panel{margin-top:var(--space-3)}
+    .hero-main{padding:var(--space-4)}
+    .title-cluster{gap:var(--space-2)}
+    .record-icon{width:36px;height:36px}
+    .page-title-row{display:block}
+    .tabset{top:0}
+    .responsive-grid,.grid2,.check-grid{grid-template-columns:1fr}
+    table,thead,tbody,tr,th,td{display:block}
+    thead{display:none}
+    .budget-head{display:grid}
+    .budget-total{text-align:left;min-width:0}
+    tr{border:1px solid var(--color-border);border-radius:var(--radius-medium);padding:var(--space-2);margin-bottom:var(--space-2);background:#fff}
+    td{border:0;display:grid;grid-template-columns:96px 1fr;gap:var(--space-2)}
+    td:before{content:attr(data-label);font-weight:800;color:var(--color-text-muted)}
+    td.r{text-align:left}
+    #map{min-height:320px;height:52vh}
+  }
+  @media(prefers-reduced-motion:reduce){
+    html{scroll-behavior:auto}
+    *,*::before,*::after{animation:none!important;transition:none!important}
+  }
+</style>
+</head>
+<body>
+<div class="app-shell">
+  <header class="global-header">
+    <a class="brand-home" href="index.html" aria-label="4案一覧へ戻る">
+      <div class="brand-mark" aria-hidden="true">T</div>
+      <div class="brand-title">Travel Planning Console</div>
+    </a>
+    <nav class="global-actions" aria-label="クイックリンク">
+      <a class="back-link" href="index.html">← 4案一覧</a>
+      <a href="#route">地図</a>
+      <a href="#itinerary">行程</a>
+      <a href="#checks">先読み</a>
+      <a href="#budget">費用</a>
+      <a href="#next">予約</a>
+    </nav>
+  </header>
+
+  <div class="shell-body">
+    <nav class="side-nav" aria-label="セクションナビ">
+      <p class="side-nav-title">ページ内ナビ</p>
+      <a href="#route">ルート</a>
+      <a href="#access">アクセス</a>
+      <a href="#itinerary">行程</a>
+      <a href="#meals">食事</a>
+      <a href="#activities">アクティビティ</a>
+      <a href="#checks">先読みチェック</a>
+      <a href="#budget">費用</a>
+      <a href="#next">予約ToDo</a>
+    </nav>
+
+<main class="main-content" id="main-content">
+  <header class="hero">
+    <div class="hero-main">
+    <div class="page-title-row">
+      <div class="title-cluster">
+        <div class="record-icon" aria-hidden="true">旅</div>
+        <div>
+          <div class="kicker">候補K｜アート峡谷・温泉・日本酒</div>
+          <h1>越後湯沢・清津峡 1泊2日</h1>
+        </div>
+      </div>
+    </div>
+    <p class="lead">水鏡の清津峡、温泉、へぎそば、日本酒、山頂景色をコンパクトに。東京組の近さと雨天耐性が強い案です。</p>
+    <div class="badges"><span class="badge">🗓 1泊2日</span><span class="badge">👥 6人</span><span class="badge">🚉 共通開始: 東京駅</span><span class="badge">🚐 10人乗り1台</span><span class="badge">🍁 狙い目: 10/24–11/3</span></div>
+    <div class="action-bar" aria-label="主要アクション">
+      <a class="btn subtle" href="index.html">← 4案一覧へ戻る</a>
+      <a class="btn primary" href="#next">予約ToDoを見る</a>
+      <a class="btn" href="#map">地図を確認</a>
+      <a class="btn" href="#checks">先読みチェック</a>
+      <a class="btn" href="#budget">費用を見る</a>
+    </div>
+    </div>
+  </header>
+
+  <nav class="tabset" aria-label="レポートタブ">
+    <a href="#route">概要</a>
+    <a href="#itinerary">行程</a>
+    <a href="#meals">食事</a>
+    <a href="#activities">体験</a>
+    <a href="#stay">宿</a>
+    <a href="#checks">先読み</a>
+    <a href="#budget">費用</a>
+    <a href="#next">予約</a>
+  </nav>
+
+  <section id="route">
+    <h2><span class="dot"></span>ルート地図</h2>
+    <p class="sub">番号順に巡るルート。赤い線は訪問順を示す概略ルートです。</p>
+    <div id="map"></div>
+    <div class="legend">
+      <span><i class="routeline"></i>順路</span>
+      <span><i class="swatch" style="background:#16354a"></i>集合・拠点</span>
+      <span><i class="swatch" style="background:#d23b2c"></i>観光スポット</span>
+      <span><i class="swatch" style="background:#b07d24"></i>食事の街</span>
+    </div>
+    <div class="pinindex" id="pinindex"></div>
+    <p class="sub" style="margin-top:8px">番号をタップすると、地図のその場所に移動します。</p>
+  </section>
+
+  <section id="access">
+    <h2><span class="dot"></span>行き帰りのアクセス</h2>
+    <p class="sub">神戸組が東海道新幹線で東京へ入り、東京駅09:10に6名集合。全員が同じ上越新幹線に乗るところから共通行程を始めます。</p>
+    <div class="card"><div class="twohead">東京発（4人）</div><div class="access" id="acc-a"></div></div>
+    <div class="card"><div class="twohead">神戸発（2人）</div><div class="access" id="acc-b"></div></div>
+  </section>
+
+  <section id="itinerary">
+    <h2><span class="dot"></span>行程</h2>
+    <p class="sub">番号は上の地図のピンと同じ順番です。スポット名は地図リンク、区間リンクは公式時刻・料金ページまたは経路地図に飛びます。</p>
+    <div id="days"></div>
+  </section>
+
+  <section id="meals">
+    <h2><span class="dot"></span>食事候補</h2>
+    <p class="sub">タイミング別の候補。気分と予約状況で選べます。</p>
+    <div id="meal-list"></div>
+  </section>
+
+  <section id="activities">
+    <h2><span class="dot"></span>アクティビティ候補</h2>
+    <p class="sub">行程に入れるかを相談しやすい体験候補です。天気・体力・予約状況で選べます。</p>
+    <div class="grid2" id="activity-list"></div>
+  </section>
+
+  <section id="other">
+    <h2><span class="dot"></span>他にもおすすめのスポット</h2>
+    <p class="sub">天気や気分で順路に足せる候補です。</p>
+    <div class="grid2" id="other-list"></div>
+  </section>
+
+  <section id="car">
+    <h2><span class="dot"></span>レンタカー</h2>
+    <p class="sub">越後湯沢駅でW4・ハイエース グランドキャビン（10人乗り）1台を約27時間利用。宿に駐車後は徒歩に切り替え、利き酒後の運転をなくします。</p>
+    <div class="grid2" id="car-list"></div>
+  </section>
+
+  <section id="stay">
+    <h2><span class="dot"></span>宿</h2>
+    <p class="sub">越後湯沢駅徒歩圏または送迎ありの温泉宿。車を置いて夕食・日本酒を楽しめる立地を優先します。</p>
+    <div class="grid2" id="stay-list"></div>
+  </section>
+
+  <section id="checks">
+    <h2><span class="dot"></span>先読みチェック</h2>
+    <p class="sub">予約前に見落としやすい費用・リスク・代替案です。</p>
+    <div class="check-grid" id="check-list"></div>
+  </section>
+
+  <section id="budget">
+    <h2><span class="dot"></span>費用のめやす（1人あたり）</h2>
+    <div class="card budget-card">
+      <div class="budget-head">
+        <div>
+          <p class="summary-title">費用サマリー</p>
+          <h3>1人あたりの概算</h3>
+        </div>
+        <div class="budget-total">
+          <span>合計めやす</span>
+          <b id="budget-total-pill">-</b>
+        </div>
+      </div>
+      <div class="budget-table-wrap"><table id="budget-table"></table></div>
+    </div>
+  </section>
+
+  <section id="next">
+    <h2><span class="dot"></span>これから決める・予約すること</h2>
+    <div class="card"><div class="twohead">予約するもの</div><ul class="todo book" id="book-list"></ul></div>
+    <div class="card"><div class="twohead">グループで決めること（まだ未確定）</div><ul class="todo decide" id="decide-list"></ul></div>
+  </section>
+
+  <footer>所要時間・便は作成時点の各社公式時刻表・地図経路に基づくめやすです。</footer>
+</main>
+
+    <aside class="summary-panel" aria-label="旅の要点">
+      <div>
+        <p class="summary-title">旅の要点</p>
+        <div class="summary-grid">
+          <div class="summary-metric"><span>日数</span><b id="summary-days">-</b></div>
+          <div class="summary-metric"><span>訪問地</span><b id="summary-spots">-</b></div>
+          <div class="summary-metric"><span>食事候補</span><b id="summary-meals">-</b></div>
+          <div class="summary-metric"><span>確認項目</span><b id="summary-checks">-</b></div>
+          <div class="summary-metric"><span>予約項目</span><b id="summary-todos">-</b></div>
+        </div>
+      </div>
+      <div class="utility-links">
+        <p class="summary-title">すぐ確認</p>
+        <a href="index.html">4案一覧へ戻る</a>
+        <a href="#route">ルート地図</a>
+        <a href="#itinerary">当日の流れ</a>
+        <a href="#checks">先読みチェック</a>
+        <a href="#budget">費用のめやす</a>
+        <a href="#next">これから決めること</a>
+      </div>
+    </aside>
+  </div>
+</div>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+  integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+<script>
+/* =================== DATA（ここだけ案件ごとに差し替える） =================== */
+const mapSpots = [
+  {
+    "n": 1,
+    "name": "東京駅",
+    "short": "東京駅・6名集合",
+    "lat": 35.6812,
+    "lng": 139.7671,
+    "kind": "hub",
+    "time": "Day1 09:10"
+  },
+  {
+    "n": 2,
+    "name": "越後湯沢駅",
+    "short": "越後湯沢駅",
+    "lat": 36.9366,
+    "lng": 138.8093,
+    "kind": "hub",
+    "time": "Day1 10:47"
+  },
+  {
+    "n": 3,
+    "name": "清津峡渓谷トンネル",
+    "short": "清津峡",
+    "lat": 36.9744,
+    "lng": 138.749,
+    "kind": "spot",
+    "time": "Day1 13:00"
+  },
+  {
+    "n": 4,
+    "name": "越後湯沢温泉",
+    "short": "温泉宿",
+    "lat": 36.938,
+    "lng": 138.808,
+    "kind": "spot",
+    "time": "Day1 15:30"
+  },
+  {
+    "n": 5,
+    "name": "ぽんしゅ館 越後湯沢驛店",
+    "short": "ぽんしゅ館",
+    "lat": 36.9363,
+    "lng": 138.8093,
+    "kind": "spot",
+    "time": "Day1 17:00"
+  },
+  {
+    "n": 6,
+    "name": "湯沢高原ロープウェイ",
+    "short": "湯沢高原",
+    "lat": 36.928,
+    "lng": 138.8085,
+    "kind": "spot",
+    "time": "Day2 08:40"
+  },
+  {
+    "n": 7,
+    "name": "越後湯沢駅",
+    "short": "越後湯沢駅",
+    "lat": 36.9366,
+    "lng": 138.8093,
+    "kind": "hub",
+    "time": "Day2 13:30"
+  },
+  {
+    "n": 8,
+    "name": "東京駅",
+    "short": "東京駅・共通行程終了",
+    "lat": 35.6812,
+    "lng": 139.7671,
+    "kind": "hub",
+    "time": "Day2 15:28"
+  }
+];
+
+const foodTowns = [
+  {
+    "name": "越後湯沢駅前",
+    "lat": 36.9368,
+    "lng": 138.808
+  }
+];
+
+const access = {
+  "a": [
+    {
+      "ic": "🚄",
+      "ttl": "東京駅で6名集合 → 越後湯沢",
+      "meta": "09:10集合。全員でとき313号 東京09:28→越後湯沢10:47、1時間19分。東京発は片道約6,700円。",
+      "pills": [
+        {
+          "cls": "book",
+          "label": "時刻: JR東日本",
+          "url": "https://timetables.jreast.co.jp/2608/timetable/tt1039/1039051.html"
+        },
+        {
+          "cls": "book",
+          "label": "空席・料金: えきねっと",
+          "url": "https://www.eki-net.com/personal/top/index"
+        }
+      ]
+    },
+    {
+      "ic": "🚄",
+      "ttl": "越後湯沢 → 東京",
+      "meta": "全員でとき322号 越後湯沢14:11→東京15:28、1時間17分。東京駅で共通行程を終えます。",
+      "pills": [
+        {
+          "cls": "book",
+          "label": "時刻: JR東日本",
+          "url": "https://timetables.jreast.co.jp/2608/timetable/tt0285/0285010.html"
+        },
+        {
+          "cls": "book",
+          "label": "予約: えきねっと",
+          "url": "https://www.eki-net.com/personal/top/index"
+        }
+      ]
+    }
+  ],
+  "b": [
+    {
+      "ic": "🚄",
+      "ttl": "新神戸 → 東京（集合）→ 越後湯沢",
+      "meta": "代表: のぞみ66号 新神戸06:10→東京08:51。09:10に東京組と合流し、とき313号09:28→10:47。片道約20,720円。",
+      "pills": [
+        {
+          "cls": "book",
+          "label": "東海道新幹線: スマートEX",
+          "url": "https://smart-ex.jp/"
+        },
+        {
+          "cls": "book",
+          "label": "上越新幹線: えきねっと",
+          "url": "https://www.eki-net.com/personal/top/index"
+        }
+      ]
+    },
+    {
+      "ic": "🚄",
+      "ttl": "越後湯沢 → 東京 → 新神戸",
+      "meta": "全員でとき322号 越後湯沢14:11→東京15:28。のぞみは16:12頃→新神戸18:54頃を目安に乗換余裕を確保。",
+      "pills": [
+        {
+          "cls": "book",
+          "label": "東海道新幹線: スマートEX",
+          "url": "https://smart-ex.jp/"
+        },
+        {
+          "cls": "book",
+          "label": "上越新幹線: えきねっと",
+          "url": "https://www.eki-net.com/personal/top/index"
+        }
+      ]
+    }
+  ]
+};
+
+const days = [
+  {
+    "label": "Day1｜へぎそば・清津峡・温泉",
+    "stops": [
+      {
+        "num": 1,
+        "kind": "hub",
+        "t": "09:10",
+        "p": "東京駅で6名集合",
+        "url": "https://www.google.com/maps/search/?api=1&query=%E6%9D%B1%E4%BA%AC%E9%A7%85",
+        "hint": "神戸組08:51着。09:28発のとき313号に全員で乗車し、ここから共通行程です。",
+        "move": {
+          "ic": "🚄",
+          "label": "とき313号 東京09:28→越後湯沢10:47・79分",
+          "url": "https://timetables.jreast.co.jp/2608/timetable/tt1039/1039051.html"
+        }
+      },
+      {
+        "num": 2,
+        "kind": "hub",
+        "t": "10:47",
+        "p": "越後湯沢駅・レンタカー受取",
+        "url": "https://www.google.com/maps/search/?api=1&query=%E8%B6%8A%E5%BE%8C%E6%B9%AF%E6%B2%A2%E9%A7%85",
+        "hint": "11:15頃に出発し、駅前駐車場へ。清津峡より先に昼食を取ります。",
+        "move": {
+          "ic": "🚗",
+          "label": "車 約5分＋駐車5分",
+          "url": "https://www.google.com/maps/dir/?api=1&origin=%E8%B6%8A%E5%BE%8C%E6%B9%AF%E6%B2%A2%E9%A7%85&destination=%E8%B6%8A%E5%BE%8C%E6%B9%AF%E6%B2%A2%E9%A7%85%E5%89%8D%20%E3%81%B8%E3%81%8E%E3%81%9D%E3%81%B0&travelmode=driving"
+        }
+      },
+      {
+        "t": "11:25",
+        "p": "越後湯沢駅前でへぎそば",
+        "url": "#meals",
+        "hint": "12:10まで。中野屋の待ちが20分を超える場合は小嶋屋へ即切り替えます。",
+        "move": {
+          "ic": "🚗",
+          "label": "車 約30分＋駐車・徒歩15分",
+          "url": "https://www.google.com/maps/dir/?api=1&origin=%E8%B6%8A%E5%BE%8C%E6%B9%AF%E6%B2%A2%E9%A7%85&destination=%E6%B8%85%E6%B4%A5%E5%B3%A1%E6%B8%93%E8%B0%B7%E3%83%88%E3%83%B3%E3%83%8D%E3%83%AB&travelmode=driving"
+        }
+      },
+      {
+        "num": 3,
+        "t": "13:00",
+        "p": "清津峡渓谷トンネル",
+        "url": "https://nakasato-kiyotsu.com/reservation/",
+        "hint": "13:00〜14:30枠で受付。入坑後の時間制限はないため、撮影を含め14:45頃まで90〜105分滞在します。",
+        "move": {
+          "ic": "🚗",
+          "label": "車 約30分",
+          "url": "https://www.google.com/maps/dir/?api=1&origin=%E6%B8%85%E6%B4%A5%E5%B3%A1%E6%B8%93%E8%B0%B7%E3%83%88%E3%83%B3%E3%83%8D%E3%83%AB&destination=%E8%B6%8A%E5%BE%8C%E6%B9%AF%E6%B2%A2%E6%B8%A9%E6%B3%89&travelmode=driving"
+        }
+      },
+      {
+        "num": 4,
+        "t": "15:30",
+        "p": "越後湯沢温泉・チェックイン",
+        "url": "https://www.google.com/maps/search/?api=1&query=%E8%B6%8A%E5%BE%8C%E6%B9%AF%E6%B2%A2%E6%B8%A9%E6%B3%89",
+        "hint": "車と荷物を宿に置き、温泉と休憩。以後は徒歩で移動。",
+        "move": {
+          "ic": "🚶",
+          "label": "徒歩 約5〜12分・車は宿に駐車",
+          "url": "https://www.google.com/maps/search/?api=1&query=%E8%B6%8A%E5%BE%8C%E6%B9%AF%E6%B2%A2%E6%B8%A9%E6%B3%89%20%E3%81%BD%E3%82%93%E3%81%97%E3%82%85%E9%A4%A8"
+        }
+      },
+      {
+        "num": 5,
+        "t": "17:00",
+        "p": "ぽんしゅ館 利き酒番所",
+        "url": "https://www.ponshukan.com/yuzawa/",
+        "hint": "コイン5枚1,000円。全員が飲む必要はなく、夕食前の45分に限定します。"
+      }
+    ]
+  },
+  {
+    "label": "Day2｜湯沢高原と駅前ランチ",
+    "stops": [
+      {
+        "t": "08:15",
+        "p": "朝食・チェックアウト準備",
+        "url": "#stay",
+        "hint": "荷物と車は宿に残し、徒歩で山麓駅へ。"
+      },
+      {
+        "num": 6,
+        "t": "08:40",
+        "p": "湯沢高原ロープウェイ",
+        "url": "https://www.yuzawakogen.com/green/tickets/",
+        "hint": "始発から往復3,500円。山頂散策を含め約2時間30分。強風・霧なら雪国館へ変更。",
+        "move": {
+          "ic": "🚶",
+          "label": "宿へ徒歩 約5〜12分、車と荷物を回収",
+          "url": "https://www.google.com/maps/search/?api=1&query=%E6%B9%AF%E6%B2%A2%E9%AB%98%E5%8E%9F%E3%83%AD%E3%83%BC%E3%83%97%E3%82%A6%E3%82%A7%E3%82%A4%20%E8%B6%8A%E5%BE%8C%E6%B9%AF%E6%B2%A2%E6%B8%A9%E6%B3%89"
+        }
+      },
+      {
+        "t": "11:50",
+        "p": "越後湯沢駅前で昼食",
+        "url": "#meals",
+        "hint": "12:45までに食事を終え、車を返却。",
+        "move": {
+          "ic": "🚗",
+          "label": "車 約5分＋返却20分",
+          "url": "https://www.google.com/maps/dir/?api=1&origin=%E8%B6%8A%E5%BE%8C%E6%B9%AF%E6%B2%A2%E6%B8%A9%E6%B3%89&destination=%E8%B6%8A%E5%BE%8C%E6%B9%AF%E6%B2%A2%E9%A7%85&travelmode=driving"
+        }
+      },
+      {
+        "num": 7,
+        "kind": "hub",
+        "t": "13:30",
+        "p": "越後湯沢駅・レンタカー返却",
+        "url": "https://www.google.com/maps/search/?api=1&query=%E8%B6%8A%E5%BE%8C%E6%B9%AF%E6%B2%A2%E9%A7%85",
+        "hint": "14:11発のとき322号に全員で乗車。",
+        "move": {
+          "ic": "🚄",
+          "label": "とき322号 越後湯沢14:11→東京15:28・77分",
+          "url": "https://timetables.jreast.co.jp/2608/timetable/tt0285/0285010.html"
+        }
+      },
+      {
+        "num": 8,
+        "kind": "hub",
+        "t": "15:28",
+        "p": "東京駅・共通行程終了",
+        "url": "https://www.google.com/maps/search/?api=1&query=%E6%9D%B1%E4%BA%AC%E9%A7%85",
+        "hint": "東京組は解散。神戸組は16:12頃ののぞみへ乗り継ぎ、新神戸18:54頃を見込みます。"
+      }
+    ]
+  }
+];
+
+const meals = [
+  {
+    "when": "Day1昼｜越後湯沢駅前",
+    "items": [
+      {
+        "name": "中野屋 湯沢本店",
+        "url": "https://www.google.com/maps/search/?api=1&query=%E4%B8%AD%E9%87%8E%E5%B1%8B%20%E6%B9%AF%E6%B2%A2%E6%9C%AC%E5%BA%97",
+        "price": "1,000〜1,999円",
+        "hint": "食べログ3.65/930人、Google 4.3/2,142件。味本命ですが週末30〜60分超の待ちを見込みます。",
+        "tag": "味本命"
+      },
+      {
+        "name": "越後十日町小嶋屋 越後湯沢店",
+        "url": "https://www.kojimaya.co.jp/",
+        "price": "1,000〜1,999円",
+        "hint": "食べログ3.49/536人、Google 4.0/669件。駅西口徒歩約1分で、遅い昼でも使いやすい実行性本命。",
+        "tag": "実行性本命"
+      },
+      {
+        "name": "そば処 しんばし",
+        "url": "https://tabelog.com/niigata/A1504/A150404/15000122/",
+        "price": "1,000〜3,999円",
+        "hint": "食べログ3.48/385人、Google 4.0/1,047件。6名は電話相談。",
+        "tag": "予約相談"
+      }
+    ]
+  },
+  {
+    "when": "Day1夜｜温泉宿",
+    "items": [
+      {
+        "name": "HATAGO井仙・むらんごっつぉ",
+        "url": "https://hatago-isen.jp/",
+        "price": "1泊2食 2万円台〜",
+        "hint": "Google 4.2/265件。駅徒歩圏で車を置いた後に動きやすく、魚沼料理の外食夜本命。",
+        "tag": "食本命"
+      },
+      {
+        "name": "雪国の宿 高半",
+        "url": "https://www.takahan.co.jp/",
+        "price": "1泊2食 2万円台〜",
+        "hint": "Google 4.3/489件。源泉と眺望重視。駅からの坂は送迎を利用。",
+        "tag": "温泉重視"
+      },
+      {
+        "name": "松泉閣 花月",
+        "url": "https://www.shousenkaku-kagetsu.com/",
+        "price": "1泊2食 2〜3万円台",
+        "hint": "Google 4.5/450件。駅徒歩圏の和会席で6名の会話しやすさが強い。",
+        "tag": "会話本命"
+      }
+    ]
+  },
+  {
+    "when": "Day2昼｜越後湯沢駅前",
+    "items": [
+      {
+        "name": "越後とんかつ人参亭",
+        "url": "https://www.google.com/maps/search/?api=1&query=%E8%B6%8A%E5%BE%8C%E3%81%A8%E3%82%93%E3%81%8B%E3%81%A4%E4%BA%BA%E5%8F%82%E4%BA%AD",
+        "price": "2,000〜2,999円",
+        "hint": "Google 4.2/1,123件。越後もち豚の本命。量と待ち時間を見込みます。",
+        "tag": "本命"
+      },
+      {
+        "name": "越後維新 湯沢本店",
+        "url": "https://www.google.com/maps/search/?api=1&query=%E8%B6%8A%E5%BE%8C%E7%B6%AD%E6%96%B0%20%E6%B9%AF%E6%B2%A2%E6%9C%AC%E5%BA%97",
+        "price": "1,000〜1,999円",
+        "hint": "Google 4.1/2,169件。米粉太麺で短時間利用しやすい。",
+        "tag": "時短"
+      },
+      {
+        "name": "寿司本陣ダイニング",
+        "url": "https://www.google.com/maps/search/?api=1&query=%E5%AF%BF%E5%8F%B8%E6%9C%AC%E9%99%A3%E3%83%80%E3%82%A4%E3%83%8B%E3%83%B3%E3%82%B0%20%E8%B6%8A%E5%BE%8C%E6%B9%AF%E6%B2%A2",
+        "price": "2,000〜6,000円",
+        "hint": "Google 3.5/421件の基準未達例外。駅直結で列車優先時に合理的。",
+        "tag": "駅例外"
+      }
+    ]
+  }
+];
+
+const activities = [
+  {
+    "name": "清津峡渓谷トンネル",
+    "url": "https://nakasato-kiyotsu.com/reservation/",
+    "price": "大人1,200円",
+    "hint": "60〜90分。10/24〜11/3は日時指定の事前購入のみ。",
+    "tag": "主役"
+  },
+  {
+    "name": "湯沢高原ロープウェイ",
+    "url": "https://www.yuzawakogen.com/green/tickets/",
+    "price": "大人往復3,500円",
+    "hint": "2026グリーンシーズン5/30〜11/15予定。山頂散策込み90〜150分。",
+    "tag": "絶景"
+  },
+  {
+    "name": "ジップライン",
+    "url": "https://www.yuzawakogen.com/green/activity/zip_line/",
+    "price": "3,500円＋ロープウェイ",
+    "hint": "60〜90分、11/1まで予定。身長120cm以上・体重25〜100kg。希望者だけ別枠で。",
+    "tag": "体験"
+  },
+  {
+    "name": "ぽんしゅ館 利き酒番所",
+    "url": "https://www.ponshukan.com/yuzawa/",
+    "price": "コイン5枚1,000円",
+    "hint": "30〜45分。宿へ車を置いた後だけ利用。",
+    "tag": "食体験"
+  },
+  {
+    "name": "雪国館",
+    "url": "https://www.e-yuzawa.gr.jp/yukigunikan/guide/",
+    "price": "大人500円",
+    "hint": "9:00〜17:00、最終16:30、水曜休。ロープウェイ運休時の代替。",
+    "tag": "雨天代替"
+  }
+];
+
+const other = [
+  {
+    "name": "大源太キャニオン",
+    "url": "https://www.google.com/maps/search/?api=1&query=%E5%A4%A7%E6%BA%90%E5%A4%AA%E3%82%AD%E3%83%A3%E3%83%8B%E3%82%AA%E3%83%B3",
+    "price": "",
+    "hint": "晴天で清津峡予約が取れない日の自然代替。"
+  },
+  {
+    "name": "魚沼の里",
+    "url": "https://www.uonuma-no-sato.jp/",
+    "price": "",
+    "hint": "酒蔵・菓子・カフェ。1泊2日では清津峡との同時投入を避けます。"
+  },
+  {
+    "name": "雪国館",
+    "url": "https://www.e-yuzawa.gr.jp/yukigunikan/guide/",
+    "price": "大人500円",
+    "hint": "雨天・強風時に使いやすい。"
+  },
+  {
+    "name": "苗場ドラゴンドラ",
+    "url": "https://www.google.com/maps/search/?api=1&query=%E8%8B%97%E5%A0%B4%E3%83%89%E3%83%A9%E3%82%B4%E3%83%B3%E3%83%89%E3%83%A9",
+    "price": "",
+    "hint": "2026秋の営業日・料金発表後に延泊候補として検討。"
+  }
+];
+
+const cars = [
+  {
+    "name": "W4 ハイエース グランドキャビン（10人乗り）",
+    "url": "https://rent-a-car.trlosaka.co.jp/6q_w4_hiace-grandcabin",
+    "price": "車関連 約5.2万〜5.7万円/27時間",
+    "hint": "越後湯沢駅周辺受取・返却。基本・補償・燃料・駐車込みの目安。実車配車と駅送迎を電話確認。",
+    "tag": "指定クラス"
+  },
+  {
+    "name": "たびらいレンタカー 新潟比較",
+    "url": "https://www.tabirai.net/car/niigata/",
+    "price": "越後湯沢・10人乗りで検索",
+    "hint": "免責・NOC補償込み総額と営業所送迎を確認。",
+    "tag": "比較"
+  }
+];
+
+const stays = [
+  {
+    "name": "HATAGO井仙",
+    "url": "https://hatago-isen.jp/",
+    "price": "1泊2食 2.2万〜3.8万円/人",
+    "hint": "駅徒歩圏、食と動線の本命。",
+    "tag": "本命"
+  },
+  {
+    "name": "楽天トラベル：越後湯沢",
+    "url": "https://travel.rakuten.co.jp/yado/niigata/yuzawa.html",
+    "price": "6名・2〜3室で検索",
+    "hint": "夕朝食と駐車、取消条件を比較。"
+  },
+  {
+    "name": "じゃらん：越後湯沢",
+    "url": "https://www.jalan.net/170000/LRG_171400/SML_171408/",
+    "price": "6名・2〜3室で検索",
+    "hint": "駅徒歩または送迎ありで絞る。"
+  },
+  {
+    "name": "agoda：湯沢",
+    "url": "https://www.agoda.com/ja-jp/city/yuzawa-jp.html",
+    "price": "6名で検索",
+    "hint": "食事条件を揃えて比較。"
+  }
+];
+
+const budget = [
+  [
+    "東京発 往復鉄道",
+    "約1.34万円",
+    "上越新幹線"
+  ],
+  [
+    "神戸発 往復鉄道",
+    "約4.144万円",
+    "東海道＋上越新幹線"
+  ],
+  [
+    "宿・夕朝食",
+    "1.8〜3.0万円",
+    "駅徒歩圏の温泉宿"
+  ],
+  [
+    "清津峡・ロープウェイ",
+    "0.47万円",
+    "1,200円＋3,500円"
+  ],
+  [
+    "レンタカー・燃料・駐車",
+    "0.87〜0.95万円",
+    "10人乗り1台を6人で按分"
+  ],
+  [
+    "昼食・利き酒・予備費",
+    "0.5〜0.8万円",
+    "2昼食と利き酒"
+  ],
+  [
+    "東京発 合計",
+    "5.5〜6.7万円",
+    "個人負担なら予算内"
+  ],
+  [
+    "神戸発 合計",
+    "8.3〜9.5万円",
+    "個人負担では予算超過"
+  ]
+];
+
+const foresightList = [
+  {
+    "category": "公平性",
+    "title": "神戸組だけ移動4時間半・総額8万円超",
+    "status": "最大の弱点",
+    "note": "交通費6名合計を均等化すると1人約22,750円になり、全員約6.4〜7.6万円。採用前に精算方針を合意します。"
+  },
+  {
+    "category": "予約",
+    "title": "清津峡は10/24〜11/3が完全予約制",
+    "status": "13時枠を確保",
+    "note": "現地券はなく、13:00〜14:30枠の時間内に受付。昼食を先に済ませ、空腹と売切れリスクを避けます。",
+    "url": "https://nakasato-kiyotsu.com/reservation/"
+  },
+  {
+    "category": "飲酒",
+    "title": "ぽんしゅ館は車を置いてから",
+    "status": "徒歩移動",
+    "note": "宿チェックイン後に全員徒歩。翌朝まで運転しません。"
+  },
+  {
+    "category": "天候",
+    "title": "ロープウェイは強風・霧で運休",
+    "status": "雪国館へ",
+    "note": "Day2朝に運行を確認し、運休なら雪国館と温泉へ変更。",
+    "url": "https://www.yuzawakogen.com/green/tickets/"
+  },
+  {
+    "category": "混雑",
+    "title": "清津峡の水鏡は撮影待ちあり",
+    "status": "90分確保",
+    "note": "6人撮影は短時間にし、後続客の動線を塞がないようにします。"
+  },
+  {
+    "category": "時期",
+    "title": "ジップラインは11月1日まで",
+    "status": "希望者のみ",
+    "note": "11月2日以降のモデルでは候補から外します。",
+    "url": "https://www.yuzawakogen.com/green/activity/zip_line/"
+  }
+];
+
+const bookList = [
+  {
+    "label": "清津峡13:00〜14:30枠 6名",
+    "url": "https://nakasato-kiyotsu.com/reservation/"
+  },
+  {
+    "label": "神戸組の東海道新幹線2席",
+    "url": "https://smart-ex.jp/"
+  },
+  {
+    "label": "6名分の上越新幹線",
+    "url": "https://www.eki-net.com/personal/top/index"
+  },
+  {
+    "label": "越後湯沢温泉の宿6名・夕朝食付き",
+    "url": "https://travel.rakuten.co.jp/yado/niigata/yuzawa.html"
+  },
+  {
+    "label": "W4・10人乗りレンタカー1台",
+    "url": "https://www.tabirai.net/car/niigata/"
+  },
+  {
+    "label": "湯沢高原ロープウェイ",
+    "url": "https://www.yuzawakogen.com/green/tickets/"
+  }
+];
+
+const decideList = [
+  "神戸組の7万円超過を許容するか、交通費をグループで均等化するか",
+  "清津峡を昼食後の13時枠にするか、写真優先で朝枠へ変えるか",
+  "Day2をロープウェイ中心にするか、温泉と駅ナカ中心にするか",
+  "利き酒を全員で行うか、飲まない人向けにカフェ時間を並行するか"
+];
+/* =================== /DATA =================== */
+
+
+/* =================== 描画（触らない） =================== */
+function colorOf(k){return k==="hub"?"#16354a":"#d23b2c";}
+function pinIcon(n,color){return L.divIcon({className:"",iconSize:[22,22],iconAnchor:[11,11],
+  html:`<div class="pin" style="background:${color}">${n}</div>`});}
+
+// ピンは実在地に置く。完全同座標の地点だけ約400m離す（拡大時に2つと分かるため）。
+function spread(items,thr=0.0015,r=0.004){
+  const placed=[];
+  return items.map(s=>{
+    let lat=s.lat,lng=s.lng,k=0;
+    while(placed.some(p=>Math.hypot(p[0]-lat,p[1]-lng)<thr)&&k<8){
+      const a=k*Math.PI/3; lat=s.lat+r*Math.sin(a); lng=s.lng+r*Math.cos(a); k++;
+    }
+    placed.push([lat,lng]);
+    return Object.assign({},s,{dlat:lat,dlng:lng});
+  });
+}
+const spots = spread(mapSpots);
+const markers={};
+let routeMap=null;
+
+function showToast(message){
+  const toast=document.getElementById("toast");
+  if(!toast)return;
+  toast.textContent=message;
+  toast.classList.add("show");
+  clearTimeout(showToast._timer);
+  showToast._timer=setTimeout(()=>toast.classList.remove("show"),2200);
+}
+
+function emptyState(label){
+  return `<div class="empty-state">${label}</div>`;
+}
+
+function populateSummary(){
+  const set=(id,value)=>{ const el=document.getElementById(id); if(el)el.textContent=value; };
+  set("summary-days", `${days.length}日`);
+  set("summary-spots", `${spots.length}件`);
+  set("summary-meals", `${meals.reduce((sum,g)=>sum+(g.items||[]).length,0)}件`);
+  set("summary-checks", `${(foresightList||[]).length}件`);
+  set("summary-todos", `${(bookList||[]).length}件`);
+}
+
+document.querySelectorAll(".side-nav a,.tabset a").forEach(link=>{
+  link.addEventListener("click",()=>showToast(`${link.textContent.trim()}を開きます`));
+});
+
+function initMap(){
+  const mapEl=document.getElementById("map");
+  if(!window.L){
+    mapEl.innerHTML='<div class="mapfallback">地図を読み込み中です。表示されない場合は通信環境を確認してください。</div>';
+    return;
+  }
+  mapEl.style.animation="none";
+  routeMap = L.map("map",{scrollWheelZoom:false});
+  L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",{maxZoom:18,attribution:'&copy; OpenStreetMap contributors'}).addTo(routeMap);
+  const latlngs = spots.map(s=>[s.dlat,s.dlng]);
+  L.polyline(latlngs,{color:"#d23b2c",weight:4,opacity:.9,lineJoin:"round"}).addTo(routeMap);
+  spots.forEach(s=>{ markers[s.n]=L.marker([s.dlat,s.dlng],{icon:pinIcon(s.n,colorOf(s.kind))}).addTo(routeMap).bindPopup(`<b>${s.n}. ${s.name}</b><br>${s.time}`); });
+  foodTowns.forEach(f=>{ L.marker([f.lat,f.lng],{icon:L.divIcon({className:"",iconSize:[14,14],iconAnchor:[7,7],
+    html:`<div style="width:14px;height:14px;border-radius:50%;background:#b07d24;border:2px solid #fff;box-shadow:0 1px 4px rgba(0,0,0,.3)"></div>`})}).addTo(routeMap).bindPopup(`<b>🍽 ${f.name}</b>`); });
+  if(latlngs.length) routeMap.fitBounds(L.latLngBounds(latlngs).pad(0.2)); else routeMap.setView([36,138],5);
+}
+
+window.focusPin=(n)=>{ const s=spots.find(x=>x.n===n); if(!s)return;
+  if(routeMap&&markers[n]){ routeMap.setView([s.dlat,s.dlng],14,{animate:true}); markers[n].openPopup(); }
+  document.querySelectorAll(".pinbtn").forEach(b=>b.classList.toggle("active",Number(b.dataset.n)===n));
+  showToast(`${s.short||s.name}へ地図を移動しました`);
+};
+document.getElementById("pinindex").innerHTML = spots.map(s=>
+  `<button class="pinbtn" data-n="${s.n}" onclick="focusPin(${s.n})"><span class="num ${s.kind==='hub'?'hub':''}">${s.n}</span>${s.short}</button>`).join("");
+initMap();
+
+function legRow(l){ const pills=(l.pills||[]).map(p=>`<a class="pill ${p.cls}" href="${p.url}" target="_blank" rel="noopener">${p.label}</a>`).join("");
+  return `<div class="leg"><div class="ic">${l.ic}</div><div><div class="ttl">${l.ttl}</div><div class="meta">${l.meta}</div><div class="pillrow">${pills}</div></div></div>`; }
+document.getElementById("acc-a").innerHTML = (access.a||[]).length ? access.a.map(legRow).join("") : emptyState("アクセス情報は未設定です");
+document.getElementById("acc-b").innerHTML = (access.b||[]).length ? access.b.map(legRow).join("") : emptyState("アクセス情報は未設定です");
+
+document.getElementById("days").innerHTML = days.length ? days.map(d=>`
+  <div class="card day timeline"><h3>${d.label}</h3>
+  ${d.stops.map(s=>`<div class="stop"><div class="top">
+    ${s.num?`<span class="num ${s.kind==='hub'?'hub':''}">${s.num}</span>`:`<span style="width:22px;flex:0 0 auto"></span>`}
+    <div class="t">${s.t}</div>
+    <div class="p">${s.url?`<a href="${s.url}" target="_blank" rel="noopener">${s.p}</a>`:s.p}</div></div>
+    ${s.hint?`<div class="hint">${s.hint}</div>`:""}
+    ${s.move?`<a class="movelink" href="${s.move.url}" target="_blank" rel="noopener">${s.move.ic} ${s.move.label}${/(?:円|料金|運賃)/.test(s.move.label) ? "" : s.move.ic === "🚗" ? "・追加運賃0円（車費は費用欄）" : s.move.ic === "🚶" ? "・0円" : "・運賃はアクセス欄"}</a>`:""}
+  </div>`).join("")}</div>`).join("") : emptyState("行程は未設定です");
+
+const itemCard=(o)=>`<div class="item">${o.tag?`<span class="tag ${o.sns?'sns':''}">${o.tag}</span>`:""}
+  <div class="name"><a href="${o.url}" target="_blank" rel="noopener">${o.name}</a></div>
+  ${o.price?`<div class="price">${o.price}</div>`:""}${o.hint?`<div class="hint">${o.hint}</div>`:""}</div>`;
+document.getElementById("meal-list").innerHTML = meals.length ? meals.map(g=>`<div class="mealgroup"><div class="when">${g.when}</div><div class="grid2">${g.items.map(itemCard).join("")}</div></div>`).join("") : emptyState("食事候補は未設定です");
+document.getElementById("activity-list").innerHTML = activities.length ? activities.map(itemCard).join("") : emptyState("アクティビティ候補は未設定です");
+document.getElementById("other-list").innerHTML = other.length ? other.map(itemCard).join("") : emptyState("追加スポットは未設定です");
+document.getElementById("car-list").innerHTML   = cars.length ? cars.map(itemCard).join("") : emptyState("レンタカー候補は未設定です");
+document.getElementById("stay-list").innerHTML  = stays.length ? stays.map(itemCard).join("") : emptyState("宿候補は未設定です");
+const checkCard=(o)=>`<div class="check-card">
+  <div class="check-label">${o.category||"確認"}</div>
+  <div class="check-title">${o.url?`<a href="${o.url}" target="_blank" rel="noopener">${o.title}</a>`:o.title}</div>
+  ${o.note?`<div class="check-note">${o.note}</div>`:""}
+  ${o.status?`<span class="check-status">${o.status}</span>`:""}
+</div>`;
+document.getElementById("check-list").innerHTML = foresightList.length ? foresightList.map(checkCard).join("") : emptyState("先読みチェックは未設定です");
+const totalBudgetRow = budget.find(r=>String(r[0]).includes("合計"));
+const totalBudgetEl = document.getElementById("budget-total-pill");
+if(totalBudgetEl) totalBudgetEl.textContent = totalBudgetRow ? totalBudgetRow[1] : "調整中";
+document.getElementById("budget-table").innerHTML = `<thead><tr><th>項目</th><th>1人あたり</th><th>メモ</th></tr></thead><tbody>`+
+  budget.map(r=>{
+    const isTotal = String(r[0]).includes("合計");
+    return `<tr class="${isTotal ? "total-row" : ""}"><td data-label="項目">${r[0]}</td><td data-label="1人あたり" class="r">${r[1]}</td><td data-label="メモ">${r[2]}</td></tr>`;
+  }).join("")+`</tbody>`;
+document.getElementById("book-list").innerHTML = bookList.length ? bookList.map(c=>`<li><a href="${c.url}" target="_blank" rel="noopener">${c.label}</a></li>`).join("") : "<li>予約ToDoは未設定です</li>";
+document.getElementById("decide-list").innerHTML = decideList.length ? decideList.map(d=>`<li>${d}</li>`).join("") : "<li>未確定事項は未設定です</li>";
+populateSummary();
+</script>
+</body>
+</html>

@@ -1,0 +1,1145 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>霧島・えびの高原 1泊2日</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+  integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="">
+<style>
+  :root{
+    --color-brand:#0b5cab;
+    --color-brand-hover:#064a8a;
+    --color-brand-deep:#032d60;
+    --color-brand-soft:#eaf5ff;
+    --color-background:#eef4fb;
+    --color-surface:#ffffff;
+    --color-surface-alt:#f7f9fd;
+    --color-border:#c9d5e8;
+    --color-text-primary:#111827;
+    --color-text-secondary:#3f526d;
+    --color-text-muted:#6b778c;
+    --color-success:#2e844a;
+    --color-warning:#b76100;
+    --color-danger:#ba0517;
+    --color-info:#0176d3;
+    --space-1:4px;
+    --space-2:8px;
+    --space-3:12px;
+    --space-4:16px;
+    --space-6:24px;
+    --space-8:32px;
+    --radius-small:4px;
+    --radius-medium:8px;
+    --radius-large:12px;
+    --shadow-card:0 1px 2px rgba(10,31,68,.10),0 10px 28px rgba(10,31,68,.08);
+    --shadow-popover:0 12px 32px rgba(10,31,68,.20);
+    --shadow-modal:0 24px 60px rgba(10,31,68,.30);
+    --font-stack:"Segoe UI Variable","Segoe UI","Noto Sans JP","Yu Gothic UI","Yu Gothic",Meiryo,sans-serif;
+    --font-page-title:750 30px/1.16 var(--font-stack);
+    --font-section-title:750 18px/1.35 var(--font-stack);
+    --font-body:400 14px/1.65 var(--font-stack);
+    --font-caption:700 12px/1.4 var(--font-stack);
+    --z-header:100;
+    --z-dropdown:200;
+    --z-modal:500;
+    --z-toast:600;
+  }
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{margin:0;color:var(--color-text-primary);
+    background:linear-gradient(180deg,#fff 0,#fff 56px,#0b5cab 56px,#276f9f 172px,#eef4fb 172px,#eef4fb 100%);
+    font:var(--font-body);-webkit-text-size-adjust:100%}
+  a{color:var(--color-brand);text-underline-offset:.16em}
+  a:hover{color:var(--color-brand-hover)}
+  a:focus-visible,button:focus-visible{outline:3px solid rgba(1,118,211,.35);outline-offset:2px}
+  .app-shell{min-height:100vh;position:relative}
+  .app-shell::before{content:"";position:absolute;left:0;right:0;top:56px;height:156px;pointer-events:none;
+    background:
+      repeating-linear-gradient(135deg,rgba(255,255,255,.14) 0 1px,transparent 1px 18px),
+      linear-gradient(120deg,rgba(3,45,96,.92),rgba(11,92,171,.78) 54%,rgba(91,144,184,.52));
+    border-bottom:1px solid rgba(255,255,255,.28)}
+  .global-header{position:sticky;top:0;z-index:var(--z-header);height:56px;background:#fff;color:var(--color-text-primary);
+    border-bottom:1px solid #dfe5ef;display:flex;align-items:center;gap:var(--space-4);padding:0 var(--space-6);
+    box-shadow:0 1px 2px rgba(10,31,68,.08)}
+  .brand-home{display:flex;align-items:center;gap:var(--space-3);min-width:0;color:inherit;text-decoration:none}
+  .brand-home:hover{color:inherit}
+  .brand-mark{width:30px;height:30px;border-radius:var(--radius-medium);background:linear-gradient(135deg,#2b6cb0,#6c7ff2);
+    color:#fff;display:grid;place-items:center;font-weight:900;box-shadow:inset 0 0 0 1px rgba(255,255,255,.35)}
+  .brand-title{font-weight:800;letter-spacing:0}
+  .global-actions{margin-left:auto;display:flex;align-items:center;gap:var(--space-1);overflow:auto}
+  .global-actions a{display:inline-flex;align-items:center;min-height:32px;padding:0 10px;border-radius:var(--radius-small);
+    color:var(--color-text-secondary);font-size:13px;font-weight:750;text-decoration:none;white-space:nowrap}
+  .global-actions a:hover{background:var(--color-brand-soft);color:var(--color-brand)}
+  .global-actions .back-link{border:1px solid var(--color-border);background:var(--color-surface-alt);color:var(--color-brand-deep)}
+  .shell-body{position:relative;z-index:1;max-width:1440px;margin:0 auto;display:grid;grid-template-columns:220px minmax(0,1fr) 300px;gap:var(--space-4);padding:var(--space-4)}
+  .side-nav,.summary-panel{position:sticky;top:72px;align-self:start}
+  .side-nav,.summary-panel,.card{background:var(--color-surface);border:1px solid var(--color-border);border-radius:var(--radius-medium);box-shadow:var(--shadow-card)}
+  .side-nav{padding:var(--space-3);box-shadow:0 1px 2px rgba(10,31,68,.10),0 10px 22px rgba(10,31,68,.08)}
+  .side-nav-title,.summary-title{font:var(--font-caption);color:var(--color-text-muted);margin:0 0 var(--space-2)}
+  .side-nav a{display:flex;align-items:center;gap:var(--space-2);min-height:36px;padding:0 var(--space-3);border-radius:var(--radius-small);
+    color:var(--color-text-secondary);font-weight:700;text-decoration:none}
+  .side-nav a:hover,.side-nav a.active{background:var(--color-brand-soft);color:var(--color-brand)}
+  .main-content{min-width:0;display:grid;gap:var(--space-4)}
+  .summary-panel{padding:var(--space-4);display:grid;gap:var(--space-4)}
+  .summary-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:var(--space-2)}
+  .summary-metric{min-height:76px;display:grid;align-content:space-between;gap:var(--space-1);padding:var(--space-3);
+    border:1px solid #d7e3f5;border-radius:var(--radius-medium);background:linear-gradient(180deg,#fff,#f8fbff)}
+  .summary-metric span{color:var(--color-text-muted);font-size:11px;font-weight:750}
+  .summary-metric b{font-size:21px;line-height:1.1;color:var(--color-brand-deep);font-weight:750}
+  .summary-metric::after{content:"";display:block;width:100%;height:6px;border-radius:999px;background:linear-gradient(90deg,#2b6cb0,#6c7ff2)}
+  .utility-links{display:grid;gap:var(--space-2)}
+  .utility-links a{display:flex;justify-content:space-between;align-items:center;min-height:36px;padding:0 var(--space-3);
+    border:1px solid var(--color-border);border-radius:var(--radius-small);background:var(--color-surface-alt);
+    color:var(--color-text-primary);font-weight:750;text-decoration:none}
+  .utility-links a::after{content:"›";color:var(--color-brand);font-size:18px}
+  .utility-links a:hover{border-color:#9bbde6;background:var(--color-brand-soft);color:var(--color-brand)}
+  .hero{position:relative;overflow:hidden;background:linear-gradient(180deg,#fff,#f9fbff);border:1px solid #c4d4ea;
+    border-radius:var(--radius-medium);padding:0;box-shadow:0 2px 4px rgba(10,31,68,.10),0 16px 42px rgba(10,31,68,.12)}
+  .hero::before{content:"";position:absolute;left:0;right:0;top:0;height:6px;background:linear-gradient(90deg,#2b6cb0,#706eeb,#20a0d8)}
+  .hero-main{padding:var(--space-6)}
+  .title-cluster{display:flex;align-items:flex-start;gap:var(--space-3)}
+  .record-icon{width:42px;height:42px;border-radius:var(--radius-medium);display:grid;place-items:center;flex:0 0 auto;
+    background:linear-gradient(135deg,#5f7feb,#2b6cb0);color:#fff;font-weight:900;box-shadow:inset 0 0 0 1px rgba(255,255,255,.35)}
+  .kicker{font:var(--font-caption);color:var(--color-brand);margin-bottom:var(--space-1)}
+  .page-title-row{display:flex;align-items:flex-start;justify-content:space-between;gap:var(--space-4)}
+  h1{margin:0;font:var(--font-page-title)}
+  .lead{color:var(--color-text-secondary);margin:var(--space-2) 0 var(--space-4);max-width:74ch}
+  .badges{display:flex;gap:var(--space-2);flex-wrap:wrap}
+  .badge,.pill,.tag{display:inline-flex;align-items:center;gap:5px;border:1px solid var(--color-border);background:var(--color-surface-alt);
+    border-radius:999px;padding:5px 10px;font-size:12px;font-weight:800;color:var(--color-text-secondary)}
+  .badge.status-info{background:#eaf5ff;border-color:#b9dcff;color:#095da0}
+  .badge.status-success{background:#eaf7ee;border-color:#b7e1c1;color:#22683e}
+  .action-bar{display:flex;gap:var(--space-2);flex-wrap:wrap;margin-top:var(--space-4)}
+  .btn{display:inline-flex;align-items:center;justify-content:center;gap:var(--space-2);min-height:36px;border:1px solid var(--color-border);
+    border-radius:var(--radius-small);padding:0 var(--space-3);background:var(--color-surface);color:var(--color-text-primary);
+    text-decoration:none;font-weight:800;cursor:pointer;box-shadow:0 1px 1px rgba(10,31,68,.06)}
+  .btn:hover{border-color:#9bbde6;color:var(--color-brand);background:#f7fbff;box-shadow:0 2px 8px rgba(10,31,68,.10)}
+  .btn.primary{background:linear-gradient(180deg,#1677d2,#0b5cab);border-color:#084f99;color:#fff}
+  .btn.primary:hover{background:var(--color-brand-hover);color:#fff}
+  .btn.subtle{background:var(--color-surface-alt)}
+  .tabset{position:sticky;top:72px;z-index:50;background:var(--color-surface);border:1px solid var(--color-border);
+    border-radius:var(--radius-medium);box-shadow:var(--shadow-card);display:flex;gap:var(--space-1);padding:var(--space-1);overflow:auto}
+  .tabset a{white-space:nowrap;text-decoration:none;color:var(--color-text-secondary);font-weight:800;border-radius:var(--radius-small);padding:9px 12px}
+  .tabset a:hover{background:var(--color-brand-soft);color:var(--color-brand)}
+  section{scroll-margin-top:128px;margin-top:var(--space-4)}
+  .section-head{display:flex;align-items:flex-end;justify-content:space-between;gap:var(--space-4);margin-bottom:var(--space-3)}
+  h2{font:var(--font-section-title);margin:0;display:flex;align-items:center;gap:var(--space-2)}
+  h2 .dot{width:4px;height:18px;border-radius:999px;background:var(--color-brand)}
+  .sub{color:var(--color-text-muted);font-size:13px;margin:4px 0 0}
+  .card{padding:var(--space-4);margin-bottom:var(--space-3)}
+  .card:hover{box-shadow:0 2px 4px rgba(10,31,68,.10),0 12px 30px rgba(10,31,68,.08)}
+  #map{height:62vh;min-height:380px;max-height:560px;width:100%;border-radius:var(--radius-medium);border:1px solid var(--color-border);z-index:0;
+    background:linear-gradient(90deg,#eef2f7 25%,#f7f9fc 37%,#eef2f7 63%);background-size:400% 100%;animation:skeleton 1.25s ease-in-out infinite}
+  .mapfallback{height:100%;display:flex;align-items:center;justify-content:center;text-align:center;padding:24px;color:var(--color-text-secondary);background:#eef4f8}
+  .legend{display:flex;gap:14px;flex-wrap:wrap;margin-top:10px;font-size:13px;color:var(--color-text-secondary)}
+  .legend span{display:inline-flex;align-items:center;gap:6px}
+  .swatch{width:14px;height:14px;border-radius:50%;display:inline-block}
+  .routeline{width:22px;height:0;border-top:3px solid var(--color-danger);display:inline-block}
+  .pinindex{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+  .pinbtn{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--color-border);background:#fff;
+    border-radius:999px;padding:5px 11px 5px 6px;font-size:13px;font-weight:800;color:var(--color-text-primary);cursor:pointer}
+  .pinbtn:hover,.pinbtn.active{border-color:var(--color-danger);background:#fff4f2}
+  .pinbtn .num{width:20px;height:20px;border-radius:50%;background:var(--color-danger);color:#fff;font-size:12px;font-weight:800;
+    display:inline-flex;align-items:center;justify-content:center}
+  .pinbtn .num.hub{background:#16354a}
+  .pin{width:22px;height:22px;border-radius:50%;color:#fff;font-weight:800;font-size:12px;
+    display:flex;align-items:center;justify-content:center;border:2px solid #fff;box-shadow:0 2px 6px rgba(0,0,0,.35)}
+  .responsive-grid,.grid2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:var(--space-3)}
+  .access{display:grid;gap:10px}
+  .leg{display:grid;grid-template-columns:30px 1fr;gap:10px;padding:10px 0;border-bottom:1px dashed #e6ebee}
+  .leg:last-child{border-bottom:0}
+  .leg .ic{font-size:20px;text-align:center}
+  .leg .ttl{font-weight:800}
+  .leg .meta{font-size:13px;color:var(--color-text-secondary)}
+  .pillrow{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
+  .pill{text-decoration:none;background:#eef4f2;color:#27514a}
+  .pill.book{background:#eaf1f7;color:#1c537a}
+  .day{margin-bottom:14px}
+  .day h3{margin:0 0 12px;font-size:16px;color:var(--color-text-primary)}
+  .timeline{position:relative}
+  .stop{position:relative;padding:12px 0;border-bottom:1px solid #eef2f4}
+  .stop:last-child{border-bottom:0}
+  .stop .top{display:flex;gap:9px;align-items:baseline}
+  .stop .num{flex:0 0 auto;width:22px;height:22px;border-radius:50%;background:var(--color-danger);color:#fff;
+    font-size:12px;font-weight:800;display:inline-flex;align-items:center;justify-content:center;align-self:center}
+  .stop .num.hub{background:#16354a}
+  .stop .t{color:var(--color-brand);font-weight:800;font-variant-numeric:tabular-nums;min-width:46px}
+  .stop .p{font-weight:800}
+  .stop .hint{color:var(--color-text-muted);font-size:13px;margin-left:31px}
+  .movelink{margin:8px 0 2px 31px;display:inline-flex;align-items:center;gap:7px;font-size:13px;font-weight:700;
+    background:#f3f7f5;border:1px solid #e2ebe6;border-radius:10px;padding:5px 11px;color:#2f5a4c;text-decoration:none}
+  .mealgroup{margin-bottom:8px}
+  .mealgroup .when{font-weight:800;font-size:14px;color:var(--color-text-primary);margin:6px 2px 8px}
+  .item{border:1px solid var(--color-border);border-radius:var(--radius-medium);padding:var(--space-4);background:linear-gradient(180deg,#fff,#fbfdff);box-shadow:0 1px 1px rgba(10,31,68,.05)}
+  .item:hover{border-color:#9bbde6;box-shadow:var(--shadow-card);transform:translateY(-1px)}
+  .item .name{font-weight:800}
+  .item .price{font-weight:800;color:#123e5b;font-size:14px}
+  .item .hint{color:var(--color-text-muted);font-size:13px}
+  .tag{border-radius:var(--radius-small);padding:2px 7px;margin:0 6px 6px 0;color:#6a4a14;background:#fdf0d6}
+  .tag.sns{color:#8a2b6b;background:#fbe4f1}
+  .check-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:var(--space-3)}
+  .check-card{position:relative;border:1px solid #c7d8ea;border-radius:var(--radius-medium);padding:var(--space-4);
+    background:linear-gradient(180deg,#fff,#f8fbff);box-shadow:0 1px 1px rgba(10,31,68,.05)}
+  .check-card::before{content:"";position:absolute;left:0;top:0;bottom:0;width:4px;border-radius:var(--radius-medium) 0 0 var(--radius-medium);background:var(--color-warning)}
+  .check-label{font-size:12px;font-weight:850;color:var(--color-warning);margin-bottom:var(--space-1)}
+  .check-title{font-weight:850;color:var(--color-text-primary)}
+  .check-note{color:var(--color-text-muted);font-size:13px;margin-top:4px}
+  .check-status{display:inline-flex;margin-top:8px;border:1px solid #d9c6a0;background:#fff8ed;color:#7a4b00;border-radius:999px;padding:3px 8px;font-size:12px;font-weight:800}
+  .budget-card{padding:0;overflow:hidden}
+  .budget-head{display:flex;justify-content:space-between;gap:var(--space-4);align-items:flex-start;padding:var(--space-4);
+    background:linear-gradient(180deg,#f7fbff,#eef5ff);border-bottom:1px solid var(--color-border)}
+  .budget-head h3{margin:2px 0 0;font:var(--font-section-title)}
+  .budget-total{min-width:180px;border:1px solid #b9d6f4;background:#fff;border-radius:var(--radius-medium);padding:var(--space-3);text-align:right;
+    box-shadow:0 1px 2px rgba(10,31,68,.06)}
+  .budget-total span{display:block;color:var(--color-text-muted);font-size:11px;font-weight:750}
+  .budget-total b{display:block;color:var(--color-brand-deep);font-size:20px;line-height:1.2;margin-top:2px}
+  .budget-table-wrap{padding:var(--space-3);overflow-x:auto}
+  table{width:100%;border-collapse:separate;border-spacing:0;font-size:14px}
+  th,td{padding:12px 12px;border-bottom:1px solid #e3eaf5;text-align:left;vertical-align:top}
+  th{background:#f4f8fd;color:#314763;font-size:12px;font-weight:800}
+  th:first-child{border-top-left-radius:var(--radius-small)}
+  th:last-child{border-top-right-radius:var(--radius-small)}
+  tbody tr:hover td{background:#f8fbff}
+  td.r{text-align:right;font-variant-numeric:tabular-nums;font-weight:800;color:var(--color-brand-deep)}
+  .total-row td{background:#edf5ff!important;border-top:2px solid #9bbde6;border-bottom:0;font-weight:900}
+  .total-row td:first-child{border-bottom-left-radius:var(--radius-small)}
+  .total-row td:last-child{border-bottom-right-radius:var(--radius-small)}
+  .todo{list-style:none;padding:0;margin:0}
+  .todo li{padding:8px 0;border-bottom:1px solid #eef2f4}
+  .todo.book li:before{content:"□";color:var(--color-brand);font-weight:800;margin-right:6px}
+  .todo.decide li:before{content:"•";color:var(--color-warning);font-weight:800;margin-right:6px}
+  .twohead{font-weight:800;margin:2px 0 6px;font-size:14px}
+  .empty-state{border:1px dashed var(--color-border);border-radius:var(--radius-medium);background:var(--color-surface-alt);padding:var(--space-6);color:var(--color-text-muted);text-align:center}
+  .toast{position:fixed;right:var(--space-4);bottom:var(--space-4);z-index:var(--z-toast);background:#17324d;color:#fff;border-radius:var(--radius-medium);
+    box-shadow:var(--shadow-popover);padding:var(--space-3) var(--space-4);font-weight:800;opacity:0;transform:translateY(10px);pointer-events:none;transition:.18s ease}
+  .toast.show{opacity:1;transform:translateY(0)}
+  footer{margin-top:34px;color:var(--color-text-muted);font-size:12px;text-align:center}
+  @keyframes skeleton{0%{background-position:100% 0}100%{background-position:0 0}}
+  @media(max-width:1120px){
+    .shell-body{grid-template-columns:190px minmax(0,1fr)}
+    .summary-panel{position:static;grid-column:2}
+  }
+  @media(max-width:760px){
+    body{background:linear-gradient(180deg,#fff 0,#fff 56px,#0b5cab 56px,#276f9f 170px,#eef4fb 170px,#eef4fb 100%)}
+    .app-shell::before{top:56px;height:132px}
+    .global-header{position:relative;height:56px;min-height:56px;padding:0 12px;gap:8px}
+    .brand-home{gap:8px;min-width:0}
+    .brand-title{font-size:14px;line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .global-actions{margin-left:auto;flex:0 0 auto;max-width:44%;overflow:visible}
+    .global-actions a:not(.back-link){display:none}
+    .global-actions .back-link{min-height:34px;padding:0 9px;font-size:12px}
+    .shell-body{display:block;padding:14px 12px 12px}
+    .side-nav{display:none}
+    .summary-panel{margin-top:var(--space-3)}
+    .hero-main{padding:var(--space-4)}
+    .title-cluster{gap:var(--space-2)}
+    .record-icon{width:36px;height:36px}
+    .page-title-row{display:block}
+    .tabset{top:0}
+    .responsive-grid,.grid2,.check-grid{grid-template-columns:1fr}
+    table,thead,tbody,tr,th,td{display:block}
+    thead{display:none}
+    .budget-head{display:grid}
+    .budget-total{text-align:left;min-width:0}
+    tr{border:1px solid var(--color-border);border-radius:var(--radius-medium);padding:var(--space-2);margin-bottom:var(--space-2);background:#fff}
+    td{border:0;display:grid;grid-template-columns:96px 1fr;gap:var(--space-2)}
+    td:before{content:attr(data-label);font-weight:800;color:var(--color-text-muted)}
+    td.r{text-align:left}
+    #map{min-height:320px;height:52vh}
+  }
+  @media(prefers-reduced-motion:reduce){
+    html{scroll-behavior:auto}
+    *,*::before,*::after{animation:none!important;transition:none!important}
+  }
+</style>
+</head>
+<body>
+<div class="app-shell">
+  <header class="global-header">
+    <a class="brand-home" href="index.html" aria-label="4案一覧へ戻る">
+      <div class="brand-mark" aria-hidden="true">T</div>
+      <div class="brand-title">Travel Planning Console</div>
+    </a>
+    <nav class="global-actions" aria-label="クイックリンク">
+      <a class="back-link" href="index.html">← 4案一覧</a>
+      <a href="#route">地図</a>
+      <a href="#itinerary">行程</a>
+      <a href="#checks">先読み</a>
+      <a href="#budget">費用</a>
+      <a href="#next">予約</a>
+    </nav>
+  </header>
+
+  <div class="shell-body">
+    <nav class="side-nav" aria-label="セクションナビ">
+      <p class="side-nav-title">ページ内ナビ</p>
+      <a href="#route">ルート</a>
+      <a href="#access">アクセス</a>
+      <a href="#itinerary">行程</a>
+      <a href="#meals">食事</a>
+      <a href="#activities">アクティビティ</a>
+      <a href="#checks">先読みチェック</a>
+      <a href="#budget">費用</a>
+      <a href="#next">予約ToDo</a>
+    </nav>
+
+<main class="main-content" id="main-content">
+  <header class="hero">
+    <div class="hero-main">
+    <div class="page-title-row">
+      <div class="title-cluster">
+        <div class="record-icon" aria-hidden="true">旅</div>
+        <div>
+          <div class="kicker">候補J｜火山高原・国宝・温泉</div>
+          <h1>霧島・えびの高原 1泊2日</h1>
+        </div>
+      </div>
+    </div>
+    <p class="lead">鹿児島空港から温泉、霧島神宮、火山高原、現代アートへ。両都市から直行便で集まりやすい南九州ルートです。</p>
+    <div class="badges"><span class="badge">🗓 1泊2日</span><span class="badge">👥 6人</span><span class="badge">✈️ 集合: 鹿児島空港</span><span class="badge">🚐 10人乗り1台</span><span class="badge">✈️ モデル日: 10/17–18</span></div>
+    <div class="action-bar" aria-label="主要アクション">
+      <a class="btn subtle" href="index.html">← 4案一覧へ戻る</a>
+      <a class="btn primary" href="#next">予約ToDoを見る</a>
+      <a class="btn" href="#map">地図を確認</a>
+      <a class="btn" href="#checks">先読みチェック</a>
+      <a class="btn" href="#budget">費用を見る</a>
+    </div>
+    </div>
+  </header>
+
+  <nav class="tabset" aria-label="レポートタブ">
+    <a href="#route">概要</a>
+    <a href="#itinerary">行程</a>
+    <a href="#meals">食事</a>
+    <a href="#activities">体験</a>
+    <a href="#stay">宿</a>
+    <a href="#checks">先読み</a>
+    <a href="#budget">費用</a>
+    <a href="#next">予約</a>
+  </nav>
+
+  <section id="route">
+    <h2><span class="dot"></span>ルート地図</h2>
+    <p class="sub">番号順に巡るルート。赤い線は訪問順を示す概略ルートです。</p>
+    <div id="map"></div>
+    <div class="legend">
+      <span><i class="routeline"></i>順路</span>
+      <span><i class="swatch" style="background:#16354a"></i>集合・拠点</span>
+      <span><i class="swatch" style="background:#d23b2c"></i>観光スポット</span>
+      <span><i class="swatch" style="background:#b07d24"></i>食事の街</span>
+    </div>
+    <div class="pinindex" id="pinindex"></div>
+    <p class="sub" style="margin-top:8px">番号をタップすると、地図のその場所に移動します。</p>
+  </section>
+
+  <section id="access">
+    <h2><span class="dot"></span>行き帰りのアクセス</h2>
+    <p class="sub">東京組・神戸組は鹿児島空港で合流。公表済み夏ダイヤ内の10/17〜18をモデルにし、10月25日以降は冬ダイヤ公開後に便時刻から再計算します。</p>
+    <div class="card"><div class="twohead">東京・羽田発（4人）</div><div class="access" id="acc-a"></div></div>
+    <div class="card"><div class="twohead">神戸空港発（2人）</div><div class="access" id="acc-b"></div></div>
+  </section>
+
+  <section id="itinerary">
+    <h2><span class="dot"></span>行程</h2>
+    <p class="sub">番号は上の地図のピンと同じ順番です。スポット名は地図リンク、区間リンクは公式時刻・料金ページまたは経路地図に飛びます。</p>
+    <div id="days"></div>
+  </section>
+
+  <section id="meals">
+    <h2><span class="dot"></span>食事候補</h2>
+    <p class="sub">タイミング別の候補。気分と予約状況で選べます。</p>
+    <div id="meal-list"></div>
+  </section>
+
+  <section id="activities">
+    <h2><span class="dot"></span>アクティビティ候補</h2>
+    <p class="sub">行程に入れるかを相談しやすい体験候補です。天気・体力・予約状況で選べます。</p>
+    <div class="grid2" id="activity-list"></div>
+  </section>
+
+  <section id="other">
+    <h2><span class="dot"></span>他にもおすすめのスポット</h2>
+    <p class="sub">天気や気分で順路に足せる候補です。</p>
+    <div class="grid2" id="other-list"></div>
+  </section>
+
+  <section id="car">
+    <h2><span class="dot"></span>レンタカー</h2>
+    <p class="sub">鹿児島空港外の営業所でW4・ハイエース グランドキャビン（10人乗り）1台を約30時間利用。往復送迎を各30分枠で組み、高原道路の規制を確認します。</p>
+    <div class="grid2" id="car-list"></div>
+  </section>
+
+  <section id="stay">
+    <h2><span class="dot"></span>宿</h2>
+    <p class="sub">丸尾温泉周辺の1泊2食付き。Day1 16時前後に入り、温泉と夕食を旅の主役として楽しめる宿を選びます。</p>
+    <div class="grid2" id="stay-list"></div>
+  </section>
+
+  <section id="checks">
+    <h2><span class="dot"></span>先読みチェック</h2>
+    <p class="sub">予約前に見落としやすい費用・リスク・代替案です。</p>
+    <div class="check-grid" id="check-list"></div>
+  </section>
+
+  <section id="budget">
+    <h2><span class="dot"></span>費用のめやす（1人あたり）</h2>
+    <div class="card budget-card">
+      <div class="budget-head">
+        <div>
+          <p class="summary-title">費用サマリー</p>
+          <h3>1人あたりの概算</h3>
+        </div>
+        <div class="budget-total">
+          <span>合計めやす</span>
+          <b id="budget-total-pill">-</b>
+        </div>
+      </div>
+      <div class="budget-table-wrap"><table id="budget-table"></table></div>
+    </div>
+  </section>
+
+  <section id="next">
+    <h2><span class="dot"></span>これから決める・予約すること</h2>
+    <div class="card"><div class="twohead">予約するもの</div><ul class="todo book" id="book-list"></ul></div>
+    <div class="card"><div class="twohead">グループで決めること（まだ未確定）</div><ul class="todo decide" id="decide-list"></ul></div>
+  </section>
+
+  <footer>所要時間・便は作成時点の各社公式時刻表・地図経路に基づくめやすです。</footer>
+</main>
+
+    <aside class="summary-panel" aria-label="旅の要点">
+      <div>
+        <p class="summary-title">旅の要点</p>
+        <div class="summary-grid">
+          <div class="summary-metric"><span>日数</span><b id="summary-days">-</b></div>
+          <div class="summary-metric"><span>訪問地</span><b id="summary-spots">-</b></div>
+          <div class="summary-metric"><span>食事候補</span><b id="summary-meals">-</b></div>
+          <div class="summary-metric"><span>確認項目</span><b id="summary-checks">-</b></div>
+          <div class="summary-metric"><span>予約項目</span><b id="summary-todos">-</b></div>
+        </div>
+      </div>
+      <div class="utility-links">
+        <p class="summary-title">すぐ確認</p>
+        <a href="index.html">4案一覧へ戻る</a>
+        <a href="#route">ルート地図</a>
+        <a href="#itinerary">当日の流れ</a>
+        <a href="#checks">先読みチェック</a>
+        <a href="#budget">費用のめやす</a>
+        <a href="#next">これから決めること</a>
+      </div>
+    </aside>
+  </div>
+</div>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+  integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+<script>
+/* =================== DATA（ここだけ案件ごとに差し替える） =================== */
+const mapSpots = [
+  {
+    "n": 1,
+    "name": "鹿児島空港",
+    "short": "鹿児島空港",
+    "lat": 31.8034,
+    "lng": 130.7195,
+    "kind": "hub",
+    "time": "Day1 11:00"
+  },
+  {
+    "n": 2,
+    "name": "黒豚の館",
+    "short": "黒豚ランチ",
+    "lat": 31.8089,
+    "lng": 130.8125,
+    "kind": "spot",
+    "time": "Day1 12:10"
+  },
+  {
+    "n": 3,
+    "name": "霧島神宮",
+    "short": "霧島神宮",
+    "lat": 31.8595,
+    "lng": 130.872,
+    "kind": "spot",
+    "time": "Day1 13:35"
+  },
+  {
+    "n": 4,
+    "name": "丸尾滝・霧島温泉",
+    "short": "霧島温泉",
+    "lat": 31.893,
+    "lng": 130.8277,
+    "kind": "spot",
+    "time": "Day1 15:15"
+  },
+  {
+    "n": 5,
+    "name": "えびのエコミュージアムセンター",
+    "short": "えびの高原",
+    "lat": 31.9463,
+    "lng": 130.856,
+    "kind": "spot",
+    "time": "Day2 09:00"
+  },
+  {
+    "n": 6,
+    "name": "霧島アートの森",
+    "short": "昼食・アート",
+    "lat": 31.9517,
+    "lng": 130.7587,
+    "kind": "spot",
+    "time": "Day2 11:45"
+  },
+  {
+    "n": 7,
+    "name": "嘉例川駅",
+    "short": "嘉例川駅",
+    "lat": 31.79,
+    "lng": 130.76,
+    "kind": "spot",
+    "time": "Day2 14:55"
+  },
+  {
+    "n": 8,
+    "name": "鹿児島空港",
+    "short": "鹿児島空港・解散",
+    "lat": 31.8034,
+    "lng": 130.7195,
+    "kind": "hub",
+    "time": "Day2 16:20"
+  }
+];
+
+const foodTowns = [
+  {
+    "name": "霧島神宮周辺",
+    "lat": 31.858,
+    "lng": 130.87
+  },
+  {
+    "name": "鹿児島空港",
+    "lat": 31.8034,
+    "lng": 130.7195
+  }
+];
+
+const access = {
+  "a": [
+    {
+      "ic": "✈️",
+      "ttl": "羽田 → 鹿児島",
+      "meta": "成立性を優先する公表済み夏ダイヤ代表: SKY303 羽田08:40→鹿児島10:30、1時間50分。往復航空券22,000〜38,000円＋羽田施設料。",
+      "pills": [
+        {
+          "cls": "book",
+          "label": "公式時刻表 PDF",
+          "url": "https://smart.skymark.co.jp/ja/news/detail/__icsFiles/afieldfile/2026/01/22/timetable_2026summerUpdate.pdf"
+        },
+        {
+          "cls": "book",
+          "label": "空席・料金: スカイマーク",
+          "url": "https://smart.skymark.co.jp/ja/reservation/"
+        }
+      ]
+    },
+    {
+      "ic": "✈️",
+      "ttl": "鹿児島 → 羽田",
+      "meta": "公表済み夏ダイヤ代表: SKY308 鹿児島20:10→羽田21:55、1時間45分。レンタカー返却・空港送迎は16:20頃までに終えます。",
+      "pills": [
+        {
+          "cls": "book",
+          "label": "公式時刻表 PDF",
+          "url": "https://smart.skymark.co.jp/ja/news/detail/__icsFiles/afieldfile/2026/01/22/timetable_2026summerUpdate.pdf"
+        },
+        {
+          "cls": "book",
+          "label": "予約: スカイマーク",
+          "url": "https://smart.skymark.co.jp/ja/reservation/"
+        }
+      ]
+    }
+  ],
+  "b": [
+    {
+      "ic": "✈️",
+      "ttl": "神戸 → 鹿児島",
+      "meta": "公表済み夏ダイヤ代表: SKY131 神戸08:35→鹿児島09:45、1時間10分。往復航空券12,000〜24,000円＋神戸施設料。神戸組が約1時間先着。",
+      "pills": [
+        {
+          "cls": "book",
+          "label": "公式時刻表 PDF",
+          "url": "https://smart.skymark.co.jp/ja/news/detail/__icsFiles/afieldfile/2026/01/22/timetable_2026summerUpdate.pdf"
+        },
+        {
+          "cls": "book",
+          "label": "空席・料金: スカイマーク",
+          "url": "https://smart.skymark.co.jp/ja/reservation/"
+        }
+      ]
+    },
+    {
+      "ic": "✈️",
+      "ttl": "鹿児島 → 神戸",
+      "meta": "公表済み夏ダイヤ代表: SKY138 鹿児島20:15→神戸21:25、1時間10分。東京組とほぼ同時刻に出発できます。",
+      "pills": [
+        {
+          "cls": "book",
+          "label": "公式時刻表 PDF",
+          "url": "https://smart.skymark.co.jp/ja/news/detail/__icsFiles/afieldfile/2026/01/22/timetable_2026summerUpdate.pdf"
+        },
+        {
+          "cls": "book",
+          "label": "予約: スカイマーク",
+          "url": "https://smart.skymark.co.jp/ja/reservation/"
+        }
+      ]
+    }
+  ]
+};
+
+const days = [
+  {
+    "label": "Day1｜黒豚・国宝・温泉",
+    "stops": [
+      {
+        "num": 1,
+        "kind": "hub",
+        "t": "11:00",
+        "p": "鹿児島空港集合・レンタカー受取",
+        "url": "https://www.google.com/maps/search/?api=1&query=%E9%B9%BF%E5%85%90%E5%B3%B6%E7%A9%BA%E6%B8%AF",
+        "hint": "東京組10:30着後の降機・荷物受取に30分を確保。神戸組09:45着と到着ロビーで合流し、営業所送迎・受付後11:45頃出発。",
+        "move": {
+          "ic": "🚗",
+          "label": "車 約20分＋駐車10分",
+          "url": "https://www.google.com/maps/dir/?api=1&origin=%E9%B9%BF%E5%85%90%E5%B3%B6%E7%A9%BA%E6%B8%AF&destination=%E9%BB%92%E8%B1%9A%E3%81%AE%E9%A4%A8&travelmode=driving"
+        }
+      },
+      {
+        "num": 2,
+        "t": "12:10",
+        "p": "黒豚ランチ",
+        "url": "https://www.google.com/maps/search/?api=1&query=%E9%BB%92%E8%B1%9A%E3%81%AE%E9%A4%A8",
+        "hint": "13:15まで。6名席は事前に店舗へ相談し、待ちが長ければ霧島たまご牧場へ切替。",
+        "move": {
+          "ic": "🚗",
+          "label": "車 約15分",
+          "url": "https://www.google.com/maps/dir/?api=1&origin=%E9%BB%92%E8%B1%9A%E3%81%AE%E9%A4%A8&destination=%E9%9C%A7%E5%B3%B6%E7%A5%9E%E5%AE%AE&travelmode=driving"
+        }
+      },
+      {
+        "num": 3,
+        "t": "13:35",
+        "p": "霧島神宮",
+        "url": "https://kirishimajingu.or.jp/",
+        "hint": "参道と社殿を約70分。社務は8:00〜17:00目安。",
+        "move": {
+          "ic": "🚗",
+          "label": "車 約25分",
+          "url": "https://www.google.com/maps/dir/?api=1&origin=%E9%9C%A7%E5%B3%B6%E7%A5%9E%E5%AE%AE&destination=%E4%B8%B8%E5%B0%BE%E6%BB%9D&travelmode=driving"
+        }
+      },
+      {
+        "num": 4,
+        "t": "15:15",
+        "p": "丸尾滝・霧島温泉チェックイン",
+        "url": "https://www.google.com/maps/search/?api=1&query=%E4%B8%B8%E5%B0%BE%E6%BB%9D%20%E9%9C%A7%E5%B3%B6",
+        "hint": "滝を20分見た後、15:45頃に宿へ。夕食前に温泉を約2時間確保。"
+      }
+    ]
+  },
+  {
+    "label": "Day2｜火山高原・現代アート・木造駅舎",
+    "stops": [
+      {
+        "t": "07:30",
+        "p": "朝食・チェックアウト",
+        "url": "#stay",
+        "hint": "08:20出発。当日朝の火山・ガス・道路情報で高原へ行くか決めます。",
+        "move": {
+          "ic": "🚗",
+          "label": "車 約40分＋駐車10分",
+          "url": "https://www.google.com/maps/dir/?api=1&origin=%E9%9C%A7%E5%B3%B6%E6%B8%A9%E6%B3%89&destination=%E3%81%88%E3%81%B3%E3%81%AE%E3%82%A8%E3%82%B3%E3%83%9F%E3%83%A5%E3%83%BC%E3%82%B8%E3%82%A2%E3%83%A0%E3%82%BB%E3%83%B3%E3%82%BF%E3%83%BC&travelmode=driving"
+        }
+      },
+      {
+        "num": 5,
+        "t": "09:10",
+        "p": "えびのエコミュージアムセンターと許可ルート散策",
+        "url": "https://ebino-ecomuseum.go.jp/today/",
+        "hint": "センターで当日歩ける範囲を確認し、10:40まで60〜90分散策。県道1号が朝から継続開放されない場合は高原へ入らず、アートの森へ直行します。",
+        "move": {
+          "ic": "🚗",
+          "label": "車 約55分＋駐車10分",
+          "url": "https://www.google.com/maps/dir/?api=1&origin=%E3%81%88%E3%81%B3%E3%81%AE%E3%82%A8%E3%82%B3%E3%83%9F%E3%83%A5%E3%83%BC%E3%82%B8%E3%82%A2%E3%83%A0%E3%82%BB%E3%83%B3%E3%82%BF%E3%83%BC&destination=%E9%9C%A7%E5%B3%B6%E3%82%A2%E3%83%BC%E3%83%88%E3%81%AE%E6%A3%AE&travelmode=driving"
+        }
+      },
+      {
+        "num": 6,
+        "t": "11:45",
+        "p": "霧島アートの森で昼食・鑑賞",
+        "url": "https://open-air-museum.org/",
+        "hint": "館内カフェ「森と福」で11:50〜12:35に昼食後、12:40〜14:10に常設展示を鑑賞。月曜休、雨が強い日は屋内中心にします。",
+        "move": {
+          "ic": "🚗",
+          "label": "車 約40分",
+          "url": "https://www.google.com/maps/dir/?api=1&origin=%E9%9C%A7%E5%B3%B6%E3%82%A2%E3%83%BC%E3%83%88%E3%81%AE%E6%A3%AE&destination=%E5%98%89%E4%BE%8B%E5%B7%9D%E9%A7%85&travelmode=driving"
+        }
+      },
+      {
+        "num": 7,
+        "t": "14:55",
+        "p": "嘉例川駅",
+        "url": "https://www.google.com/maps/search/?api=1&query=%E5%98%89%E4%BE%8B%E5%B7%9D%E9%A7%85",
+        "hint": "木造駅舎を20分。高原または昼食が20分以上遅れた場合は省略します。",
+        "move": {
+          "ic": "🚗",
+          "label": "車 約15分＋給油・返却・送迎45分",
+          "url": "https://www.google.com/maps/dir/?api=1&origin=%E5%98%89%E4%BE%8B%E5%B7%9D%E9%A7%85&destination=%E9%B9%BF%E5%85%90%E5%B3%B6%E7%A9%BA%E6%B8%AF&travelmode=driving"
+        }
+      },
+      {
+        "num": 8,
+        "kind": "hub",
+        "t": "16:20",
+        "p": "鹿児島空港・レンタカー返却・解散",
+        "url": "https://www.google.com/maps/search/?api=1&query=%E9%B9%BF%E5%85%90%E5%B3%B6%E7%A9%BA%E6%B8%AF",
+        "hint": "空港外営業所で給油・返却し、送迎でターミナルへ。20時台の代表便まで夕食・土産・保安検査の余裕を確保します。"
+      }
+    ]
+  }
+];
+
+const meals = [
+  {
+    "when": "Day1昼｜霧島神宮周辺",
+    "items": [
+      {
+        "name": "黒豚の館",
+        "url": "https://www.google.com/maps/search/?api=1&query=%E9%BB%92%E8%B1%9A%E3%81%AE%E9%A4%A8%20%E9%9C%A7%E5%B3%B6",
+        "price": "3,000〜3,999円",
+        "hint": "食べログ3.75/384人、Google 4.3/1,194件。黒豚とんかつの本命。6名は電話予約または早着推奨。",
+        "tag": "本命"
+      },
+      {
+        "name": "霧島たまご牧場",
+        "url": "https://www.google.com/maps/search/?api=1&query=%E9%9C%A7%E5%B3%B6%E3%81%9F%E3%81%BE%E3%81%94%E7%89%A7%E5%A0%B4",
+        "price": "1,000〜1,999円",
+        "hint": "食べログ3.32/80人、Google 4.0/785件。6名対応しやすく、黒豚の館の待ちが長い場合の実行性本命。",
+        "tag": "実行性本命"
+      },
+      {
+        "name": "がまこう庵",
+        "url": "https://gamakouan.com/",
+        "price": "1,000〜1,999円",
+        "hint": "食べログ3.40/106人、Google 4.3/646件。営業日を電話確認し、黒豚以外を選ぶ日の候補。",
+        "tag": "そば"
+      }
+    ]
+  },
+  {
+    "when": "Day1夜｜霧島温泉",
+    "items": [
+      {
+        "name": "旅行人山荘",
+        "url": "https://ryokojin.com/",
+        "price": "1泊2食 1.5〜2万円台〜",
+        "hint": "食べログ3.23/約50人、Google 4.5/1,524件。貸切露天・眺望・価格の本命。",
+        "tag": "予算本命"
+      },
+      {
+        "name": "硫黄谷温泉 霧島ホテル",
+        "url": "https://www.kirishima-hotel.jp/",
+        "price": "1泊2食 1.5〜2万円台〜",
+        "hint": "食べログ3.25/77人、Google 4.3/2,187件。大浴場と口コミ量の温泉本命。",
+        "tag": "温泉本命"
+      },
+      {
+        "name": "妙見石原荘 食菜石蔵",
+        "url": "https://www.m-ishiharaso.com/",
+        "price": "宿泊6〜8万円台/人目安",
+        "hint": "食べログ4.12/235人、Google 4.6/618件。高評価ですが総予算外の比較用例外。",
+        "tag": "予算外"
+      }
+    ]
+  },
+  {
+    "when": "Day2昼｜霧島アートの森〜鹿児島空港",
+    "items": [
+      {
+        "name": "CAFE&SHOP MUSEUM 森と福",
+        "url": "https://open-air-museum.org/cafe-shop-2",
+        "price": "1,000〜1,999円目安",
+        "hint": "霧島アートの森館内、開園日9:00〜17:00。パスタ等があり、移動を増やさず12時前後に食べられる行程本命。",
+        "tag": "行程本命"
+      },
+      {
+        "name": "そば茶屋 吹上庵 空港バイパス店",
+        "url": "https://fukiagean.jp/",
+        "price": "1,000〜1,999円",
+        "hint": "食べログ3.20/151人、Google 4.1/999件。空港前で6名対応しやすく、遅延に強い実行性本命。",
+        "tag": "実行性本命"
+      },
+      {
+        "name": "大空食堂777",
+        "url": "https://www.google.com/maps/search/?api=1&query=%E5%A4%A7%E7%A9%BA%E9%A3%9F%E5%A0%82777%20%E9%B9%BF%E5%85%90%E5%B3%B6%E7%A9%BA%E6%B8%AF",
+        "price": "〜1,999円",
+        "hint": "食べログ3.49/551人、Google 3.8/688件の基準未達例外。空港内で遅延時に最も安全。",
+        "tag": "遅延例外"
+      }
+    ]
+  }
+];
+
+const activities = [
+  {
+    "name": "えびのエコミュージアムセンター",
+    "url": "https://ebino-ecomuseum.go.jp/today/",
+    "price": "入館無料",
+    "hint": "30〜45分。火山・ガス・歩けるルートを当日確認。",
+    "tag": "安全起点"
+  },
+  {
+    "name": "許可ルートの高原散策",
+    "url": "https://www.city.ebino.lg.jp/kanko/oshirase/5235.html",
+    "price": "無料＋駐車500円目安",
+    "hint": "60〜90分。登山道規制に合わせて現地で範囲を選びます。",
+    "tag": "自然"
+  },
+  {
+    "name": "霧島神宮参拝",
+    "url": "https://kirishimajingu.or.jp/",
+    "price": "境内無料",
+    "hint": "60〜90分。小雨でも組みやすい。",
+    "tag": "文化"
+  },
+  {
+    "name": "霧島アートの森",
+    "url": "https://open-air-museum.org/schedule",
+    "price": "常設野外 大人400円",
+    "hint": "60〜120分。月曜休、企画展は別料金の場合あり。",
+    "tag": "アート"
+  },
+  {
+    "name": "温泉宿の貸切風呂",
+    "url": "https://ryokojin.com/",
+    "price": "宿・プランで確認",
+    "hint": "夕食前の60分。枠が必要な宿は予約時に同時確保。",
+    "tag": "温泉"
+  }
+];
+
+const other = [
+  {
+    "name": "塩浸温泉龍馬公園",
+    "url": "https://www.google.com/maps/search/?api=1&query=%E5%A1%A9%E6%B5%B8%E6%B8%A9%E6%B3%89%E9%BE%8D%E9%A6%AC%E5%85%AC%E5%9C%92",
+    "price": "",
+    "hint": "高原を短縮した日の空港方向の差し替え。"
+  },
+  {
+    "name": "嘉例川駅",
+    "url": "https://www.google.com/maps/search/?api=1&query=%E5%98%89%E4%BE%8B%E5%B7%9D%E9%A7%85",
+    "price": "",
+    "hint": "空港近くの木造駅舎。"
+  },
+  {
+    "name": "丸尾滝",
+    "url": "https://www.google.com/maps/search/?api=1&query=%E4%B8%B8%E5%B0%BE%E6%BB%9D%20%E9%9C%A7%E5%B3%B6",
+    "price": "",
+    "hint": "宿への途中に20分。"
+  },
+  {
+    "name": "鹿児島県霧島アートの森",
+    "url": "https://open-air-museum.org/",
+    "price": "大人400円〜",
+    "hint": "火山規制時のDay2主役。"
+  }
+];
+
+const cars = [
+  {
+    "name": "W4 ハイエース グランドキャビン（10人乗り）",
+    "url": "https://rent-a-car.trlosaka.co.jp/6q_w4_hiace-grandcabin",
+    "price": "車関連 約6.8万〜7.4万円/約30時間",
+    "hint": "鹿児島空港外の営業所で受取・返却。基本・補償・燃料・道路・駐車込み。往復送迎時刻と実車を電話確認。",
+    "tag": "指定クラス"
+  },
+  {
+    "name": "たびらいレンタカー 鹿児島空港比較",
+    "url": "https://www.tabirai.net/car/kagoshima/",
+    "price": "空港・10人乗りで検索",
+    "hint": "免責・NOC補償、返却給油まで総額比較。",
+    "tag": "比較"
+  }
+];
+
+const stays = [
+  {
+    "name": "旅行人山荘",
+    "url": "https://ryokojin.com/",
+    "price": "1泊2食 2.0万〜3.5万円/人",
+    "hint": "温泉・自然・食の本命。",
+    "tag": "本命"
+  },
+  {
+    "name": "楽天トラベル：霧島温泉",
+    "url": "https://travel.rakuten.co.jp/onsen/kagoshima/OK00896.html",
+    "price": "6名・2〜3室で検索",
+    "hint": "夕朝食、貸切風呂、取消料を比較。"
+  },
+  {
+    "name": "じゃらん：霧島",
+    "url": "https://www.jalan.net/460000/LRG_461100/",
+    "price": "6名・2〜3室で検索",
+    "hint": "丸尾温泉周辺に絞る。"
+  },
+  {
+    "name": "agoda：霧島",
+    "url": "https://www.agoda.com/ja-jp/city/kirishima-jp.html",
+    "price": "6名で検索",
+    "hint": "食事条件を揃えて比較。"
+  }
+];
+
+const budget = [
+  [
+    "東京発 往復航空",
+    "2.2〜3.8万円＋施設料",
+    "公表済み夏ダイヤの運賃幅"
+  ],
+  [
+    "神戸発 往復航空",
+    "1.2〜2.4万円＋施設料",
+    "スカイマーク直行"
+  ],
+  [
+    "宿・夕朝食",
+    "1.8〜3.0万円",
+    "霧島温泉"
+  ],
+  [
+    "レンタカー・燃料・駐車",
+    "1.13〜1.23万円",
+    "10人乗り1台を6人で按分"
+  ],
+  [
+    "昼食・入場・予備費",
+    "0.6〜0.9万円",
+    "アートの森等"
+  ],
+  [
+    "東京発 合計",
+    "6.2〜9.0万円",
+    "航空・宿の上限設定が必要"
+  ],
+  [
+    "神戸発 合計",
+    "5.1〜7.5万円",
+    "早期購入なら予算内"
+  ]
+];
+
+const foresightList = [
+  {
+    "category": "安全",
+    "title": "えびの高原は火山ガス・登山道規制あり",
+    "status": "当日可変",
+    "note": "エコミュージアムで歩ける範囲を確認し、池巡り一周は固定しません。",
+    "url": "https://ebino-ecomuseum.go.jp/today/"
+  },
+  {
+    "category": "航空",
+    "title": "10月25日以降の冬ダイヤへ更新",
+    "status": "公開後に確定",
+    "note": "表示便は10月24日までの公表済み夏ダイヤ。狙い目週末は冬ダイヤ公開後に同時間帯で再設計します。",
+    "url": "https://smart.skymark.co.jp/ja/news/detail/__icsFiles/afieldfile/2026/01/22/timetable_2026summerUpdate.pdf"
+  },
+  {
+    "category": "費用",
+    "title": "東京組は航空券で7万円超の可能性",
+    "status": "購入上限を設定",
+    "note": "往復航空3.2万円、宿2.5万円程度を目安に購入条件を決めます。"
+  },
+  {
+    "category": "道路",
+    "title": "県道・高原道路は週ごとの規制あり",
+    "status": "前日再確認",
+    "note": "霧島・えびの側からのアクセスと、レンタカー会社の案内を確認します。",
+    "url": "https://www.pref.miyazaki.lg.jp/kiki-kikikanri/bosai/saigai/kirisima.html"
+  },
+  {
+    "category": "車",
+    "title": "W4は空港外営業所の送迎込み",
+    "status": "往復30分枠",
+    "note": "到着時は11:00集合後に送迎・受付、帰路は給油・返却・空港送迎に45分を確保します。"
+  },
+  {
+    "category": "天候",
+    "title": "標高約1,200mは冷え・霧・強風",
+    "status": "防風防寒",
+    "note": "紅葉期でも薄手の冬装備を持ち、散策は90分以内。"
+  },
+  {
+    "category": "代替",
+    "title": "高原不可なら神宮・温泉・アートへ",
+    "status": "低標高ルート",
+    "note": "えびの高原へのアクセス自体に問題があれば、霧島アートの森をDay2の主役にします。",
+    "url": "https://open-air-museum.org/"
+  }
+];
+
+const bookList = [
+  {
+    "label": "東京組の羽田〜鹿児島往復4席",
+    "url": "https://smart.skymark.co.jp/ja/reservation/"
+  },
+  {
+    "label": "神戸組の神戸〜鹿児島往復2席",
+    "url": "https://smart.skymark.co.jp/ja/reservation/"
+  },
+  {
+    "label": "霧島温泉の宿6名・夕朝食付き",
+    "url": "https://travel.rakuten.co.jp/onsen/kagoshima/OK00896.html"
+  },
+  {
+    "label": "鹿児島空港のW4・10人乗りレンタカー1台",
+    "url": "https://www.tabirai.net/car/kagoshima/"
+  },
+  {
+    "label": "旅行日前日の火山・ガス・道路情報",
+    "url": "https://ebino-ecomuseum.go.jp/today/"
+  },
+  {
+    "label": "Day1黒豚ランチの6名席",
+    "url": "https://www.google.com/maps/search/?api=1&query=%E9%BB%92%E8%B1%9A%E3%81%AE%E9%A4%A8%20%E9%9C%A7%E5%B3%B6"
+  }
+];
+
+const decideList = [
+  "紅葉優先で10月下旬〜11月上旬にするか、公表済み便を使える10月24日以前にするか",
+  "航空券の購入上限を東京組・神戸組それぞれいくらにするか",
+  "宿を温泉重視の旅行人山荘にするか、設備・価格重視の大型宿にするか",
+  "火山規制時に高原を諦め、アート・神宮・温泉へ全面変更する基準"
+];
+/* =================== /DATA =================== */
+
+
+/* =================== 描画（触らない） =================== */
+function colorOf(k){return k==="hub"?"#16354a":"#d23b2c";}
+function pinIcon(n,color){return L.divIcon({className:"",iconSize:[22,22],iconAnchor:[11,11],
+  html:`<div class="pin" style="background:${color}">${n}</div>`});}
+
+// ピンは実在地に置く。完全同座標の地点だけ約400m離す（拡大時に2つと分かるため）。
+function spread(items,thr=0.0015,r=0.004){
+  const placed=[];
+  return items.map(s=>{
+    let lat=s.lat,lng=s.lng,k=0;
+    while(placed.some(p=>Math.hypot(p[0]-lat,p[1]-lng)<thr)&&k<8){
+      const a=k*Math.PI/3; lat=s.lat+r*Math.sin(a); lng=s.lng+r*Math.cos(a); k++;
+    }
+    placed.push([lat,lng]);
+    return Object.assign({},s,{dlat:lat,dlng:lng});
+  });
+}
+const spots = spread(mapSpots);
+const markers={};
+let routeMap=null;
+
+function showToast(message){
+  const toast=document.getElementById("toast");
+  if(!toast)return;
+  toast.textContent=message;
+  toast.classList.add("show");
+  clearTimeout(showToast._timer);
+  showToast._timer=setTimeout(()=>toast.classList.remove("show"),2200);
+}
+
+function emptyState(label){
+  return `<div class="empty-state">${label}</div>`;
+}
+
+function populateSummary(){
+  const set=(id,value)=>{ const el=document.getElementById(id); if(el)el.textContent=value; };
+  set("summary-days", `${days.length}日`);
+  set("summary-spots", `${spots.length}件`);
+  set("summary-meals", `${meals.reduce((sum,g)=>sum+(g.items||[]).length,0)}件`);
+  set("summary-checks", `${(foresightList||[]).length}件`);
+  set("summary-todos", `${(bookList||[]).length}件`);
+}
+
+document.querySelectorAll(".side-nav a,.tabset a").forEach(link=>{
+  link.addEventListener("click",()=>showToast(`${link.textContent.trim()}を開きます`));
+});
+
+function initMap(){
+  const mapEl=document.getElementById("map");
+  if(!window.L){
+    mapEl.innerHTML='<div class="mapfallback">地図を読み込み中です。表示されない場合は通信環境を確認してください。</div>';
+    return;
+  }
+  mapEl.style.animation="none";
+  routeMap = L.map("map",{scrollWheelZoom:false});
+  L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",{maxZoom:18,attribution:'&copy; OpenStreetMap contributors'}).addTo(routeMap);
+  const latlngs = spots.map(s=>[s.dlat,s.dlng]);
+  L.polyline(latlngs,{color:"#d23b2c",weight:4,opacity:.9,lineJoin:"round"}).addTo(routeMap);
+  spots.forEach(s=>{ markers[s.n]=L.marker([s.dlat,s.dlng],{icon:pinIcon(s.n,colorOf(s.kind))}).addTo(routeMap).bindPopup(`<b>${s.n}. ${s.name}</b><br>${s.time}`); });
+  foodTowns.forEach(f=>{ L.marker([f.lat,f.lng],{icon:L.divIcon({className:"",iconSize:[14,14],iconAnchor:[7,7],
+    html:`<div style="width:14px;height:14px;border-radius:50%;background:#b07d24;border:2px solid #fff;box-shadow:0 1px 4px rgba(0,0,0,.3)"></div>`})}).addTo(routeMap).bindPopup(`<b>🍽 ${f.name}</b>`); });
+  if(latlngs.length) routeMap.fitBounds(L.latLngBounds(latlngs).pad(0.2)); else routeMap.setView([36,138],5);
+}
+
+window.focusPin=(n)=>{ const s=spots.find(x=>x.n===n); if(!s)return;
+  if(routeMap&&markers[n]){ routeMap.setView([s.dlat,s.dlng],14,{animate:true}); markers[n].openPopup(); }
+  document.querySelectorAll(".pinbtn").forEach(b=>b.classList.toggle("active",Number(b.dataset.n)===n));
+  showToast(`${s.short||s.name}へ地図を移動しました`);
+};
+document.getElementById("pinindex").innerHTML = spots.map(s=>
+  `<button class="pinbtn" data-n="${s.n}" onclick="focusPin(${s.n})"><span class="num ${s.kind==='hub'?'hub':''}">${s.n}</span>${s.short}</button>`).join("");
+initMap();
+
+function legRow(l){ const pills=(l.pills||[]).map(p=>`<a class="pill ${p.cls}" href="${p.url}" target="_blank" rel="noopener">${p.label}</a>`).join("");
+  return `<div class="leg"><div class="ic">${l.ic}</div><div><div class="ttl">${l.ttl}</div><div class="meta">${l.meta}</div><div class="pillrow">${pills}</div></div></div>`; }
+document.getElementById("acc-a").innerHTML = (access.a||[]).length ? access.a.map(legRow).join("") : emptyState("アクセス情報は未設定です");
+document.getElementById("acc-b").innerHTML = (access.b||[]).length ? access.b.map(legRow).join("") : emptyState("アクセス情報は未設定です");
+
+document.getElementById("days").innerHTML = days.length ? days.map(d=>`
+  <div class="card day timeline"><h3>${d.label}</h3>
+  ${d.stops.map(s=>`<div class="stop"><div class="top">
+    ${s.num?`<span class="num ${s.kind==='hub'?'hub':''}">${s.num}</span>`:`<span style="width:22px;flex:0 0 auto"></span>`}
+    <div class="t">${s.t}</div>
+    <div class="p">${s.url?`<a href="${s.url}" target="_blank" rel="noopener">${s.p}</a>`:s.p}</div></div>
+    ${s.hint?`<div class="hint">${s.hint}</div>`:""}
+    ${s.move?`<a class="movelink" href="${s.move.url}" target="_blank" rel="noopener">${s.move.ic} ${s.move.label}${/(?:円|料金|運賃)/.test(s.move.label) ? "" : s.move.ic === "🚗" ? "・追加運賃0円（車費は費用欄）" : s.move.ic === "🚶" ? "・0円" : "・運賃はアクセス欄"}</a>`:""}
+  </div>`).join("")}</div>`).join("") : emptyState("行程は未設定です");
+
+const itemCard=(o)=>`<div class="item">${o.tag?`<span class="tag ${o.sns?'sns':''}">${o.tag}</span>`:""}
+  <div class="name"><a href="${o.url}" target="_blank" rel="noopener">${o.name}</a></div>
+  ${o.price?`<div class="price">${o.price}</div>`:""}${o.hint?`<div class="hint">${o.hint}</div>`:""}</div>`;
+document.getElementById("meal-list").innerHTML = meals.length ? meals.map(g=>`<div class="mealgroup"><div class="when">${g.when}</div><div class="grid2">${g.items.map(itemCard).join("")}</div></div>`).join("") : emptyState("食事候補は未設定です");
+document.getElementById("activity-list").innerHTML = activities.length ? activities.map(itemCard).join("") : emptyState("アクティビティ候補は未設定です");
+document.getElementById("other-list").innerHTML = other.length ? other.map(itemCard).join("") : emptyState("追加スポットは未設定です");
+document.getElementById("car-list").innerHTML   = cars.length ? cars.map(itemCard).join("") : emptyState("レンタカー候補は未設定です");
+document.getElementById("stay-list").innerHTML  = stays.length ? stays.map(itemCard).join("") : emptyState("宿候補は未設定です");
+const checkCard=(o)=>`<div class="check-card">
+  <div class="check-label">${o.category||"確認"}</div>
+  <div class="check-title">${o.url?`<a href="${o.url}" target="_blank" rel="noopener">${o.title}</a>`:o.title}</div>
+  ${o.note?`<div class="check-note">${o.note}</div>`:""}
+  ${o.status?`<span class="check-status">${o.status}</span>`:""}
+</div>`;
+document.getElementById("check-list").innerHTML = foresightList.length ? foresightList.map(checkCard).join("") : emptyState("先読みチェックは未設定です");
+const totalBudgetRow = budget.find(r=>String(r[0]).includes("合計"));
+const totalBudgetEl = document.getElementById("budget-total-pill");
+if(totalBudgetEl) totalBudgetEl.textContent = totalBudgetRow ? totalBudgetRow[1] : "調整中";
+document.getElementById("budget-table").innerHTML = `<thead><tr><th>項目</th><th>1人あたり</th><th>メモ</th></tr></thead><tbody>`+
+  budget.map(r=>{
+    const isTotal = String(r[0]).includes("合計");
+    return `<tr class="${isTotal ? "total-row" : ""}"><td data-label="項目">${r[0]}</td><td data-label="1人あたり" class="r">${r[1]}</td><td data-label="メモ">${r[2]}</td></tr>`;
+  }).join("")+`</tbody>`;
+document.getElementById("book-list").innerHTML = bookList.length ? bookList.map(c=>`<li><a href="${c.url}" target="_blank" rel="noopener">${c.label}</a></li>`).join("") : "<li>予約ToDoは未設定です</li>";
+document.getElementById("decide-list").innerHTML = decideList.length ? decideList.map(d=>`<li>${d}</li>`).join("") : "<li>未確定事項は未設定です</li>";
+populateSummary();
+</script>
+</body>
+</html>
