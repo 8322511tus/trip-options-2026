@@ -1,0 +1,556 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>城沼の花ハスクルーズと足利｜8月2日 日帰り</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+  integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="">
+<style>
+  :root{
+    --color-brand:#0b5cab;
+    --color-brand-hover:#064a8a;
+    --color-brand-deep:#032d60;
+    --color-brand-soft:#eaf5ff;
+    --color-background:#eef4fb;
+    --color-surface:#ffffff;
+    --color-surface-alt:#f7f9fd;
+    --color-border:#c9d5e8;
+    --color-text-primary:#111827;
+    --color-text-secondary:#3f526d;
+    --color-text-muted:#6b778c;
+    --color-success:#2e844a;
+    --color-warning:#b76100;
+    --color-danger:#ba0517;
+    --color-info:#0176d3;
+    --space-1:4px;
+    --space-2:8px;
+    --space-3:12px;
+    --space-4:16px;
+    --space-6:24px;
+    --space-8:32px;
+    --radius-small:4px;
+    --radius-medium:8px;
+    --radius-large:12px;
+    --shadow-card:0 1px 2px rgba(10,31,68,.10),0 10px 28px rgba(10,31,68,.08);
+    --shadow-popover:0 12px 32px rgba(10,31,68,.20);
+    --shadow-modal:0 24px 60px rgba(10,31,68,.30);
+    --font-stack:"Segoe UI Variable","Segoe UI","Noto Sans JP","Yu Gothic UI","Yu Gothic",Meiryo,sans-serif;
+    --font-page-title:750 30px/1.16 var(--font-stack);
+    --font-section-title:750 18px/1.35 var(--font-stack);
+    --font-body:400 14px/1.65 var(--font-stack);
+    --font-caption:700 12px/1.4 var(--font-stack);
+    --z-header:100;
+    --z-dropdown:200;
+    --z-modal:500;
+    --z-toast:600;
+  }
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{margin:0;color:var(--color-text-primary);
+    background:linear-gradient(180deg,#fff 0,#fff 56px,#0b5cab 56px,#276f9f 172px,#eef4fb 172px,#eef4fb 100%);
+    font:var(--font-body);-webkit-text-size-adjust:100%}
+  a{color:var(--color-brand);text-underline-offset:.16em}
+  a:hover{color:var(--color-brand-hover)}
+  a:focus-visible,button:focus-visible{outline:3px solid rgba(1,118,211,.35);outline-offset:2px}
+  .app-shell{min-height:100vh;position:relative}
+  .app-shell::before{content:"";position:absolute;left:0;right:0;top:56px;height:156px;pointer-events:none;
+    background:
+      repeating-linear-gradient(135deg,rgba(255,255,255,.14) 0 1px,transparent 1px 18px),
+      linear-gradient(120deg,rgba(3,45,96,.92),rgba(11,92,171,.78) 54%,rgba(91,144,184,.52));
+    border-bottom:1px solid rgba(255,255,255,.28)}
+  .global-header{position:sticky;top:0;z-index:var(--z-header);height:56px;background:#fff;color:var(--color-text-primary);
+    border-bottom:1px solid #dfe5ef;display:flex;align-items:center;gap:var(--space-4);padding:0 var(--space-6);
+    box-shadow:0 1px 2px rgba(10,31,68,.08)}
+  .brand-home{display:flex;align-items:center;gap:var(--space-3);min-width:0;color:inherit;text-decoration:none}
+  .brand-home:hover{color:inherit}
+  .brand-mark{width:30px;height:30px;border-radius:var(--radius-medium);background:linear-gradient(135deg,#2b6cb0,#6c7ff2);
+    color:#fff;display:grid;place-items:center;font-weight:900;box-shadow:inset 0 0 0 1px rgba(255,255,255,.35)}
+  .brand-title{font-weight:800;letter-spacing:0}
+  .global-actions{margin-left:auto;display:flex;align-items:center;gap:var(--space-1);overflow:auto}
+  .global-actions a{display:inline-flex;align-items:center;min-height:32px;padding:0 10px;border-radius:var(--radius-small);
+    color:var(--color-text-secondary);font-size:13px;font-weight:750;text-decoration:none;white-space:nowrap}
+  .global-actions a:hover{background:var(--color-brand-soft);color:var(--color-brand)}
+  .global-actions .back-link{border:1px solid var(--color-border);background:var(--color-surface-alt);color:var(--color-brand-deep)}
+  .shell-body{position:relative;z-index:1;max-width:1440px;margin:0 auto;display:grid;grid-template-columns:220px minmax(0,1fr) 300px;gap:var(--space-4);padding:var(--space-4)}
+  .side-nav,.summary-panel{position:sticky;top:72px;align-self:start}
+  .side-nav,.summary-panel,.card{background:var(--color-surface);border:1px solid var(--color-border);border-radius:var(--radius-medium);box-shadow:var(--shadow-card)}
+  .side-nav{padding:var(--space-3);box-shadow:0 1px 2px rgba(10,31,68,.10),0 10px 22px rgba(10,31,68,.08)}
+  .side-nav-title,.summary-title{font:var(--font-caption);color:var(--color-text-muted);margin:0 0 var(--space-2)}
+  .side-nav a{display:flex;align-items:center;gap:var(--space-2);min-height:36px;padding:0 var(--space-3);border-radius:var(--radius-small);
+    color:var(--color-text-secondary);font-weight:700;text-decoration:none}
+  .side-nav a:hover,.side-nav a.active{background:var(--color-brand-soft);color:var(--color-brand)}
+  .main-content{min-width:0;display:grid;gap:var(--space-4)}
+  .summary-panel{padding:var(--space-4);display:grid;gap:var(--space-4)}
+  .summary-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:var(--space-2)}
+  .summary-metric{min-height:76px;display:grid;align-content:space-between;gap:var(--space-1);padding:var(--space-3);
+    border:1px solid #d7e3f5;border-radius:var(--radius-medium);background:linear-gradient(180deg,#fff,#f8fbff)}
+  .summary-metric span{color:var(--color-text-muted);font-size:11px;font-weight:750}
+  .summary-metric b{font-size:21px;line-height:1.1;color:var(--color-brand-deep);font-weight:750}
+  .summary-metric::after{content:"";display:block;width:100%;height:6px;border-radius:999px;background:linear-gradient(90deg,#2b6cb0,#6c7ff2)}
+  .utility-links{display:grid;gap:var(--space-2)}
+  .utility-links a{display:flex;justify-content:space-between;align-items:center;min-height:36px;padding:0 var(--space-3);
+    border:1px solid var(--color-border);border-radius:var(--radius-small);background:var(--color-surface-alt);
+    color:var(--color-text-primary);font-weight:750;text-decoration:none}
+  .utility-links a::after{content:"›";color:var(--color-brand);font-size:18px}
+  .utility-links a:hover{border-color:#9bbde6;background:var(--color-brand-soft);color:var(--color-brand)}
+  .hero{position:relative;overflow:hidden;background:linear-gradient(180deg,#fff,#f9fbff);border:1px solid #c4d4ea;
+    border-radius:var(--radius-medium);padding:0;box-shadow:0 2px 4px rgba(10,31,68,.10),0 16px 42px rgba(10,31,68,.12)}
+  .hero::before{content:"";position:absolute;left:0;right:0;top:0;height:6px;background:linear-gradient(90deg,#2b6cb0,#706eeb,#20a0d8)}
+  .hero-main{padding:var(--space-6)}
+  .title-cluster{display:flex;align-items:flex-start;gap:var(--space-3)}
+  .record-icon{width:42px;height:42px;border-radius:var(--radius-medium);display:grid;place-items:center;flex:0 0 auto;
+    background:linear-gradient(135deg,#5f7feb,#2b6cb0);color:#fff;font-weight:900;box-shadow:inset 0 0 0 1px rgba(255,255,255,.35)}
+  .kicker{font:var(--font-caption);color:var(--color-brand);margin-bottom:var(--space-1)}
+  .page-title-row{display:flex;align-items:flex-start;justify-content:space-between;gap:var(--space-4)}
+  h1{margin:0;font:var(--font-page-title)}
+  .lead{color:var(--color-text-secondary);margin:var(--space-2) 0 var(--space-4);max-width:74ch}
+  .badges{display:flex;gap:var(--space-2);flex-wrap:wrap}
+  .badge,.pill,.tag{display:inline-flex;align-items:center;gap:5px;border:1px solid var(--color-border);background:var(--color-surface-alt);
+    border-radius:999px;padding:5px 10px;font-size:12px;font-weight:800;color:var(--color-text-secondary)}
+  .badge.status-info{background:#eaf5ff;border-color:#b9dcff;color:#095da0}
+  .badge.status-success{background:#eaf7ee;border-color:#b7e1c1;color:#22683e}
+  .action-bar{display:flex;gap:var(--space-2);flex-wrap:wrap;margin-top:var(--space-4)}
+  .btn{display:inline-flex;align-items:center;justify-content:center;gap:var(--space-2);min-height:36px;border:1px solid var(--color-border);
+    border-radius:var(--radius-small);padding:0 var(--space-3);background:var(--color-surface);color:var(--color-text-primary);
+    text-decoration:none;font-weight:800;cursor:pointer;box-shadow:0 1px 1px rgba(10,31,68,.06)}
+  .btn:hover{border-color:#9bbde6;color:var(--color-brand);background:#f7fbff;box-shadow:0 2px 8px rgba(10,31,68,.10)}
+  .btn.primary{background:linear-gradient(180deg,#1677d2,#0b5cab);border-color:#084f99;color:#fff}
+  .btn.primary:hover{background:var(--color-brand-hover);color:#fff}
+  .btn.subtle{background:var(--color-surface-alt)}
+  .tabset{position:sticky;top:72px;z-index:50;background:var(--color-surface);border:1px solid var(--color-border);
+    border-radius:var(--radius-medium);box-shadow:var(--shadow-card);display:flex;gap:var(--space-1);padding:var(--space-1);overflow:auto}
+  .tabset a{white-space:nowrap;text-decoration:none;color:var(--color-text-secondary);font-weight:800;border-radius:var(--radius-small);padding:9px 12px}
+  .tabset a:hover{background:var(--color-brand-soft);color:var(--color-brand)}
+  section{scroll-margin-top:128px;margin-top:var(--space-4)}
+  .section-head{display:flex;align-items:flex-end;justify-content:space-between;gap:var(--space-4);margin-bottom:var(--space-3)}
+  h2{font:var(--font-section-title);margin:0;display:flex;align-items:center;gap:var(--space-2)}
+  h2 .dot{width:4px;height:18px;border-radius:999px;background:var(--color-brand)}
+  .sub{color:var(--color-text-muted);font-size:13px;margin:4px 0 0}
+  .card{padding:var(--space-4);margin-bottom:var(--space-3)}
+  .card:hover{box-shadow:0 2px 4px rgba(10,31,68,.10),0 12px 30px rgba(10,31,68,.08)}
+  #map{height:62vh;min-height:380px;max-height:560px;width:100%;border-radius:var(--radius-medium);border:1px solid var(--color-border);z-index:0;
+    background:linear-gradient(90deg,#eef2f7 25%,#f7f9fc 37%,#eef2f7 63%);background-size:400% 100%;animation:skeleton 1.25s ease-in-out infinite}
+  .mapfallback{height:100%;display:flex;align-items:center;justify-content:center;text-align:center;padding:24px;color:var(--color-text-secondary);background:#eef4f8}
+  .legend{display:flex;gap:14px;flex-wrap:wrap;margin-top:10px;font-size:13px;color:var(--color-text-secondary)}
+  .legend span{display:inline-flex;align-items:center;gap:6px}
+  .swatch{width:14px;height:14px;border-radius:50%;display:inline-block}
+  .routeline{width:22px;height:0;border-top:3px solid var(--color-danger);display:inline-block}
+  .pinindex{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+  .pinbtn{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--color-border);background:#fff;
+    border-radius:999px;padding:5px 11px 5px 6px;font-size:13px;font-weight:800;color:var(--color-text-primary);cursor:pointer}
+  .pinbtn:hover,.pinbtn.active{border-color:var(--color-danger);background:#fff4f2}
+  .pinbtn .num{width:20px;height:20px;border-radius:50%;background:var(--color-danger);color:#fff;font-size:12px;font-weight:800;
+    display:inline-flex;align-items:center;justify-content:center}
+  .pinbtn .num.hub{background:#16354a}
+  .pin{width:22px;height:22px;border-radius:50%;color:#fff;font-weight:800;font-size:12px;
+    display:flex;align-items:center;justify-content:center;border:2px solid #fff;box-shadow:0 2px 6px rgba(0,0,0,.35)}
+  .responsive-grid,.grid2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:var(--space-3)}
+  .access{display:grid;gap:10px}
+  .leg{display:grid;grid-template-columns:30px 1fr;gap:10px;padding:10px 0;border-bottom:1px dashed #e6ebee}
+  .leg:last-child{border-bottom:0}
+  .leg .ic{font-size:20px;text-align:center}
+  .leg .ttl{font-weight:800}
+  .leg .meta{font-size:13px;color:var(--color-text-secondary)}
+  .pillrow{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
+  .pill{text-decoration:none;background:#eef4f2;color:#27514a}
+  .pill.book{background:#eaf1f7;color:#1c537a}
+  .day{margin-bottom:14px}
+  .day h3{margin:0 0 12px;font-size:16px;color:var(--color-text-primary)}
+  .timeline{position:relative}
+  .stop{position:relative;padding:12px 0;border-bottom:1px solid #eef2f4}
+  .stop:last-child{border-bottom:0}
+  .stop .top{display:flex;gap:9px;align-items:baseline}
+  .stop .num{flex:0 0 auto;width:22px;height:22px;border-radius:50%;background:var(--color-danger);color:#fff;
+    font-size:12px;font-weight:800;display:inline-flex;align-items:center;justify-content:center;align-self:center}
+  .stop .num.hub{background:#16354a}
+  .stop .t{color:var(--color-brand);font-weight:800;font-variant-numeric:tabular-nums;min-width:46px}
+  .stop .p{font-weight:800}
+  .stop .hint{color:var(--color-text-muted);font-size:13px;margin-left:31px}
+  .movelink{margin:8px 0 2px 31px;display:inline-flex;align-items:center;gap:7px;font-size:13px;font-weight:700;
+    background:#f3f7f5;border:1px solid #e2ebe6;border-radius:10px;padding:5px 11px;color:#2f5a4c;text-decoration:none}
+  .mealgroup{margin-bottom:8px}
+  .mealgroup .when{font-weight:800;font-size:14px;color:var(--color-text-primary);margin:6px 2px 8px}
+  .item{border:1px solid var(--color-border);border-radius:var(--radius-medium);padding:var(--space-4);background:linear-gradient(180deg,#fff,#fbfdff);box-shadow:0 1px 1px rgba(10,31,68,.05)}
+  .item:hover{border-color:#9bbde6;box-shadow:var(--shadow-card);transform:translateY(-1px)}
+  .item .name{font-weight:800}
+  .item .price{font-weight:800;color:#123e5b;font-size:14px}
+  .item .hint{color:var(--color-text-muted);font-size:13px}
+  .tag{border-radius:var(--radius-small);padding:2px 7px;margin:0 6px 6px 0;color:#6a4a14;background:#fdf0d6}
+  .tag.sns{color:#8a2b6b;background:#fbe4f1}
+  .check-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:var(--space-3)}
+  .check-card{position:relative;border:1px solid #c7d8ea;border-radius:var(--radius-medium);padding:var(--space-4);
+    background:linear-gradient(180deg,#fff,#f8fbff);box-shadow:0 1px 1px rgba(10,31,68,.05)}
+  .check-card::before{content:"";position:absolute;left:0;top:0;bottom:0;width:4px;border-radius:var(--radius-medium) 0 0 var(--radius-medium);background:var(--color-warning)}
+  .check-label{font-size:12px;font-weight:850;color:var(--color-warning);margin-bottom:var(--space-1)}
+  .check-title{font-weight:850;color:var(--color-text-primary)}
+  .check-note{color:var(--color-text-muted);font-size:13px;margin-top:4px}
+  .check-status{display:inline-flex;margin-top:8px;border:1px solid #d9c6a0;background:#fff8ed;color:#7a4b00;border-radius:999px;padding:3px 8px;font-size:12px;font-weight:800}
+  .budget-card{padding:0;overflow:hidden}
+  .budget-head{display:flex;justify-content:space-between;gap:var(--space-4);align-items:flex-start;padding:var(--space-4);
+    background:linear-gradient(180deg,#f7fbff,#eef5ff);border-bottom:1px solid var(--color-border)}
+  .budget-head h3{margin:2px 0 0;font:var(--font-section-title)}
+  .budget-total{min-width:180px;border:1px solid #b9d6f4;background:#fff;border-radius:var(--radius-medium);padding:var(--space-3);text-align:right;
+    box-shadow:0 1px 2px rgba(10,31,68,.06)}
+  .budget-total span{display:block;color:var(--color-text-muted);font-size:11px;font-weight:750}
+  .budget-total b{display:block;color:var(--color-brand-deep);font-size:20px;line-height:1.2;margin-top:2px}
+  .budget-table-wrap{padding:var(--space-3);overflow-x:auto}
+  table{width:100%;border-collapse:separate;border-spacing:0;font-size:14px}
+  th,td{padding:12px 12px;border-bottom:1px solid #e3eaf5;text-align:left;vertical-align:top}
+  th{background:#f4f8fd;color:#314763;font-size:12px;font-weight:800}
+  th:first-child{border-top-left-radius:var(--radius-small)}
+  th:last-child{border-top-right-radius:var(--radius-small)}
+  tbody tr:hover td{background:#f8fbff}
+  td.r{text-align:right;font-variant-numeric:tabular-nums;font-weight:800;color:var(--color-brand-deep)}
+  .total-row td{background:#edf5ff!important;border-top:2px solid #9bbde6;border-bottom:0;font-weight:900}
+  .total-row td:first-child{border-bottom-left-radius:var(--radius-small)}
+  .total-row td:last-child{border-bottom-right-radius:var(--radius-small)}
+  .todo{list-style:none;padding:0;margin:0}
+  .todo li{padding:8px 0;border-bottom:1px solid #eef2f4}
+  .todo.book li:before{content:"□";color:var(--color-brand);font-weight:800;margin-right:6px}
+  .todo.decide li:before{content:"•";color:var(--color-warning);font-weight:800;margin-right:6px}
+  .twohead{font-weight:800;margin:2px 0 6px;font-size:14px}
+  .empty-state{border:1px dashed var(--color-border);border-radius:var(--radius-medium);background:var(--color-surface-alt);padding:var(--space-6);color:var(--color-text-muted);text-align:center}
+  .toast{position:fixed;right:var(--space-4);bottom:var(--space-4);z-index:var(--z-toast);background:#17324d;color:#fff;border-radius:var(--radius-medium);
+    box-shadow:var(--shadow-popover);padding:var(--space-3) var(--space-4);font-weight:800;opacity:0;transform:translateY(10px);pointer-events:none;transition:.18s ease}
+  .toast.show{opacity:1;transform:translateY(0)}
+  footer{margin-top:34px;color:var(--color-text-muted);font-size:12px;text-align:center}
+  @keyframes skeleton{0%{background-position:100% 0}100%{background-position:0 0}}
+  @media(max-width:1120px){
+    .shell-body{grid-template-columns:190px minmax(0,1fr)}
+    .summary-panel{position:static;grid-column:2}
+  }
+  @media(max-width:760px){
+    body{background:linear-gradient(180deg,#fff 0,#fff 56px,#0b5cab 56px,#276f9f 170px,#eef4fb 170px,#eef4fb 100%)}
+    .app-shell::before{top:56px;height:132px}
+    .global-header{position:relative;height:56px;min-height:56px;padding:0 12px;gap:8px}
+    .brand-home{gap:8px;min-width:0}
+    .brand-title{font-size:14px;line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .global-actions{margin-left:auto;flex:0 0 auto;max-width:44%;overflow:visible}
+    .global-actions a:not(.back-link){display:none}
+    .global-actions .back-link{min-height:34px;padding:0 9px;font-size:12px}
+    .shell-body{display:block;padding:14px 12px 12px}
+    .side-nav{display:none}
+    .summary-panel{margin-top:var(--space-3)}
+    .hero-main{padding:var(--space-4)}
+    .title-cluster{gap:var(--space-2)}
+    .record-icon{width:36px;height:36px}
+    .page-title-row{display:block}
+    .tabset{top:0}
+    .responsive-grid,.grid2,.check-grid{grid-template-columns:1fr}
+    table,thead,tbody,tr,th,td{display:block}
+    thead{display:none}
+    .budget-head{display:grid}
+    .budget-total{text-align:left;min-width:0}
+    tr{border:1px solid var(--color-border);border-radius:var(--radius-medium);padding:var(--space-2);margin-bottom:var(--space-2);background:#fff}
+    td{border:0;display:grid;grid-template-columns:96px 1fr;gap:var(--space-2)}
+    td:before{content:attr(data-label);font-weight:800;color:var(--color-text-muted)}
+    td.r{text-align:left}
+    #map{min-height:320px;height:52vh}
+  }
+  @media(prefers-reduced-motion:reduce){
+    html{scroll-behavior:auto}
+    *,*::before,*::after{animation:none!important;transition:none!important}
+  }
+</style>
+</head>
+<body>
+<div class="app-shell">
+  <header class="global-header">
+    <a class="brand-home" href="index.html" aria-label="2案の比較へ戻る">
+      <div class="brand-mark" aria-hidden="true">T</div>
+      <div class="brand-title">Travel Planning Console</div>
+    </a>
+    <nav class="global-actions" aria-label="クイックリンク">
+      <a class="back-link" href="index.html">← 2案の比較</a>
+      <a href="#route">地図</a>
+      <a href="#itinerary">行程</a>
+      <a href="#checks">先読み</a>
+      <a href="#budget">費用</a>
+      <a href="#next">予約</a>
+    </nav>
+  </header>
+
+  <div class="shell-body">
+    <nav class="side-nav" aria-label="セクションナビ">
+      <p class="side-nav-title">ページ内ナビ</p>
+      <a href="#route">ルート</a>
+      <a href="#access">アクセス</a>
+      <a href="#itinerary">行程</a>
+      <a href="#meals">食事</a>
+      <a href="#activities">アクティビティ</a>
+      <a href="#checks">先読みチェック</a>
+      <a href="#budget">費用</a>
+      <a href="#next">予約ToDo</a>
+    </nav>
+
+<main class="main-content" id="main-content">
+  <header class="hero">
+    <div class="hero-main">
+    <div class="page-title-row">
+      <div class="title-cluster">
+        <div class="record-icon" aria-hidden="true">旅</div>
+        <div>
+          <div class="kicker">2026年8月2日（日）｜北千住発・日帰り｜B案</div>
+          <h1>城沼の花ハスクルーズと、足利</h1>
+        </div>
+      </div>
+    </div>
+    <p class="lead">朝いちばんの船で、ハスの葉をかき分けて城沼へ。花が開いているのは午前中だけなので早起きが効きます。午後は東武佐野線から両毛線に乗り継いで足利へ、国宝のお寺と高台の神社をまわります。</p>
+    <div class="badges"><span class="badge">🗓 日帰り</span><span class="badge">👥 2人</span><span class="badge">🪷 花ハス遊覧船</span><span class="badge">🚃 佐野から両毛線</span><span class="badge">🕖 北千住 7:01発 → 18:42着</span></div>
+    <div class="action-bar" aria-label="主要アクション">
+      <a class="btn subtle" href="index.html">← 2案の比較へ戻る</a>
+      <a class="btn primary" href="#next">当日までにやることを見る</a>
+      <a class="btn" href="#map">地図を確認</a>
+      <a class="btn" href="#checks">先読みチェック</a>
+      <a class="btn" href="#budget">費用を見る</a>
+    </div>
+    </div>
+  </header>
+
+  <nav class="tabset" aria-label="レポートタブ">
+    <a href="#route">概要</a>
+    <a href="#itinerary">行程</a>
+    <a href="#meals">食事</a>
+    <a href="#activities">体験</a>
+    <a href="#checks">先読み</a>
+    <a href="#budget">費用</a>
+    <a href="#next">予約</a>
+  </nav>
+
+  <section id="route">
+    <h2><span class="dot"></span>ルート地図</h2>
+    <p class="sub">番号順にまわるルート。赤い線が実際の移動経路です。</p>
+    <div id="map"></div>
+    <div class="legend">
+      <span><i class="routeline"></i>順路</span>
+      <span><i class="swatch" style="background:#16354a"></i>集合・拠点</span>
+      <span><i class="swatch" style="background:#d23b2c"></i>観光スポット</span>
+      <span><i class="swatch" style="background:#b07d24"></i>食事の街</span>
+    </div>
+    <div class="pinindex" id="pinindex"></div>
+    <p class="sub" style="margin-top:8px">番号をタップすると、地図のその場所に移動します。</p>
+  </section>
+
+  <section id="access">
+    <h2><span class="dot"></span>行き帰りのアクセス</h2>
+    <p class="sub">行きは東武で館林へ直行。帰りは足利から特急で戻ります。両毛線は午後の佐野〜足利で乗ります。</p>
+    <div class="card"><div class="twohead">行き（北千住 → 館林 → 城沼）</div><div class="access" id="acc-a"></div></div>
+    <div class="card"><div class="twohead">午後の移動と帰り（館林 → 足利 → 北千住）</div><div class="access" id="acc-b"></div></div>
+  </section>
+
+  <section id="itinerary">
+    <h2><span class="dot"></span>行程</h2>
+    <p class="sub">番号は上の地図のピンと同じ順番です。スポット名は地図と公式ページ、区間リンクは公式時刻表に飛びます。</p>
+    <div id="days"></div>
+  </section>
+
+  <section id="meals">
+    <h2><span class="dot"></span>食事候補</h2>
+    <p class="sub">館林はうどんの街、足利は焼きそばとうなぎ。朝が早いので、朝ごはんの手当ても入れています。</p>
+    <div id="meal-list"></div>
+  </section>
+
+  <section id="activities">
+    <h2><span class="dot"></span>アクティビティ候補</h2>
+    <p class="sub">行程に入れるか相談しやすい候補です。暑さと天気で入れ替えられます。</p>
+    <div class="grid2" id="activity-list"></div>
+  </section>
+
+  <section id="other">
+    <h2><span class="dot"></span>他にもおすすめのスポット</h2>
+    <p class="sub">気分と体力で順路に足せる候補です。</p>
+    <div class="grid2" id="other-list"></div>
+  </section>
+
+  <section id="checks">
+    <h2><span class="dot"></span>先読みチェック</h2>
+    <p class="sub">予約前・出発前に見落としやすい費用・リスク・代替案です。</p>
+    <div class="check-grid" id="check-list"></div>
+  </section>
+
+  <section id="budget">
+    <h2><span class="dot"></span>費用のめやす（1人あたり）</h2>
+    <div class="card budget-card">
+      <div class="budget-head">
+        <div>
+          <p class="summary-title">費用サマリー</p>
+          <h3>1人あたりの概算</h3>
+        </div>
+        <div class="budget-total">
+          <span>合計めやす</span>
+          <b id="budget-total-pill">-</b>
+        </div>
+      </div>
+      <div class="budget-table-wrap"><table id="budget-table"></table></div>
+    </div>
+  </section>
+
+  <section id="next">
+    <h2><span class="dot"></span>当日までにやること・決めること</h2>
+    <div class="card"><div class="twohead">先に押さえておくもの</div><ul class="todo book" id="book-list"></ul></div>
+    <div class="card"><div class="twohead">2人で決めること</div><ul class="todo decide" id="decide-list"></ul></div>
+  </section>
+
+  <footer>時刻・運賃は2026年7月30日時点の各社公式時刻表と運賃表に基づくめやすです。天気、船の運航、店の営業は当日変わることがあります。</footer>
+</main>
+
+    <aside class="summary-panel" aria-label="旅の要点">
+      <div>
+        <p class="summary-title">旅の要点</p>
+        <div class="summary-grid">
+          <div class="summary-metric"><span>日数</span><b id="summary-days">-</b></div>
+          <div class="summary-metric"><span>訪問地</span><b id="summary-spots">-</b></div>
+          <div class="summary-metric"><span>食事候補</span><b id="summary-meals">-</b></div>
+          <div class="summary-metric"><span>確認項目</span><b id="summary-checks">-</b></div>
+          <div class="summary-metric"><span>予約項目</span><b id="summary-todos">-</b></div>
+        </div>
+      </div>
+      <div class="utility-links">
+        <p class="summary-title">すぐ確認</p>
+        <a href="index.html">2案の比較へ戻る</a>
+        <a href="#route">ルート地図</a>
+        <a href="#itinerary">当日の流れ</a>
+        <a href="#checks">先読みチェック</a>
+        <a href="#budget">費用のめやす</a>
+        <a href="#next">これから決めること</a>
+      </div>
+    </aside>
+  </div>
+</div>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+  integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+<script>
+/* =================== DATA（ここだけ案件ごとに差し替える） =================== */
+const M = q => `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(q)}`;
+const mapSpots = [{"n": 1, "name": "北千住駅（東武スカイツリーライン）", "short": "北千住", "lat": 35.75026, "lng": 139.80439, "kind": "hub", "time": "06:50 集合"}, {"n": 2, "name": "館林駅", "short": "館林駅", "lat": 36.24655, "lng": 139.52779, "kind": "hub", "time": "07:53"}, {"n": 3, "name": "城沼 花ハス遊覧船（つつじが岡公園 渡船場）", "short": "花ハス遊覧船", "lat": 36.24129, "lng": 139.54505, "kind": "spot", "time": "08:30"}, {"n": 4, "name": "向井千秋記念子ども科学館", "short": "子ども科学館", "lat": 36.24404, "lng": 139.54476, "kind": "spot", "time": "10:00"}, {"n": 5, "name": "館林駅（昼ごはん・乗り換え）", "short": "館林駅（昼）", "lat": 36.24655, "lng": 139.52779, "kind": "hub", "time": "11:45"}, {"n": 6, "name": "佐野駅（両毛線に乗り換え）", "short": "佐野駅", "lat": 36.31633, "lng": 139.57903, "kind": "hub", "time": "13:18"}, {"n": 7, "name": "JR足利駅", "short": "足利駅", "lat": 36.33197, "lng": 139.45625, "kind": "hub", "time": "13:43"}, {"n": 8, "name": "鑁阿寺（国宝の本堂）", "short": "鑁阿寺", "lat": 36.33741, "lng": 139.45209, "kind": "spot", "time": "14:00"}, {"n": 9, "name": "史跡足利学校", "short": "足利学校", "lat": 36.33597, "lng": 139.45351, "kind": "spot", "time": "14:45"}, {"n": 10, "name": "足利織姫神社", "short": "織姫神社", "lat": 36.33925, "lng": 139.4449, "kind": "spot", "time": "16:30"}, {"n": 11, "name": "東武 足利市駅（特急に乗車）", "short": "足利市駅", "lat": 36.32937, "lng": 139.44827, "kind": "hub", "time": "17:25"}, {"n": 12, "name": "北千住駅（解散）", "short": "北千住（帰）", "lat": 35.75026, "lng": 139.80439, "kind": "hub", "time": "18:42"}];
+const foodTowns = [];
+const access = {"a": [{"ic": "🚄", "ttl": "北千住 7:01 → 館林 7:53", "meta": "特急リバティりょうもう1号 赤城行／52分／運賃827円＋特急1,450円（8/2は繁忙期）", "pills": [{"cls": "book", "label": "特急券を取る（トブチケ！）", "url": "https://tobuchike.jp/"}, {"cls": "", "label": "特急時刻表", "url": "https://www.tobu.co.jp/railway/special_express/timetable/"}]}, {"ic": "🚃", "ttl": "＜安く行く案＞北千住 6:27 → 館林 7:51", "meta": "東武スカイツリーライン準急＋伊勢崎線／東武動物公園乗換／84分／IC827円のみ", "pills": [{"cls": "", "label": "東武の駅・時刻表", "url": "https://www.tobu.co.jp/railway/guide/station/"}]}, {"ic": "🚌", "ttl": "館林駅東口 8:15 → つつじが岡公園 8:26", "meta": "館林市路線バス 館林・板倉線 板倉東洋大前駅西口行／11分／200円。この便は日曜も運行", "pills": [{"cls": "book", "label": "館林市の路線バス時刻表", "url": "https://www.city.tatebayashi.gunma.jp/s015/kurashi/140/060/20251110140043.html"}]}, {"ic": "🚕", "ttl": "＜バスを使わない案＞館林駅 → つつじが岡公園", "meta": "タクシー約10分／徒歩なら約2.5km・40分", "pills": [{"cls": "", "label": "公園の場所", "url": "https://www.google.com/maps/search/?api=1&query=%E3%81%A4%E3%81%A4%E3%81%98%E3%81%8C%E5%B2%A1%E5%85%AC%E5%9C%92%20%E9%A4%A8%E6%9E%97%E5%B8%82%E8%8A%B1%E5%B1%B1%E7%94%BA"}]}], "b": [{"ic": "🚌", "ttl": "つつじが岡公園 11:32 → 館林駅東口 11:45", "meta": "館林・板倉線 館林駅東口行／13分／200円。この便も日曜運行", "pills": [{"cls": "book", "label": "館林市の路線バス時刻表", "url": "https://www.city.tatebayashi.gunma.jp/s015/kurashi/140/060/20251110140043.html"}]}, {"ic": "🚃", "ttl": "館林 13:02 → 佐野 13:18", "meta": "東武佐野線 葛生行／16分／IC261円", "pills": [{"cls": "", "label": "東武の駅・時刻表", "url": "https://www.tobu.co.jp/railway/guide/station/"}]}, {"ic": "🚃", "ttl": "佐野 13:29 → 足利 13:43", "meta": "JR両毛線 高崎行 452M／14分／IC253円。佐野駅は両毛線と東武佐野線の共同駅で、改札を出ずに乗り換えられます", "pills": [{"cls": "book", "label": "両毛線上りの時刻表（JR東日本）", "url": "https://timetables.jreast.co.jp/2608/timetable-v/237u1p.html"}]}, {"ic": "🚄", "ttl": "足利市 17:37 → 北千住 18:42", "meta": "特急りょうもう38号 浅草行／65分／運賃912円＋特急1,250円（8/2は繁忙期）", "pills": [{"cls": "book", "label": "特急券を取る（トブチケ！）", "url": "https://tobuchike.jp/"}, {"cls": "", "label": "特急料金表", "url": "https://www.tobu.co.jp/railway/special_express/transit_fare/ryomo/"}]}, {"ic": "🚃", "ttl": "＜特急を使わない案＞足利市 17:44 → 北千住 19:28", "meta": "東武伊勢崎線 館林・久喜で乗り継ぎ／104分／運賃912円のみ", "pills": [{"cls": "", "label": "東武の駅・時刻表", "url": "https://www.tobu.co.jp/railway/guide/station/"}]}]};
+const days = [{"label": "8月2日（日）｜早起きして、ハスの沼へ", "stops": [{"num": 1, "kind": "hub", "t": "06:50", "p": "北千住駅 東武線ホームに集合", "url": "https://www.google.com/maps/search/?api=1&query=%E5%8C%97%E5%8D%83%E4%BD%8F%E9%A7%85%20%E6%9D%B1%E6%AD%A6%E3%82%B9%E3%82%AB%E3%82%A4%E3%83%84%E3%83%AA%E3%83%BC%E3%83%A9%E3%82%A4%E3%83%B3", "hint": "7:01発の特急リバティりょうもう1号。朝ごはんは改札内か前夜に買っておくのが安全です。", "move": {"ic": "🚄", "label": "特急 52分", "url": "https://www.tobu.co.jp/railway/special_express/timetable/"}}, {"num": 2, "kind": "hub", "t": "07:53", "p": "館林駅 到着 → 東口のバスのりばへ", "url": "https://www.google.com/maps/search/?api=1&query=%E9%A4%A8%E6%9E%97%E9%A7%85", "hint": "8:15発の館林・板倉線に乗ります（200円）。20分ほど余裕があるので飲み物の補給を。", "move": {"ic": "🚌", "label": "路線バス 11分", "url": "https://www.city.tatebayashi.gunma.jp/s015/kurashi/140/060/20251110140043.html"}}, {"num": 3, "t": "08:30", "p": "城沼 花ハス遊覧船（始発の便）", "url": "https://www.jonumakanko.com/", "hint": "つつじが岡公園内の渡船場から、ハスの葉をかき分けて約30分。大人1,000円、並んだ順に約15分間隔で出航します。花が開いているのは午前中だけ。", "move": {"ic": "🚶", "label": "徒歩すぐ", "url": "https://www.city.tatebayashi.gunma.jp/tsutsuji/"}}, {"t": "09:10", "p": "つつじが岡公園と城沼のほとりを散策", "url": "https://www.city.tatebayashi.gunma.jp/tsutsuji/", "hint": "沼沿いの遊歩道と旧秋元別邸。日差しが強くなる前に切り上げます。", "move": {"ic": "🚶", "label": "徒歩3分", "url": "https://www.city.tatebayashi.gunma.jp/kagakukan/"}}, {"num": 4, "t": "10:00", "p": "向井千秋記念子ども科学館", "url": "https://www.city.tatebayashi.gunma.jp/kagakukan/", "hint": "公園のすぐ隣。8月2日は毎月第1日曜の「家庭の日」で入館無料。プラネタリウム（大人540円）は11:30の回に合わせられます。冷房のある屋内で体を冷やす時間。", "move": {"ic": "🚌", "label": "11:32発のバスで駅へ（13分）", "url": "https://www.city.tatebayashi.gunma.jp/s015/kurashi/140/060/20251110140043.html"}}, {"num": 5, "kind": "hub", "t": "11:45", "p": "館林駅に戻る", "url": "https://www.google.com/maps/search/?api=1&query=%E9%A4%A8%E6%9E%97%E9%A7%85", "hint": "13:02発の東武佐野線に合わせるので、昼は約1時間。館林の店は駅から徒歩10〜15分のところが多いので、暑い日はタクシー（約3分）を使うと食べる時間がしっかり取れます。"}, {"t": "11:55", "p": "昼ごはん（館林うどん）", "url": "#meals", "hint": "下の食事候補から。花山うどん本店のお食事処は日曜が定休なので注意。", "move": {"ic": "🚃", "label": "東武佐野線 16分", "url": "https://www.tobu.co.jp/railway/guide/station/"}}, {"num": 6, "kind": "hub", "t": "13:18", "p": "佐野駅で両毛線に乗り換え（11分）", "url": "https://www.google.com/maps/search/?api=1&query=%E4%BD%90%E9%87%8E%E9%A7%85", "hint": "両毛線と東武佐野線が同じ駅なので、改札を出ずに乗り換えられます。", "move": {"ic": "🚃", "label": "両毛線 14分", "url": "https://timetables.jreast.co.jp/2608/timetable-v/237u1p.html"}}, {"num": 7, "kind": "hub", "t": "13:43", "p": "JR足利駅 到着", "url": "https://www.google.com/maps/search/?api=1&query=JR%E8%B6%B3%E5%88%A9%E9%A7%85", "hint": "ここから足利の中心部は徒歩圏です。", "move": {"ic": "🚶", "label": "徒歩10分", "url": "https://www.ashikaga-kankou.jp/spot/bannaji"}}, {"num": 8, "t": "14:00", "p": "鑁阿寺（ばんなじ）", "url": "https://www.ashikaga-kankou.jp/spot/bannaji", "hint": "足利氏の館跡がそのままお寺になった国宝の本堂。境内は無料、開門は16:00まで。大イチョウの木陰が涼しい。", "move": {"ic": "🚶", "label": "徒歩2分", "url": "https://www.city.ashikaga.tochigi.jp/education/000031/000178/index.html"}}, {"num": 9, "t": "14:45", "p": "史跡足利学校", "url": "https://www.city.ashikaga.tochigi.jp/education/000031/000178/index.html", "hint": "日本最古の学校。9:00〜17:00（受付16:30まで）、一般480円。方丈に座って庭を眺められます。", "move": {"ic": "🚶", "label": "徒歩5分", "url": "#meals"}}, {"t": "15:30", "p": "カフェでひと休み", "url": "#meals", "hint": "下のカフェ候補から。いちばん暑い時間なので、屋内でしっかり休みます。", "move": {"ic": "🚶", "label": "徒歩12分", "url": "https://www.ashikaga-kankou.jp/spot/orihime_jinjya"}}, {"num": 10, "t": "16:30", "p": "足利織姫神社", "url": "https://www.ashikaga-kankou.jp/spot/orihime_jinjya", "hint": "石段を上った高台にある縁結びの神社。関東平野が見渡せて、夕方の光がいちばんきれいな時間です。参拝は無料。", "move": {"ic": "🚶", "label": "徒歩15分", "url": "https://www.google.com/maps/search/?api=1&query=%E6%9D%B1%E6%AD%A6%E8%B6%B3%E5%88%A9%E5%B8%82%E9%A7%85"}}, {"num": 11, "kind": "hub", "t": "17:25", "p": "東武 足利市駅", "url": "https://www.google.com/maps/search/?api=1&query=%E6%9D%B1%E6%AD%A6%E8%B6%B3%E5%88%A9%E5%B8%82%E9%A7%85", "hint": "17:37発の特急りょうもう38号。座って帰れます。", "move": {"ic": "🚄", "label": "特急 65分", "url": "https://www.tobu.co.jp/railway/special_express/timetable/"}}, {"num": 12, "kind": "hub", "t": "18:42", "p": "北千住駅 到着", "url": "https://www.google.com/maps/search/?api=1&query=%E5%8C%97%E5%8D%83%E4%BD%8F%E9%A7%85", "hint": "おつかれさまでした。"}]}];
+const meals = [{"when": "朝ごはん｜出発が早いので先に手を打つ", "items": [{"name": "北千住駅の東武線改札内で買っていく", "url": "https://www.google.com/maps/search/?api=1&query=%E5%8C%97%E5%8D%83%E4%BD%8F%E9%A7%85%20%E6%9D%B1%E6%AD%A6%E7%B7%9A%20%E6%94%B9%E6%9C%AD%E5%86%85%20%E3%83%99%E3%83%BC%E3%82%AB%E3%83%AA%E3%83%BC", "price": "〜800円", "hint": "いちばん確実。館林駅での滞在は22分あるものの、駅前で確実に開いている店が読めません。日曜の開店時刻は店舗で確認を。", "tag": "おすすめ"}, {"name": "デイリーヤマザキ 館林駅前店", "url": "https://www.google.com/maps/search/?api=1&query=%E3%83%87%E3%82%A4%E3%83%AA%E3%83%BC%E3%83%A4%E3%83%9E%E3%82%B6%E3%82%AD%20%E9%A4%A8%E6%9E%97%E9%A7%85%E5%89%8D%E5%BA%97", "price": "〜800円", "hint": "館林駅から徒歩2分・24時間。8:15のバスに乗る朝の保険として。"}, {"name": "花山うどん 本店直売所（帰りの手土産）", "url": "https://www.hanayamaudon.co.jp/store/", "price": "乾麺", "hint": "館林駅東口から徒歩1分、9:30〜19:00で日曜も営業。名物「鬼ひも川」の乾麺が買えます。お食事処は日曜定休です。"}]}, {"when": "お昼｜11:55〜12:45・13:02の電車に間に合う館林", "items": [{"name": "うどん本丸（館林うどん・なまず天）", "url": "https://100y-komugi.jp/shop/a02/", "price": "〜1,999円", "hint": "館林市本町3-8-1。館林駅から徒歩10〜12分（タクシーなら約3分）。11:00〜15:00で無休なので日曜の確実性がいちばん高い。なまずの天ぷらが乗る冷たいざるうどんは館林ならでは。", "tag": "日曜も確実"}, {"name": "手打らーめん 自慢亭", "url": "https://www.ekiten.jp/shop_4261722/", "price": "平均980円", "hint": "館林駅から徒歩14分。11:00〜21:00の通し営業／木曜・第3金曜休。時間がずれても入れる気楽さ。"}, {"name": "花山うどん アゼリアモール店（鬼ひも川）", "url": "https://www.hanayamaudon.co.jp/store/", "price": "〜1,999円", "hint": "10:00〜19:00で日曜営業。極幅の「鬼ひも川」が食べられます。冷房のモール内で待ち時間も読みやすい一方、館林駅から約2.5kmあり、日曜のこの時間帯は館林駅東口発の路線バスが次の12:45発までないので、行くならタクシーで往復する形になります。", "tag": "涼しい"}]}, {"when": "午後のカフェ・軽い夕食｜足利", "items": [{"name": "八蔵（はちくら）", "url": "https://r.gnavi.co.jp/408ec5130000/", "price": "カフェ相場", "hint": "鑁阿寺から続く石畳の大門通。11:00〜19:30(L.O.)／月曜・第2火曜休。この時間帯でいちばん遅くまで開いているので、電車の時間が読めない日でも使えます。", "tag": "遅くまで"}, {"name": "大日茶屋（鑁阿寺の境内）", "url": "https://www.ashikaga-kankou.jp/eat/dainichijaya", "price": "〜999円", "hint": "10:00〜16:00。足利名物のポテト入り焼きそばと足利シュウマイを、参拝の流れでそのまま。16時閉店なので早めに。"}, {"name": "come in家fe maze maze", "url": "https://www.tochinavi.net/spot/home/?id=18333", "hint": "JR足利駅から徒歩8分の古民家カフェ。11:00〜16:00／木曜休。静かに話したいときに。"}]}, {"when": "しっかり食べて帰るなら｜足利・17時前後", "items": [{"name": "魚政（うなぎ）", "url": "https://tabelog.com/tochigi/A0902/A090202/9006209/", "price": "うなぎ相場", "hint": "明治44年創業、足利で4代続くうなぎ屋。11:30〜19:30の通し営業／水曜・第3火曜休。中休みがないので、到着が16時でも17時半でも入れます。予約は電話のみ 0284-21-2388。", "tag": "通し営業"}, {"name": "鳥常本店（うなぎ・鳥料理）", "url": "https://www.hotpepper.jp/strJ000315425/", "price": "うなぎ相場", "hint": "創業140年。17:30〜20:00（L.O.19:30）／火曜休。ネット予約に対応しているので、17:30の席を先に押さえられます。食べログ3.68・309件。"}, {"name": "八蔵（軽く済ませる）", "url": "https://r.gnavi.co.jp/408ec5130000/", "price": "カフェ相場", "hint": "19:30ラストオーダー。電車の時間まで軽くつまむならここ。"}]}];
+const activities = [{"name": "城沼 花ハス遊覧船", "url": "https://www.jonumakanko.com/", "price": "大人1,000円／子ども300円", "hint": "2026年は7/10〜8/31の毎日、8:30〜12:00（最終11:30ごろ）。乗船約30分、約15分間隔で順次出航。20名未満は予約不可で並んだ順です。大雨・強風は運休。", "tag": "今日の主役"}, {"name": "向井千秋記念子ども科学館 プラネタリウム", "url": "https://www.city.tatebayashi.gunma.jp/kagakukan/", "price": "大人540円（入館は8/2無料）", "hint": "9:00〜17:00（入館16:30まで）。土日祝の投影は10:00 / 11:30 / 13:00 / 14:30 / 15:50。8月2日は毎月第1日曜の「家庭の日」で入館料が無料になります。", "tag": "屋内"}, {"name": "史跡足利学校", "url": "https://www.city.ashikaga.tochigi.jp/education/000031/000178/index.html", "price": "一般480円／高校生240円", "hint": "9:00〜17:00（受付16:30まで）、毎月第3水曜休。日本最古の学校で、方丈と庭園をゆっくり歩けます。"}, {"name": "足利織姫神社", "url": "https://www.ashikaga-kankou.jp/spot/orihime_jinjya", "price": "参拝無料", "hint": "縁結びの神社で、関東平野を見下ろす高台。社務所は9:00〜16:00。石段を上るので、暑い時間は避けて夕方に。", "tag": "夕景"}];
+const other = [{"name": "茂林寺（分福茶釜）", "url": "https://morinji.com/", "hint": "東武伊勢崎線 茂林寺前駅から徒歩。参道にたぬきの像が並ぶ、館林でいちばん有名なお寺。分福茶釜が見られる宝物館は大人300円。"}, {"name": "旧秋元別邸", "url": "https://www.city.tatebayashi.gunma.jp/tsutsuji/", "hint": "城沼のほとりに建つ旧館林藩主の別邸。庭から沼が見えます。"}, {"name": "渡良瀬橋", "url": "https://www.google.com/maps/search/?api=1&query=%E6%B8%A1%E8%89%AF%E7%80%AC%E6%A9%8B%20%E8%B6%B3%E5%88%A9%E5%B8%82", "hint": "足利市駅から歩ける、歌でおなじみの橋。夕暮れに歩くときれいです。"}, {"name": "あしかがフラワーパーク", "url": "https://www.ashikaga.co.jp/", "hint": "両毛線のあしかがフラワーパーク駅が最寄り。8月の展示内容と入園料は変動するので公式で確認を。"}, {"name": "佐野厄除け大師", "url": "https://www.google.com/maps/search/?api=1&query=%E4%BD%90%E9%87%8E%E5%8E%84%E9%99%A4%E3%81%91%E5%A4%A7%E5%B8%AB", "hint": "乗り換えの佐野駅から歩ける距離。時間が余ったら寄り道できます。"}];
+const budget = [["行き（運賃827円＋特急1,450円）", "2,277円", "リバティりょうもう1号・繁忙期料金"], ["館林市の路線バス 往復", "400円", "館林駅東口↔つつじが岡公園・1回200円"], ["城沼 花ハス遊覧船", "1,000円", "約30分・大人料金"], ["向井千秋記念子ども科学館", "0円", "8/2は第1日曜で入館無料（通常320円）"], ["プラネタリウム", "540円", "入れる場合。11:30の回"], ["昼ごはん", "1,100円", "館林うどんの相場"], ["館林→佐野→足利（東武261円＋JR253円）", "514円", "両毛線に乗る区間"], ["史跡足利学校", "480円", "一般"], ["カフェ", "900円", "足利で休憩"], ["帰り（運賃912円＋特急1,250円）", "2,162円", "りょうもう38号・繁忙期料金"], ["合計めやす", "約9,400円", "特急を使わなければ約6,700円"]];
+const foresightList = [{"category": "体験", "title": "ハスの花は午前中だけ開く", "status": "早い便ほど良い", "url": "https://www.jonumakanko.com/", "note": "運航は8:30〜12:00で、最終は11:30ごろ。8:30の始発が花の状態も気温もいちばん良い時間です。10:15のバス（公園10:26着）でも乗れますが、花は閉じ始めます。"}, {"category": "交通", "title": "路線バスは日曜運休の便が多い", "status": "時刻を固定する", "url": "https://www.city.tatebayashi.gunma.jp/s015/kurashi/140/060/20251110140043.html", "note": "館林駅東口発で日曜に動くのは 8:15 / 10:15 / 12:45 / 14:40 / 16:25。6:45・7:45・8:00・9:34発は運休です。公園発は 11:32 / 14:07 / 16:02 のみ。"}, {"category": "運航", "title": "大雨・強風の日は船が出ない", "status": "当日朝に確認", "url": "https://www.jonumakanko.com/", "note": "城沼観光 0276-73-7800。20名未満は予約できず当日並ぶ形なので、天気が怪しい朝は出発前に電話を。"}, {"category": "暑さ", "title": "館林の8月は平年で最高32.7℃", "status": "対策を持っていく", "url": "https://www.data.jma.go.jp/stats/etrn/view/nml_amd_ym.php?prec_no=42&block_no=0356", "note": "全国でも屈指の暑さの街です。船を降りたあとは子ども科学館の冷房で体を冷やす組み方にしています。水・塩分・日傘・帽子は必携。当日の暑さは<a href=\"https://www.wbgt.env.go.jp/\" target=\"_blank\" rel=\"noopener\">環境省の熱中症予防情報サイト</a>と<a href=\"https://www.jma.go.jp/bosai/forecast/#area_type=offices&area_code=100000\" target=\"_blank\" rel=\"noopener\">気象庁の天気予報</a>で朝に見ておくと動きやすくなります。"}, {"category": "交通", "title": "8月1日の足利花火大会が荒天なら8月2日に順延", "status": "8月1日の昼に確認", "url": "https://www.tobu.co.jp/cms-pdf/news/20260717103437H_10cufvy_9vOQ_9fw9x9w.pdf", "note": "第110回足利花火大会は8月1日（土）開催で、荒天のときは8月2日（日）に順延します。順延になった日は足利で17:30〜21:30の交通規制が入り、東武は臨時ダイヤで一部の定期列車の時刻が変わります。実施の判断は前日12時までに東武から発表されるので、8月1日の昼に見ておくと確実です。順延した日は午後を足利ではなく佐野（佐野厄除け大師・アウトレット）に振り替えると混雑を避けられます。"}, {"category": "費用", "title": "8月2日は東武特急の繁忙期", "status": "出発前に確認", "url": "https://www.tobu.co.jp/railway/special_express/transit_fare/seasonal_calendar.pdf", "note": "2026年8月1〜16日は伊勢崎線特急が繁忙期で、通常の特急料金＋200円。北千住↔館林は りょうもう1,250円／リバティりょうもう1,450円（運賃827円は別）。"}, {"category": "時間", "title": "昼のあとの電車は1時間に1本", "status": "13:02か14:02か", "url": "https://www.tobu.co.jp/railway/guide/station/", "note": "館林から佐野へ向かう東武佐野線は 13:02 の次が 14:02。13:02に乗れば足利13:43着で午後がゆったりしますが、昼は約1時間です。混んでいて間に合わなければ14:02に切り替え、足利ではカフェを省くか、帰りの特急を1本遅らせて調整します。"}, {"category": "営業", "title": "花山うどん本店のお食事処は日曜定休", "status": "代替を用意済み", "url": "https://www.hanayamaudon.co.jp/store/", "note": "駅前の本店で食べることはできません。直売所（9:30〜19:00）は日曜も開いているので乾麺は買えます。鬼ひも川を食べたいならアゼリアモール店へ。"}, {"category": "交通", "title": "足利市駅とJR足利駅は別の駅", "status": "乗換時間を削らない", "url": "https://www.city.ashikaga.tochigi.jp/urban/000063/000338/000994/p005163.html", "note": "渡良瀬川をはさんで徒歩15〜18分。帰りは織姫神社から足利市駅へ直接歩くので橋は渡りませんが、行程を変える場合は要注意です。"}, {"category": "天候", "title": "雨のときの組み替え", "status": "代替あり", "url": "https://www.city.tatebayashi.gunma.jp/kagakukan/", "note": "船が運休なら、子ども科学館のプラネタリウムと足利学校・鑁阿寺で屋内中心に。館林美術館へ足を伸ばす選択肢もあります。"}];
+const bookList = [{"label": "東武の特急券を取る（トブチケ！）", "url": "https://tobuchike.jp/"}, {"label": "花ハス遊覧船の運航を確認（0276-73-7800）", "url": "https://www.jonumakanko.com/"}, {"label": "館林市の路線バス時刻表", "url": "https://www.city.tatebayashi.gunma.jp/s015/kurashi/140/060/20251110140043.html"}, {"label": "向井千秋記念子ども科学館のプラネタリウム時刻", "url": "https://www.city.tatebayashi.gunma.jp/kagakukan/"}, {"label": "史跡足利学校の参観案内", "url": "https://www.city.ashikaga.tochigi.jp/education/000031/000178/index.html"}, {"label": "鳥常本店をネット予約する（夕食にする場合）", "url": "https://www.hotpepper.jp/strJ000315425/"}, {"label": "8月1日の昼に東武の臨時ダイヤの発表を見る（花火大会の順延判定）", "url": "https://www.tobu.co.jp/cms-pdf/news/20260717103437H_10cufvy_9vOQ_9fw9x9w.pdf"}];
+const decideList = ["北千住 7:01の特急にするか、6:27の各停で1,450円浮かせるか", "プラネタリウム（11:30の回・540円）を入れるかどうか", "午後を足利にするか、佐野で降りて佐野ラーメンとアウトレットにするか", "夕食を足利で食べて帰るか、北千住まで戻ってから食べるか", "昼を約1時間で切り上げて13:02に乗るか、ゆっくり食べて14:02にするか", "船が運休だったときに、館林で切り上げるか足利まで行くか", "花火大会が8月2日に順延した場合、午後を佐野に振り替えるか、そのまま足利で花火を見て帰るか"];
+/* =================== /DATA =================== */
+
+
+/* =================== 描画（触らない） =================== */
+function colorOf(k){return k==="hub"?"#16354a":"#d23b2c";}
+function pinIcon(n,color){return L.divIcon({className:"",iconSize:[22,22],iconAnchor:[11,11],
+  html:`<div class="pin" style="background:${color}">${n}</div>`});}
+
+// ピンは実在地に置く。完全同座標の地点だけ約400m離す（拡大時に2つと分かるため）。
+function spread(items,thr=0.0015,r=0.004){
+  const placed=[];
+  return items.map(s=>{
+    let lat=s.lat,lng=s.lng,k=0;
+    while(placed.some(p=>Math.hypot(p[0]-lat,p[1]-lng)<thr)&&k<8){
+      const a=k*Math.PI/3; lat=s.lat+r*Math.sin(a); lng=s.lng+r*Math.cos(a); k++;
+    }
+    placed.push([lat,lng]);
+    return Object.assign({},s,{dlat:lat,dlng:lng});
+  });
+}
+const spots = spread(mapSpots);
+const markers={};
+let routeMap=null;
+
+function showToast(message){
+  const toast=document.getElementById("toast");
+  if(!toast)return;
+  toast.textContent=message;
+  toast.classList.add("show");
+  clearTimeout(showToast._timer);
+  showToast._timer=setTimeout(()=>toast.classList.remove("show"),2200);
+}
+
+function emptyState(label){
+  return `<div class="empty-state">${label}</div>`;
+}
+
+function populateSummary(){
+  const set=(id,value)=>{ const el=document.getElementById(id); if(el)el.textContent=value; };
+  set("summary-days", `${days.length}日`);
+  set("summary-spots", `${spots.length}件`);
+  set("summary-meals", `${meals.reduce((sum,g)=>sum+(g.items||[]).length,0)}件`);
+  set("summary-checks", `${(foresightList||[]).length}件`);
+  set("summary-todos", `${(bookList||[]).length}件`);
+}
+
+document.querySelectorAll(".side-nav a,.tabset a").forEach(link=>{
+  link.addEventListener("click",()=>showToast(`${link.textContent.trim()}を開きます`));
+});
+
+function initMap(){
+  const mapEl=document.getElementById("map");
+  if(!window.L){
+    mapEl.innerHTML='<div class="mapfallback">地図を読み込み中です。表示されない場合は通信環境を確認してください。</div>';
+    return;
+  }
+  mapEl.style.animation="none";
+  routeMap = L.map("map",{scrollWheelZoom:false});
+  L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",{maxZoom:18,attribution:'&copy; OpenStreetMap contributors'}).addTo(routeMap);
+  const latlngs = spots.map(s=>[s.dlat,s.dlng]);
+  L.polyline(latlngs,{color:"#d23b2c",weight:4,opacity:.9,lineJoin:"round"}).addTo(routeMap);
+  spots.forEach(s=>{ markers[s.n]=L.marker([s.dlat,s.dlng],{icon:pinIcon(s.n,colorOf(s.kind))}).addTo(routeMap).bindPopup(`<b>${s.n}. ${s.name}</b><br>${s.time}`); });
+  foodTowns.forEach(f=>{ L.marker([f.lat,f.lng],{icon:L.divIcon({className:"",iconSize:[14,14],iconAnchor:[7,7],
+    html:`<div style="width:14px;height:14px;border-radius:50%;background:#b07d24;border:2px solid #fff;box-shadow:0 1px 4px rgba(0,0,0,.3)"></div>`})}).addTo(routeMap).bindPopup(`<b>🍽 ${f.name}</b>`); });
+  if(latlngs.length) routeMap.fitBounds(L.latLngBounds(latlngs).pad(0.2)); else routeMap.setView([36,138],5);
+}
+
+window.focusPin=(n)=>{ const s=spots.find(x=>x.n===n); if(!s)return;
+  if(routeMap&&markers[n]){ routeMap.setView([s.dlat,s.dlng],14,{animate:true}); markers[n].openPopup(); }
+  document.querySelectorAll(".pinbtn").forEach(b=>b.classList.toggle("active",Number(b.dataset.n)===n));
+  showToast(`${s.short||s.name}へ地図を移動しました`);
+};
+document.getElementById("pinindex").innerHTML = spots.map(s=>
+  `<button class="pinbtn" data-n="${s.n}" onclick="focusPin(${s.n})"><span class="num ${s.kind==='hub'?'hub':''}">${s.n}</span>${s.short}</button>`).join("");
+initMap();
+
+function legRow(l){ const pills=(l.pills||[]).map(p=>`<a class="pill ${p.cls}" href="${p.url}" target="_blank" rel="noopener">${p.label}</a>`).join("");
+  return `<div class="leg"><div class="ic">${l.ic}</div><div><div class="ttl">${l.ttl}</div><div class="meta">${l.meta}</div><div class="pillrow">${pills}</div></div></div>`; }
+document.getElementById("acc-a").innerHTML = (access.a||[]).length ? access.a.map(legRow).join("") : emptyState("アクセス情報は未設定です");
+document.getElementById("acc-b").innerHTML = (access.b||[]).length ? access.b.map(legRow).join("") : emptyState("アクセス情報は未設定です");
+
+document.getElementById("days").innerHTML = days.length ? days.map(d=>`
+  <div class="card day timeline"><h3>${d.label}</h3>
+  ${d.stops.map(s=>`<div class="stop"><div class="top">
+    ${s.num?`<span class="num ${s.kind==='hub'?'hub':''}">${s.num}</span>`:`<span style="width:22px;flex:0 0 auto"></span>`}
+    <div class="t">${s.t}</div>
+    <div class="p">${s.url?`<a href="${s.url}" target="_blank" rel="noopener">${s.p}</a>`:s.p}</div></div>
+    ${s.hint?`<div class="hint">${s.hint}</div>`:""}
+    ${s.move?`<a class="movelink" href="${s.move.url}" target="_blank" rel="noopener">${s.move.ic} ${s.move.label}</a>`:""}
+  </div>`).join("")}</div>`).join("") : emptyState("行程は未設定です");
+
+const itemCard=(o)=>`<div class="item">${o.tag?`<span class="tag ${o.sns?'sns':''}">${o.tag}</span>`:""}
+  <div class="name"><a href="${o.url}" target="_blank" rel="noopener">${o.name}</a></div>
+  ${o.price?`<div class="price">${o.price}</div>`:""}${o.hint?`<div class="hint">${o.hint}</div>`:""}</div>`;
+document.getElementById("meal-list").innerHTML = meals.length ? meals.map(g=>`<div class="mealgroup"><div class="when">${g.when}</div><div class="grid2">${g.items.map(itemCard).join("")}</div></div>`).join("") : emptyState("食事候補は未設定です");
+document.getElementById("activity-list").innerHTML = activities.length ? activities.map(itemCard).join("") : emptyState("アクティビティ候補は未設定です");
+document.getElementById("other-list").innerHTML = other.length ? other.map(itemCard).join("") : emptyState("追加スポットは未設定です");
+const checkCard=(o)=>`<div class="check-card">
+  <div class="check-label">${o.category||"確認"}</div>
+  <div class="check-title">${o.url?`<a href="${o.url}" target="_blank" rel="noopener">${o.title}</a>`:o.title}</div>
+  ${o.note?`<div class="check-note">${o.note}</div>`:""}
+  ${o.status?`<span class="check-status">${o.status}</span>`:""}
+</div>`;
+document.getElementById("check-list").innerHTML = foresightList.length ? foresightList.map(checkCard).join("") : emptyState("先読みチェックは未設定です");
+const totalBudgetRow = budget.find(r=>String(r[0]).includes("合計"));
+const totalBudgetEl = document.getElementById("budget-total-pill");
+if(totalBudgetEl) totalBudgetEl.textContent = totalBudgetRow ? totalBudgetRow[1] : "調整中";
+document.getElementById("budget-table").innerHTML = `<thead><tr><th>項目</th><th>1人あたり</th><th>メモ</th></tr></thead><tbody>`+
+  budget.map(r=>{
+    const isTotal = String(r[0]).includes("合計");
+    return `<tr class="${isTotal ? "total-row" : ""}"><td data-label="項目">${r[0]}</td><td data-label="1人あたり" class="r">${r[1]}</td><td data-label="メモ">${r[2]}</td></tr>`;
+  }).join("")+`</tbody>`;
+document.getElementById("book-list").innerHTML = bookList.length ? bookList.map(c=>`<li><a href="${c.url}" target="_blank" rel="noopener">${c.label}</a></li>`).join("") : "<li>予約ToDoは未設定です</li>";
+document.getElementById("decide-list").innerHTML = decideList.length ? decideList.map(d=>`<li>${d}</li>`).join("") : "<li>未確定事項は未設定です</li>";
+populateSummary();
+</script>
+</body>
+</html>
