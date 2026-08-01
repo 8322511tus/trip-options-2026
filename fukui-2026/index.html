@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>福井・東尋坊＋あわら温泉 1泊2日</title>
+<title>福井まるごと1泊2日 東尋坊・永平寺・恐竜博物館</title>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
   integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="">
 <style>
@@ -290,13 +290,13 @@
       <div class="title-cluster">
         <div class="record-icon" aria-hidden="true">旅</div>
         <div>
-          <div class="kicker">2026年秋｜福井 1泊2日｜東京4人・神戸2人</div>
-          <h1>福井・東尋坊＋あわら温泉 1泊2日</h1>
+          <div class="kicker">2026年10〜11月｜福井 1泊2日｜東京4人・神戸2人</div>
+          <h1>福井まるごと1泊2日 東尋坊・永平寺・恐竜博物館</h1>
         </div>
       </div>
     </div>
-    <p class="lead">永平寺の静けさ、東尋坊の海景色、あわらの温泉をつなぎ、11月は越前がにまで味わう福井県内完結ルートです。</p>
-    <div class="badges"><span class="badge">🗓 1泊2日</span><span class="badge">👥 6人</span><span class="badge">🚉 集合: 福井駅</span><span class="badge">🚐 10人乗り1台</span><span class="badge">🦀 狙い目: 11/14–15・11/21–22</span></div>
+    <p class="lead">戦国の城下町跡から禅の大本山、日本海の夕景まで走り、翌日は恐竜博物館と苔の宮、越前大野の城下町へ。福井県内だけで2日間しっかり動くルートです。</p>
+    <div class="badges"><span class="badge">🗓 1泊2日</span><span class="badge">👥 6人</span><span class="badge">🚉 集合: 福井駅</span><span class="badge">🚐 8人乗り1台</span><span class="badge">🍂 10〜11月</span></div>
     <div class="action-bar" aria-label="主要アクション">
       <a class="btn subtle" href="#access">アクセスを見る</a>
       <a class="btn primary" href="#next">予約ToDoを見る</a>
@@ -334,7 +334,7 @@
 
   <section id="access">
     <h2><span class="dot"></span>行き帰りのアクセス</h2>
-    <p class="sub">東京組・神戸組は福井駅で合流。現行ダイヤの代表列車では10:10前後にそろい、福井駅から共通行程を始めます。</p>
+    <p class="sub">東京組・神戸組とも福井駅で合流。神戸組08:51着、東京組09:12着で、09:25から共通行程を始めます。帰りは両組とも17時台発で、東京20:23着・三ノ宮20:00頃着です。</p>
     <div class="card"><div class="twohead">東京発（4人）</div><div class="access" id="acc-a"></div></div>
     <div class="card"><div class="twohead">神戸発（2人）</div><div class="access" id="acc-b"></div></div>
   </section>
@@ -365,13 +365,13 @@
 
   <section id="car">
     <h2><span class="dot"></span>レンタカー</h2>
-    <p class="sub">福井駅でW4・ハイエース グランドキャビン（10人乗り）1台を約30時間利用。6人分の1泊荷物を積める実車を指定します。</p>
+    <p class="sub">福井駅東口で8人乗りミニバン（ノア／ヴォクシー クラス）1台を約32時間利用。6名が乗ると3列目まで使うため、荷物のサイズをそろえてから積みます。</p>
     <div class="grid2" id="car-list"></div>
   </section>
 
   <section id="stay">
     <h2><span class="dot"></span>宿</h2>
-    <p class="sub">あわら温泉の1泊2食付き。越前がに会席は料理ランクで総額差が大きいため、6名2室と3室の両方で比較します。</p>
+    <p class="sub">あわら温泉の1泊2食付きを6名2室（3名×2）で。甲殻類を使わない献立に変更できるかを、予約時に必ず確認します。</p>
     <div class="grid2" id="stay-list"></div>
   </section>
 
@@ -443,52 +443,88 @@ const mapSpots = [
     "lat": 36.062,
     "lng": 136.223,
     "kind": "hub",
-    "time": "Day1 10:15"
+    "time": "Day1 09:25"
   },
   {
     "n": 2,
+    "name": "一乗谷朝倉氏遺跡博物館",
+    "short": "一乗谷",
+    "lat": 36.015,
+    "lng": 136.2984,
+    "kind": "spot",
+    "time": "Day1 10:05"
+  },
+  {
+    "n": 3,
     "name": "大本山永平寺",
     "short": "永平寺",
     "lat": 36.0553,
     "lng": 136.356,
     "kind": "spot",
-    "time": "Day1 11:10"
+    "time": "Day1 11:35"
   },
   {
-    "n": 3,
+    "n": 4,
     "name": "東尋坊",
     "short": "東尋坊",
     "lat": 36.2376,
     "lng": 136.1265,
     "kind": "spot",
-    "time": "Day1 14:30"
+    "time": "Day1 14:45"
   },
   {
-    "n": 4,
+    "n": 5,
     "name": "あわら温泉",
     "short": "あわら温泉",
     "lat": 36.223,
     "lng": 136.192,
     "kind": "spot",
-    "time": "Day1 17:00"
-  },
-  {
-    "n": 5,
-    "name": "越前かにまつり・道の駅越前",
-    "short": "かにまつり",
-    "lat": 35.9188,
-    "lng": 135.9946,
-    "kind": "spot",
-    "time": "Day2 09:35"
+    "time": "Day1 16:50"
   },
   {
     "n": 6,
+    "name": "あわら温泉屋台村 湯けむり横丁",
+    "short": "湯けむり横丁",
+    "lat": 36.2216,
+    "lng": 136.19,
+    "kind": "spot",
+    "time": "Day1 20:10"
+  },
+  {
+    "n": 7,
+    "name": "福井県立恐竜博物館",
+    "short": "恐竜博物館",
+    "lat": 36.0831,
+    "lng": 136.5067,
+    "kind": "spot",
+    "time": "Day2 09:05"
+  },
+  {
+    "n": 8,
+    "name": "平泉寺白山神社",
+    "short": "平泉寺",
+    "lat": 36.0439,
+    "lng": 136.5419,
+    "kind": "spot",
+    "time": "Day2 11:30"
+  },
+  {
+    "n": 9,
+    "name": "越前大野城・城下町",
+    "short": "越前大野",
+    "lat": 35.9865,
+    "lng": 136.4831,
+    "kind": "spot",
+    "time": "Day2 13:55"
+  },
+  {
+    "n": 10,
     "name": "福井駅",
     "short": "福井駅・解散",
     "lat": 36.062,
     "lng": 136.223,
     "kind": "hub",
-    "time": "Day2 13:30"
+    "time": "Day2 16:25"
   }
 ];
 
@@ -499,9 +535,9 @@ const foodTowns = [
     "lng": 136.353
   },
   {
-    "name": "あわら温泉街",
-    "lat": 36.223,
-    "lng": 136.192
+    "name": "勝山・平泉寺",
+    "lat": 36.05,
+    "lng": 136.53
   }
 ];
 
@@ -510,7 +546,7 @@ const access = {
     {
       "ic": "🚄",
       "ttl": "東京 → 福井",
-      "meta": "代表: かがやき503号 東京07:20→福井10:09、2時間49分。通常期指定席は片道15,830円、往復31,660円。",
+      "meta": "代表: かがやき501号 東京06:16→福井09:12、2時間56分。通常期指定席は片道15,830円、往復31,660円。始発グループのため前泊は不要です。",
       "pills": [
         {
           "cls": "book",
@@ -527,7 +563,7 @@ const access = {
     {
       "ic": "🚄",
       "ttl": "福井 → 東京",
-      "meta": "代表: かがやき512号 福井16:23→東京19:20、2時間57分。福井駅には出発20分前までに戻ります。",
+      "meta": "代表: かがやき514号 福井17:31→東京20:23、2時間52分。レンタカー返却16:25目安で、改札まで約1時間の余裕があります。",
       "pills": [
         {
           "cls": "book",
@@ -546,7 +582,7 @@ const access = {
     {
       "ic": "🚃",
       "ttl": "三ノ宮 → 大阪 → 敦賀 → 福井",
-      "meta": "代表: 三ノ宮07:26→大阪07:48、サンダーバード7号 大阪08:10→敦賀09:37、つるぎ8号 敦賀09:46→福井10:06。片道7,420円、往復14,840円。",
+      "meta": "代表: 三ノ宮06:20頃発の新快速で大阪へ、サンダーバード 大阪07:00→敦賀08:23、つるぎ4号 敦賀08:31→福井08:51。片道7,420円、往復14,840円。敦賀の8分乗換はダイヤ上の接続です。",
       "pills": [
         {
           "cls": "book",
@@ -563,7 +599,7 @@ const access = {
     {
       "ic": "🚃",
       "ttl": "福井 → 敦賀 → 大阪 → 三ノ宮",
-      "meta": "代表: つるぎ33号 福井16:41→敦賀17:02、サンダーバード34号 敦賀17:14→大阪18:39。三ノ宮は19:10頃。",
+      "meta": "代表: つるぎ37号 福井17:38→敦賀17:59、サンダーバード 敦賀18:12→大阪19:37、新快速で三ノ宮20:00頃。敦賀の乗換は13分です。",
       "pills": [
         {
           "cls": "book",
@@ -582,39 +618,51 @@ const access = {
 
 const days = [
   {
-    "label": "Day1｜禅・海景色・温泉",
+    "label": "Day1｜戦国の城下町・禅・日本海の夕景",
     "stops": [
       {
         "num": 1,
         "kind": "hub",
-        "t": "10:15",
-        "p": "福井駅集合・レンタカー受取",
+        "t": "09:25",
+        "p": "福井駅東口集合・レンタカー受取",
         "url": "https://www.google.com/maps/search/?api=1&query=%E7%A6%8F%E4%BA%95%E9%A7%85",
-        "hint": "東京組は10:09着、神戸組は先着。10:35出発を目安に荷物を積みます。",
+        "hint": "神戸組08:51着・東京組09:12着。先に着いた神戸組が受付を始めておくと09:45に出られます。",
         "move": {
           "ic": "🚗",
-          "label": "車 約30分＋駐車10分",
-          "url": "https://www.google.com/maps/dir/?api=1&origin=%E7%A6%8F%E4%BA%95%E9%A7%85&destination=%E5%A4%A7%E6%9C%AC%E5%B1%B1%E6%B0%B8%E5%B9%B3%E5%AF%BA&travelmode=driving"
+          "label": "車 約20分",
+          "url": "https://www.google.com/maps/dir/?api=1&origin=%E7%A6%8F%E4%BA%95%E9%A7%85&destination=%E4%B8%80%E4%B9%97%E8%B0%B7%E6%9C%9D%E5%80%89%E6%B0%8F%E9%81%BA%E8%B7%A1%E5%8D%9A%E7%89%A9%E9%A4%A8&travelmode=driving"
         }
       },
       {
         "num": 2,
-        "t": "11:15",
-        "p": "大本山永平寺・門前ランチ",
-        "url": "https://www.eiheiji.jp/main/archives/89",
-        "hint": "先に昼食を取り、12:10〜13:30に回廊と伽藍を拝観。食事は下の3候補から予約状況で選びます。",
+        "t": "10:05",
+        "p": "一乗谷朝倉氏遺跡博物館",
+        "url": "https://asakura-museum.pref.fukui.lg.jp/about/guidance",
+        "hint": "一般700円、9:00〜17:00、月曜休館。原寸復元された朝倉館と石垣の遺構を60分で。時間があれば復原町並との共通券に。",
         "move": {
           "ic": "🚗",
-          "label": "車 約55分＋駐車10分",
-          "url": "https://www.google.com/maps/dir/?api=1&origin=%E5%A4%A7%E6%9C%AC%E5%B1%B1%E6%B0%B8%E5%B9%B3%E5%AF%BA&destination=%E6%9D%B1%E5%B0%8B%E5%9D%8A&travelmode=driving"
+          "label": "車 約25分",
+          "url": "https://www.google.com/maps/dir/?api=1&origin=%E4%B8%80%E4%B9%97%E8%B0%B7%E6%9C%9D%E5%80%89%E6%B0%8F%E9%81%BA%E8%B7%A1%E5%8D%9A%E7%89%A9%E9%A4%A8&destination=%E5%A4%A7%E6%9C%AC%E5%B1%B1%E6%B0%B8%E5%B9%B3%E5%AF%BA&travelmode=driving"
         }
       },
       {
         "num": 3,
-        "t": "14:35",
-        "p": "東尋坊・海岸散策と遊覧船",
+        "t": "11:35",
+        "p": "大本山永平寺・門前ランチ",
+        "url": "https://www.eiheiji.jp/main/archives/89",
+        "hint": "11:40から門前で越前おろしそばの昼食、12:40〜13:50に回廊と七堂伽藍を拝観。拝観は大人700円・入場16:00までです。",
+        "move": {
+          "ic": "🚗",
+          "label": "車 約55分",
+          "url": "https://www.google.com/maps/dir/?api=1&origin=%E5%A4%A7%E6%9C%AC%E5%B1%B1%E6%B0%B8%E5%B9%B3%E5%AF%BA&destination=%E6%9D%B1%E5%B0%8B%E5%9D%8A&travelmode=driving"
+        }
+      },
+      {
+        "num": 4,
+        "t": "14:45",
+        "p": "東尋坊・遊覧船と夕景",
         "url": "https://kanko-sakai.com/spot/k001/",
-        "hint": "遊覧船は1周約30分・大人1,800円。冬期ダイヤで11月は15:30までのため、14:45便前後を狙い、欠航時は散策とカフェに切り替えます。",
+        "hint": "15:00の遊覧船（1周約30分・大人1,800円）に乗り、そのあと柱状節理の崖上と商店街を1時間。10〜11月は夕日が海に落ちる時間帯です。",
         "move": {
           "ic": "🚗",
           "label": "車 約20分",
@@ -622,47 +670,78 @@ const days = [
         }
       },
       {
-        "num": 4,
+        "num": 5,
         "t": "16:50",
         "p": "あわら温泉・チェックイン",
         "url": "https://awara.info/",
-        "hint": "夕食前に温泉と部屋時間を約2時間確保。夕食後の運転はありません。"
+        "hint": "17:00〜18:30に大浴場、18:30から夕食。6名2室で、部屋を移動しやすい配置を希望として伝えておきます。"
+      },
+      {
+        "num": 6,
+        "t": "20:10",
+        "p": "あわら温泉屋台村 湯けむり横丁",
+        "url": "https://yukemuriyokocho.com/",
+        "hint": "17:00〜24:00、9店舗の屋台村。あわら湯のまち駅前で、宿から歩ける距離かは予約時に確認します。運転はないので飲めます。"
       }
     ]
   },
   {
-    "label": "Day2｜越前がにの朝市と帰路",
+    "label": "Day2｜恐竜・苔の宮・越前大野の城下町",
     "stops": [
       {
         "t": "07:00",
         "p": "朝食・チェックアウト",
         "url": "#stay",
-        "hint": "08:00出発。かにまつり開催日以外は三国湊散策へ差し替え、Day2の走行を約100km短縮します。",
+        "hint": "07:00朝食、08:00出発。恐竜博物館の開館直後に入るための早出です。",
         "move": {
           "ic": "🚗",
-          "label": "車 約80分＋混雑余裕15分",
-          "url": "https://www.google.com/maps/dir/?api=1&origin=%E3%81%82%E3%82%8F%E3%82%89%E6%B8%A9%E6%B3%89&destination=%E9%81%93%E3%81%AE%E9%A7%85%20%E8%B6%8A%E5%89%8D&travelmode=driving"
+          "label": "車 約65分",
+          "url": "https://www.google.com/maps/dir/?api=1&origin=%E3%81%82%E3%82%8F%E3%82%89%E6%B8%A9%E6%B3%89&destination=%E7%A6%8F%E4%BA%95%E7%9C%8C%E7%AB%8B%E6%81%90%E7%AB%9C%E5%8D%9A%E7%89%A9%E9%A4%A8&travelmode=driving"
         }
       },
       {
-        "num": 5,
-        "t": "09:35",
-        "p": "越前かにまつり2026",
-        "url": "https://www.fuku-e.com/event/detail_5236.html",
-        "hint": "11/14・15、11/21・22の9:00〜15:00。10:15頃から海鮮グルメを早めの昼食にし、11:45までに会場を出ます。",
+        "num": 7,
+        "t": "09:05",
+        "p": "福井県立恐竜博物館",
+        "url": "https://www.dinosaur.pref.fukui.jp/guide/fee.html",
+        "hint": "9:00開館・一般1,000円。09:15から2時間、混む前の時間帯に全身骨格と化石発掘場を見ます。日時指定券が基本のため事前予約を。",
         "move": {
           "ic": "🚗",
-          "label": "車 約75分＋給油・返却30分",
-          "url": "https://www.google.com/maps/dir/?api=1&origin=%E9%81%93%E3%81%AE%E9%A7%85%20%E8%B6%8A%E5%89%8D&destination=%E7%A6%8F%E4%BA%95%E9%A7%85&travelmode=driving"
+          "label": "車 約15分",
+          "url": "https://www.google.com/maps/dir/?api=1&origin=%E7%A6%8F%E4%BA%95%E7%9C%8C%E7%AB%8B%E6%81%90%E7%AB%9C%E5%8D%9A%E7%89%A9%E9%A4%A8&destination=%E5%B9%B3%E6%B3%89%E5%AF%BA%E7%99%BD%E5%B1%B1%E7%A5%9E%E7%A4%BE&travelmode=driving"
         }
       },
       {
-        "num": 6,
+        "num": 8,
+        "t": "11:30",
+        "p": "平泉寺白山神社（白山平泉寺）",
+        "url": "https://heisenji.jp/",
+        "hint": "境内は拝観無料、旧玄成院庭園のみ50円。駐車は協力金1台300円。一面の苔に覆われた参道と拝殿跡を50分歩きます。",
+        "move": {
+          "ic": "🚗",
+          "label": "車 約30分＋昼食60分",
+          "url": "https://www.google.com/maps/dir/?api=1&origin=%E5%B9%B3%E6%B3%89%E5%AF%BA%E7%99%BD%E5%B1%B1%E7%A5%9E%E7%A4%BE&destination=%E8%B6%8A%E5%89%8D%E5%A4%A7%E9%87%8E%E5%9F%8E&travelmode=driving"
+        }
+      },
+      {
+        "num": 9,
+        "t": "13:55",
+        "p": "越前大野城・城下町",
+        "url": "https://www.onocastle.net/",
+        "hint": "12:25から平泉寺ふもとか勝山市街で昼食を取り、大野へ。城は大人400円で10〜11月は9:00〜16:00、西口から徒歩約10分。城下町の七間通りと御清水も合わせて95分。",
+        "move": {
+          "ic": "🚗",
+          "label": "車 約50分＋給油20分",
+          "url": "https://www.google.com/maps/dir/?api=1&origin=%E8%B6%8A%E5%89%8D%E5%A4%A7%E9%87%8E%E5%9F%8E&destination=%E7%A6%8F%E4%BA%95%E9%A7%85&travelmode=driving"
+        }
+      },
+      {
+        "num": 10,
         "kind": "hub",
-        "t": "13:30",
+        "t": "16:25",
         "p": "福井駅・レンタカー返却・解散",
         "url": "https://www.google.com/maps/search/?api=1&query=%E7%A6%8F%E4%BA%95%E9%A7%85",
-        "hint": "Day2だけで約130km・運転約2時間35分。代表列車は東京組16:23、神戸組16:41発で、返却後に約3時間空きます。荷物をコインロッカーに預けて駅前で過ごすか、早い便に変えるかを先に決めておきます。"
+        "hint": "2日で約210km・運転約4時間40分。返却後は駅ビルで土産を見て、東京組17:31・神戸組17:38の列車へ。"
       }
     ]
   }
@@ -690,61 +769,60 @@ const meals = [
         "name": "てらぐち",
         "url": "https://www.google.com/maps/search/?api=1&query=%E3%81%A6%E3%82%89%E3%81%90%E3%81%A1%20%E6%B0%B8%E5%B9%B3%E5%AF%BA",
         "price": "〜1,999円",
-        "hint": "食べログ3.46/222人、Google 3.7/149件。基準未達ですが参拝口徒歩数分で、到着遅延時の合理的な例外。",
+        "hint": "食べログ3.46/222人、Google 3.7/149件。参拝口から徒歩数分で、到着が遅れた日の保険。",
         "tag": "立地例外"
       }
     ]
   },
   {
-    "when": "Day1夜｜あわら温泉",
+    "when": "Day1夜｜あわら温泉の宿",
     "items": [
       {
-        "name": "グランディア芳泉・越前がに会席",
+        "name": "グランディア芳泉・若狭牛しゃぶしゃぶ会席",
         "url": "https://www.g-housen.co.jp/",
-        "price": "1泊2食 2〜4万円台〜",
-        "hint": "食べログ3.26/約134人、Google 4.3/2,119件。上質本命。タグ付きがにの杯数・追加料金・6名の部屋割りを比較。",
-        "tag": "上質本命"
+        "price": "1泊2食 2.2〜3.5万円台/人",
+        "hint": "かに以外の会席が公式に用意されている宿。食物アレルギー対応の窓口もあるため、甲殻類を外した献立を組みやすい。",
+        "tag": "本命"
       },
       {
-        "name": "まつや千千・かに会席",
+        "name": "まつや千千・和会席",
         "url": "https://matuyasensen.co.jp/",
-        "price": "1泊2食 2〜3万円台〜",
-        "hint": "食べログ3.25/約102人、Google 4.3/1,756件。会話しやすい和会席。夕食開始時刻と料理内容を固定。",
+        "price": "1泊2食 2.0〜3.0万円台/人",
+        "hint": "食べログ3.25/約102人、Google 4.3/1,756件。会話しやすい和会席。かに以外のプランを指定し、夕食開始時刻も固定しておく。",
         "tag": "会話重視"
       },
       {
-        "name": "清風荘・かにプラン",
+        "name": "清風荘・会席またはビュッフェ",
         "url": "https://www.seifuso.com/",
-        "price": "1泊2食 2〜3万円台〜",
-        "hint": "食べログ3.25/約97人、Google 4.0/1,825件。大人数向き。ビュッフェと会席で料金差が大きい。",
+        "price": "1泊2食 2.0〜3.0万円台/人",
+        "hint": "食べログ3.25/約97人、Google 4.0/1,825件。ビュッフェなら各自が避けられる一方、会席は個別対応の可否を要確認。",
         "tag": "カジュアル"
       }
     ]
   },
   {
-    "when": "Day2昼｜越前町",
+    "when": "Day2昼｜平泉寺ふもと・勝山",
     "items": [
       {
-        "name": "越前かにまつり・海鮮グルメ",
-        "url": "https://www.fuku-e.com/event/detail_5236.html",
-        "price": "1,500〜4,000円",
-        "hint": "かに汁・海鮮焼き等。開催日限定で、混雑と売切れを見込み10時台に食べ始めます。",
-        "tag": "開催日限定",
-        "sns": true
+        "name": "そば処 まつや",
+        "url": "https://soba-matsuya.com/",
+        "price": "1,000〜1,999円",
+        "hint": "食べログ3.16/37人。平泉寺の駐車場前で、参拝後に移動ゼロで入れるのが最大の利点。勝山産玄そばの自家製粉、11:00〜19:00。",
+        "tag": "動線本命"
       },
       {
-        "name": "越前 蟹の坊",
-        "url": "https://www.google.com/maps/search/?api=1&query=%E8%B6%8A%E5%89%8D%20%E8%9F%B9%E3%81%AE%E5%9D%8A",
-        "price": "3,000〜3,999円",
-        "hint": "食べログ3.58/約352人、Google 4.3/745件。三国港駅側なので、祭りを外す日の旅程本命。",
-        "tag": "通常日本命"
+        "name": "越前そば処 勝食",
+        "url": "https://www.katusyoku.jp/",
+        "price": "1,000〜1,999円",
+        "hint": "食べログ3.39/150人。エリア最高評価で、おろしそばとソース・玉子・醤油から選ぶカツ丼のセットが看板。11:00〜14:00・水曜定休。",
+        "tag": "評価本命"
       },
       {
-        "name": "料理茶屋 魚志楼",
-        "url": "https://www.google.com/maps/search/?api=1&query=%E6%96%99%E7%90%86%E8%8C%B6%E5%B1%8B%20%E9%AD%9A%E5%BF%97%E6%A5%BC",
-        "price": "2,000〜2,999円",
-        "hint": "食べログ3.50/68人、Google 4.3/191件。歴史建築で会話しやすく、6名は事前電話予約推奨。",
-        "tag": "雰囲気本命"
+        "name": "福彩り食堂 のむら屋",
+        "url": "http://www.nomuraya-fukui.com/",
+        "price": "〜1,999円",
+        "hint": "食べログ3.26/58人。とろとろ玉子かつ丼850円と勝ち山おろしそば。11:00〜14:00・火曜夜と水曜が休み。",
+        "tag": "コスパ"
       }
     ]
   }
@@ -759,76 +837,103 @@ const activities = [
     "tag": "海上体験"
   },
   {
+    "name": "福井県立恐竜博物館",
+    "url": "https://www.dinosaur.pref.fukui.jp/guide/admission.html",
+    "price": "一般1,000円",
+    "hint": "9:00〜17:00（入館16:30まで）、第2・4水曜休館。日時指定券が基本のため、日程が決まり次第6枚を確保します。",
+    "tag": "要事前予約"
+  },
+  {
+    "name": "越前大野城",
+    "url": "https://www.onocastle.net/",
+    "price": "大人400円",
+    "hint": "10〜11月は9:00〜16:00。登り口から頂上まで徒歩約20分、最短の西口なら約10分。12〜3月は閉館。",
+    "tag": "登城"
+  },
+  {
+    "name": "平泉寺白山神社",
+    "url": "https://heisenji.jp/",
+    "price": "拝観無料（庭園50円・駐車協力金300円）",
+    "hint": "苔に覆われた参道と拝殿跡。舗装のない道が続くため歩きやすい靴で。",
+    "tag": "苔の宮"
+  },
+  {
+    "name": "あわら温泉屋台村 湯けむり横丁",
+    "url": "https://yukemuriyokocho.com/",
+    "price": "1店1,500〜3,000円目安",
+    "hint": "17:00〜24:00、9店舗。夕食後の2軒目に使える夜の選択肢。店ごとに定休日が異なります。",
+    "tag": "夜"
+  },
+  {
     "name": "永平寺拝観",
     "url": "https://www.eiheiji.jp/main/archives/89",
     "price": "大人700円",
     "hint": "拝観8:30〜16:30（入場16:00まで）。回廊と七堂伽藍を60〜90分。雨でも組みやすい。",
     "tag": "文化"
-  },
-  {
-    "name": "福井県立恐竜博物館",
-    "url": "https://www.dinosaur.pref.fukui.jp/guide/admission.html",
-    "price": "大人1,000円",
-    "hint": "荒天時の終日代替。日時指定券が必要で、東尋坊ルートとは朝に入れ替えます。",
-    "tag": "雨天代替"
-  },
-  {
-    "name": "化石研究体験",
-    "url": "https://www.dinosaur.pref.fukui.jp/event/fossil.html",
-    "price": "一般2,200円目安",
-    "hint": "約2時間。恐竜博物館へ切り替える日に事前予約。",
-    "tag": "予約制"
   }
 ];
 
 const other = [
   {
-    "name": "三國湊の町並み",
-    "url": "https://www.google.com/maps/search/?api=1&query=%E4%B8%89%E5%9C%8B%E6%B9%8A",
-    "price": "",
-    "hint": "かにまつり日以外のDay2候補。あわら温泉から車約20分。"
+    "name": "一乗谷 復原町並",
+    "url": "https://ichijo-dani.com/site/",
+    "price": "博物館との共通券あり",
+    "hint": "戦国の町並みを原寸で復元した区画。博物館だけでは足りない場合の延長先。"
+  },
+  {
+    "name": "三國湊 きたまえ通り",
+    "url": "https://www.google.com/maps/search/?api=1&query=%E4%B8%89%E5%9C%8B%E6%B9%8A%20%E3%81%8D%E3%81%9F%E3%81%BE%E3%81%88%E9%80%9A%E3%82%8A",
+    "price": "散策は無料",
+    "hint": "北前船で栄えた港町の町並み。東尋坊から車約15分で、遊覧船が欠航した日の差し替えに使えます。"
   },
   {
     "name": "丸岡城",
-    "url": "https://maruoka-castle.jp/",
-    "price": "入場料は公式で確認",
-    "hint": "福井駅へ戻る途中に60分。強風で東尋坊を短縮した日の差し替え。"
+    "url": "https://maruoka-castle.jp/information/",
+    "price": "天守は入城不可",
+    "hint": "北陸唯一の現存天守ですが、天守は改修工事中で中に入れません。霞ヶ城公園の外観と一筆啓上 日本一短い手紙の館は見学できます。"
   },
   {
-    "name": "福井県立恐竜博物館",
-    "url": "https://www.dinosaur.pref.fukui.jp/",
-    "price": "大人1,000円",
-    "hint": "雨天に強いが、あわら・東尋坊とは逆方向のためルート単位で差し替え。"
+    "name": "谷口屋（竹田の油あげ）",
+    "url": "https://taniguchiya.co.jp/restaurant/",
+    "price": "食事は2,000円前後",
+    "hint": "分厚い油あげで知られる坂井市の店。お食事処は3〜11月10:30〜15:00、火曜定休。あわら温泉から勝山へ抜ける途中に寄れます。"
   },
   {
-    "name": "一乗谷朝倉氏遺跡",
-    "url": "https://asakura-museum.pref.fukui.lg.jp/",
-    "price": "博物館は別料金",
-    "hint": "永平寺と組み合わせやすい歴史スポット。"
+    "name": "めがねミュージアム",
+    "url": "https://www.megane.gr.jp/museum",
+    "price": "見学無料・体験は別料金",
+    "hint": "鯖江の眼鏡づくりを見学・体験できる施設。行程からは南に外れるため、延泊するときの候補。"
   }
 ];
 
 const cars = [
   {
-    "name": "トヨタレンタカー 福井駅東口店（W4クラス）",
+    "name": "トヨタレンタカー 福井駅東口店（ミニバン・ワゴン）",
     "url": "https://rent.toyota.co.jp/sp/shop/detail.aspx?rCode=64301&eCode=013",
-    "price": "基本・補償 約4.7万〜6.2万円/30時間",
-    "hint": "福井駅東口で受取・返却。10人乗りは台数が限られるため、6名＋1泊荷物が積めるか実車と荷室を電話確認。燃料等を含む車関連総額は約5.9万〜6.5万円。",
+    "price": "基本・免責補償 約2.4万〜3.4万円/約32時間",
+    "hint": "福井駅東口で受取・返却。8人乗りを確実にするには、予約後に出発店舗へ定員指定の連絡が必要です。",
     "tag": "受取店"
   },
   {
-    "name": "ハイエース グランドキャビン（10人乗り）の車種仕様",
-    "url": "https://www.tabirai.net/car/vehicle/vehicle-type/?VID=27",
-    "price": "10人乗り・W4クラス",
-    "hint": "定員・荷室・運転感覚の目安。運転担当2名が事前に見ておく用。",
+    "name": "ノア／ヴォクシー（7・8人乗り）の車種仕様",
+    "url": "https://rent.toyota.co.jp/service/car/class/charge.aspx?searchKbn=4",
+    "price": "8人乗り指定は+2,200円/回",
+    "hint": "6名が乗ると3列目まで使うため、荷室は最小になります。大型スーツケースは持たず、機内持ち込みサイズ以下にそろえます。",
     "tag": "車種"
   },
   {
     "name": "たびらいレンタカー 福井駅比較",
     "url": "https://www.tabirai.net/car/fukui/",
-    "price": "日付・10人乗りで検索",
-    "hint": "W4相当1台を、免責・NOC補償込みの総額で比較。",
+    "price": "日付・8人乗りで検索",
+    "hint": "免責・NOC補償込みの総額で比較。料金の考え方はトヨタの料金一覧も参照。",
     "tag": "比較"
+  },
+  {
+    "name": "トヨタレンタカー 料金一覧",
+    "url": "https://rent.toyota.co.jp/service/charge/pricelist.aspx",
+    "price": "クラス別の基本料金",
+    "hint": "24時間＋延長の考え方と補償料金の内訳。約32時間利用の見積り根拠に使います。",
+    "tag": "料金表"
   }
 ];
 
@@ -836,21 +941,21 @@ const stays = [
   {
     "name": "グランディア芳泉",
     "url": "https://www.g-housen.co.jp/",
-    "price": "1泊2食 2.8万〜5万円台/人",
-    "hint": "大浴場・食事・6名対応の総合本命。越前がにの料理ランクを確認。",
+    "price": "1泊2食 2.2万〜3.5万円台/人",
+    "hint": "かに以外の会席が公式にあり、食物アレルギー対応の案内も持つ総合本命。3名1室が取れるかを先に確認。",
     "tag": "本命"
   },
   {
     "name": "楽天トラベル：あわら温泉",
     "url": "https://travel.rakuten.co.jp/onsen/fukui/OK00428.html",
-    "price": "6名・2〜3室で検索",
-    "hint": "キャンセル条件と夕食開始時刻まで比較。"
+    "price": "6名・2室で検索",
+    "hint": "1室3名で2部屋の空きと、キャンセル条件・夕食開始時刻まで比較。"
   },
   {
-    "name": "じゃらん：あわら温泉",
+    "name": "じゃらん：あわら",
     "url": "https://www.jalan.net/200000/LRG_200200/SML_200202/",
-    "price": "6名・2〜3室で検索",
-    "hint": "カニ会席のプラン本文と総額を比較。"
+    "price": "6名・2室で検索",
+    "hint": "プラン本文で献立を確認し、かにが主菜でないプランを選びます。"
   },
   {
     "name": "agoda：あわら",
@@ -872,113 +977,124 @@ const budget = [
     "新快速＋サンダーバード＋つるぎ"
   ],
   [
-    "宿・夕朝食",
-    "2.0〜4.0万円超",
-    "通常会席と越前がに会席で大きく変動"
+    "宿・夕朝食（2室）",
+    "2.0〜3.0万円",
+    "かにを外すぶん、11月のかに会席より下がる"
   ],
   [
-    "レンタカー・燃料・駐車",
-    "0.98〜1.08万円",
-    "10人乗り1台を6人で按分"
+    "レンタカー・燃料・高速・駐車",
+    "0.6〜0.8万円",
+    "8人乗り1台を6人で按分"
   ],
   [
-    "昼食・拝観・遊覧船",
-    "0.6〜0.9万円",
-    "イベントでの飲食を含む"
+    "昼食2回・拝観・入館・遊覧船・屋台村",
+    "1.0〜1.4万円",
+    "一乗谷700＋永平寺700＋遊覧船1,800＋恐竜博1,000＋大野城400を含む"
   ],
   [
     "東京発 合計",
-    "通常7.5〜8.3／かに8.6〜10.3万円",
-    "想定1人5〜7万円に対し、通常会席でも上振れ・かに込みは超過"
+    "6.8〜8.4万円",
+    "想定1人5〜7万円に収めるには宿を2.2万円以内に"
   ],
   [
     "神戸発 合計",
-    "通常5.8〜6.6／かに6.9〜8.6万円",
-    "通常会席なら想定内。かにの量で7万円超"
+    "5.1〜6.7万円",
+    "想定1人5〜7万円の範囲に収まる"
   ]
 ];
 
 const foresightList = [
   {
-    "category": "時期",
-    "title": "越前がには11月6日以降を前提",
-    "status": "11月案",
-    "note": "10月は漁期前。かにまつりは11/14・15、11/21・22の9:00〜15:00です。",
-    "url": "https://www.fuku-e.com/event/detail_5236.html"
+    "category": "食事",
+    "title": "甲殻類は宿と食事処へ事前申告",
+    "status": "予約時に伝える",
+    "note": "会席は先付・天ぷら・茶碗蒸しにえびが入りやすく、当日申告では差し替えが効きません。人数と対象食材を予約時に伝え、確認の返信をもらいます。",
+    "url": "https://www.g-housen.co.jp/"
   },
   {
-    "category": "費用",
-    "title": "東京組は料理ランク次第で予算超過",
-    "status": "上限を決める",
-    "note": "宿の1泊2食を1人3万円以内にできるかが5〜7万円達成の分岐点です。"
+    "category": "時期",
+    "title": "10月〜11月上旬のほうが宿を選びやすい",
+    "status": "日程を決める",
+    "note": "越前がには11月6日解禁で、それ以降はかに前提のプランが増えて相場も上がります。かにを使わない今回は、解禁前のほうが献立も価格も融通が利きます。"
+  },
+  {
+    "category": "予約",
+    "title": "恐竜博物館は日時指定券が基本",
+    "status": "先に6枚確保",
+    "note": "当日券は販売がない場合があります。09:15入館の枠を、日程確定と同時に押さえます。",
+    "url": "https://www.dinosaur.pref.fukui.jp/guide/admission.html"
+  },
+  {
+    "category": "荷物",
+    "title": "8人乗りは3列目を使うと荷室が小さい",
+    "status": "サイズをそろえる",
+    "note": "6名が乗ると荷室はほぼ残りません。大型スーツケースは持たず、宿に置ける荷物は先に降ろすか、福井駅のコインロッカーを併用します。",
+    "url": "https://www.jr-odekake.net/eki/top?id=0541430"
+  },
+  {
+    "category": "運転",
+    "title": "2日で約210km・運転約4時間40分",
+    "status": "2名交代",
+    "note": "Day1が約81km、Day2が約128km。中部縦貫道と山あいの一般道が続くため、運転担当を2名決めて交代します。"
+  },
+  {
+    "category": "休館日",
+    "title": "月曜と水曜は行程が崩れる",
+    "status": "曜日で選ぶ",
+    "note": "一乗谷は月曜休館、恐竜博物館は第2・4水曜休館、東尋坊の遊覧船と勝山の食事処2軒は水曜定休です。土日で組むのが最も安全です。"
   },
   {
     "category": "海況",
     "title": "遊覧船は風・波で欠航",
     "status": "当日判断",
-    "note": "欠航時は東尋坊散策を短くし、丸岡城または宿の早着へ切り替えます。",
+    "note": "欠航時は崖上散策を短めにして三國湊のきたまえ通りへ回り、宿に早く入ります。",
     "url": "https://www.toujinbou-yuransen.jp/"
   },
   {
-    "category": "混雑",
-    "title": "かにまつりは午前から混雑",
-    "status": "10時前着",
-    "note": "駐車と売切れを避けるため、あわら温泉を8:00に出て9:35着を目安にします。"
-  },
-  {
-    "category": "運転",
-    "title": "祭り日はDay2だけで約130km",
-    "status": "2名交代",
-    "note": "2日合計は約220km超。あわら温泉から祭り会場まで約80分、会場から福井駅まで約75分を見込み、運転担当を2名決めます。"
-  },
-  {
-    "category": "代替",
-    "title": "荒天時は恐竜博物館へルート交換",
-    "status": "朝に切替",
-    "note": "東尋坊からの追加移動にはせず、Day1の海岸ルート全体を入れ替えます。",
-    "url": "https://www.dinosaur.pref.fukui.jp/guide/admission.html"
-  },
-  {
     "category": "帰路",
-    "title": "返却13:30から代表列車まで約3時間空く",
-    "status": "便を決める",
-    "note": "駅前で過ごすなら福井駅のコインロッカーへ荷物を預けます。前倒しするなら、より早い便の空席と料金を予約前にそろえて確認します。",
-    "url": "https://www.jr-odekake.net/eki/top?id=0541430"
+    "title": "返却16:25・出発17:31／17:38",
+    "status": "余裕あり",
+    "note": "大野を15:35に出れば福井駅16:25着。給油と返却に40分を見ても、両組とも改札まで余裕があります。"
   }
 ];
 
 const bookList = [
   {
-    "label": "東京組の北陸新幹線4席",
+    "label": "東京組の北陸新幹線4席（501号・514号）",
     "url": "https://www.eki-net.com/personal/top/index"
   },
   {
-    "label": "神戸組のサンダーバード＋北陸新幹線2席",
+    "label": "神戸組のサンダーバード＋つるぎ2席",
     "url": "https://www.jr-odekake.net/goyoyaku/e5489/"
   },
   {
-    "label": "あわら温泉の宿6名・夕朝食付き",
+    "label": "あわら温泉の宿 6名2室・夕朝食付き（甲殻類抜きの確認つき）",
     "url": "https://travel.rakuten.co.jp/onsen/fukui/OK00428.html"
   },
   {
-    "label": "越前がに料理の内容と6人分",
-    "url": "https://www.fuku-e.com/topics/detail_3496.html"
+    "label": "恐竜博物館の日時指定券6枚",
+    "url": "https://www.dinosaur.pref.fukui.jp/guide/admission.html"
   },
   {
-    "label": "W4・10人乗りレンタカー1台",
-    "url": "https://www.tabirai.net/car/fukui/"
+    "label": "8人乗りミニバン1台（定員指定の連絡）",
+    "url": "https://rent.toyota.co.jp/sp/shop/detail.aspx?rCode=64301&eCode=013"
   },
   {
     "label": "東尋坊遊覧船の当日運航",
     "url": "https://www.toujinbou-yuransen.jp/"
+  },
+  {
+    "label": "永平寺門前の昼食（6名・予約可の店）",
+    "url": "https://zen-eiheiji.jp/shop/entry-50.html"
   }
 ];
 
 const decideList = [
-  "11/14〜15と11/21〜22のどちらを狙うか",
-  "越前がにを1人1杯にするか、会席の一部にして予算を守るか",
-  "宿を6名2室にするか、ゆとり重視で3室にするか",
-  "遊覧船が欠航した場合、丸岡城と宿の早着のどちらにするか"
+  "10月にするか11月にするか（宿の相場と紅葉の進み方で変わる）",
+  "宿の夕食を若狭牛の会席にするか、創作懐石にするか",
+  "越前大野城に登るか、城下町の散策だけにして時間を使うか",
+  "Day1の夜に湯けむり横丁へ出るか、宿の温泉と部屋で過ごすか",
+  "遊覧船が欠航した場合、三國湊へ回すか宿に早く入るか"
 ];
 /* =================== /DATA =================== */
 
