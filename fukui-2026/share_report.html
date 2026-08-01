@@ -1,0 +1,1095 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>福井・東尋坊＋あわら温泉 1泊2日</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+  integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="">
+<style>
+  :root{
+    --color-brand:#0b5cab;
+    --color-brand-hover:#064a8a;
+    --color-brand-deep:#032d60;
+    --color-brand-soft:#eaf5ff;
+    --color-background:#eef4fb;
+    --color-surface:#ffffff;
+    --color-surface-alt:#f7f9fd;
+    --color-border:#c9d5e8;
+    --color-text-primary:#111827;
+    --color-text-secondary:#3f526d;
+    --color-text-muted:#6b778c;
+    --color-success:#2e844a;
+    --color-warning:#b76100;
+    --color-danger:#ba0517;
+    --color-info:#0176d3;
+    --space-1:4px;
+    --space-2:8px;
+    --space-3:12px;
+    --space-4:16px;
+    --space-6:24px;
+    --space-8:32px;
+    --radius-small:4px;
+    --radius-medium:8px;
+    --radius-large:12px;
+    --shadow-card:0 1px 2px rgba(10,31,68,.10),0 10px 28px rgba(10,31,68,.08);
+    --shadow-popover:0 12px 32px rgba(10,31,68,.20);
+    --shadow-modal:0 24px 60px rgba(10,31,68,.30);
+    --font-stack:"Segoe UI Variable","Segoe UI","Noto Sans JP","Yu Gothic UI","Yu Gothic",Meiryo,sans-serif;
+    --font-page-title:750 30px/1.16 var(--font-stack);
+    --font-section-title:750 18px/1.35 var(--font-stack);
+    --font-body:400 14px/1.65 var(--font-stack);
+    --font-caption:700 12px/1.4 var(--font-stack);
+    --z-header:100;
+    --z-dropdown:200;
+    --z-modal:500;
+    --z-toast:600;
+  }
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{margin:0;color:var(--color-text-primary);
+    background:linear-gradient(180deg,#fff 0,#fff 56px,#0b5cab 56px,#276f9f 172px,#eef4fb 172px,#eef4fb 100%);
+    font:var(--font-body);-webkit-text-size-adjust:100%}
+  a{color:var(--color-brand);text-underline-offset:.16em}
+  a:hover{color:var(--color-brand-hover)}
+  a:focus-visible,button:focus-visible{outline:3px solid rgba(1,118,211,.35);outline-offset:2px}
+  .app-shell{min-height:100vh;position:relative}
+  .app-shell::before{content:"";position:absolute;left:0;right:0;top:56px;height:156px;pointer-events:none;
+    background:
+      repeating-linear-gradient(135deg,rgba(255,255,255,.14) 0 1px,transparent 1px 18px),
+      linear-gradient(120deg,rgba(3,45,96,.92),rgba(11,92,171,.78) 54%,rgba(91,144,184,.52));
+    border-bottom:1px solid rgba(255,255,255,.28)}
+  .global-header{position:sticky;top:0;z-index:var(--z-header);height:56px;background:#fff;color:var(--color-text-primary);
+    border-bottom:1px solid #dfe5ef;display:flex;align-items:center;gap:var(--space-4);padding:0 var(--space-6);
+    box-shadow:0 1px 2px rgba(10,31,68,.08)}
+  .brand-home{display:flex;align-items:center;gap:var(--space-3);min-width:0;color:inherit;text-decoration:none}
+  .brand-home:hover{color:inherit}
+  .brand-mark{width:30px;height:30px;border-radius:var(--radius-medium);background:linear-gradient(135deg,#2b6cb0,#6c7ff2);
+    color:#fff;display:grid;place-items:center;font-weight:900;box-shadow:inset 0 0 0 1px rgba(255,255,255,.35)}
+  .brand-title{font-weight:800;letter-spacing:0}
+  .global-actions{margin-left:auto;display:flex;align-items:center;gap:var(--space-1);overflow:auto}
+  .global-actions a{display:inline-flex;align-items:center;min-height:32px;padding:0 10px;border-radius:var(--radius-small);
+    color:var(--color-text-secondary);font-size:13px;font-weight:750;text-decoration:none;white-space:nowrap}
+  .global-actions a:hover{background:var(--color-brand-soft);color:var(--color-brand)}
+  .global-actions .back-link{border:1px solid var(--color-border);background:var(--color-surface-alt);color:var(--color-brand-deep)}
+  .shell-body{position:relative;z-index:1;max-width:1440px;margin:0 auto;display:grid;grid-template-columns:220px minmax(0,1fr) 300px;gap:var(--space-4);padding:var(--space-4)}
+  .side-nav,.summary-panel{position:sticky;top:72px;align-self:start}
+  .side-nav,.summary-panel,.card{background:var(--color-surface);border:1px solid var(--color-border);border-radius:var(--radius-medium);box-shadow:var(--shadow-card)}
+  .side-nav{padding:var(--space-3);box-shadow:0 1px 2px rgba(10,31,68,.10),0 10px 22px rgba(10,31,68,.08)}
+  .side-nav-title,.summary-title{font:var(--font-caption);color:var(--color-text-muted);margin:0 0 var(--space-2)}
+  .side-nav a{display:flex;align-items:center;gap:var(--space-2);min-height:36px;padding:0 var(--space-3);border-radius:var(--radius-small);
+    color:var(--color-text-secondary);font-weight:700;text-decoration:none}
+  .side-nav a:hover,.side-nav a.active{background:var(--color-brand-soft);color:var(--color-brand)}
+  .main-content{min-width:0;display:grid;gap:var(--space-4)}
+  .summary-panel{padding:var(--space-4);display:grid;gap:var(--space-4)}
+  .summary-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:var(--space-2)}
+  .summary-metric{min-height:76px;display:grid;align-content:space-between;gap:var(--space-1);padding:var(--space-3);
+    border:1px solid #d7e3f5;border-radius:var(--radius-medium);background:linear-gradient(180deg,#fff,#f8fbff)}
+  .summary-metric span{color:var(--color-text-muted);font-size:11px;font-weight:750}
+  .summary-metric b{font-size:21px;line-height:1.1;color:var(--color-brand-deep);font-weight:750}
+  .summary-metric::after{content:"";display:block;width:100%;height:6px;border-radius:999px;background:linear-gradient(90deg,#2b6cb0,#6c7ff2)}
+  .utility-links{display:grid;gap:var(--space-2)}
+  .utility-links a{display:flex;justify-content:space-between;align-items:center;min-height:36px;padding:0 var(--space-3);
+    border:1px solid var(--color-border);border-radius:var(--radius-small);background:var(--color-surface-alt);
+    color:var(--color-text-primary);font-weight:750;text-decoration:none}
+  .utility-links a::after{content:"›";color:var(--color-brand);font-size:18px}
+  .utility-links a:hover{border-color:#9bbde6;background:var(--color-brand-soft);color:var(--color-brand)}
+  .hero{position:relative;overflow:hidden;background:linear-gradient(180deg,#fff,#f9fbff);border:1px solid #c4d4ea;
+    border-radius:var(--radius-medium);padding:0;box-shadow:0 2px 4px rgba(10,31,68,.10),0 16px 42px rgba(10,31,68,.12)}
+  .hero::before{content:"";position:absolute;left:0;right:0;top:0;height:6px;background:linear-gradient(90deg,#2b6cb0,#706eeb,#20a0d8)}
+  .hero-main{padding:var(--space-6)}
+  .title-cluster{display:flex;align-items:flex-start;gap:var(--space-3)}
+  .record-icon{width:42px;height:42px;border-radius:var(--radius-medium);display:grid;place-items:center;flex:0 0 auto;
+    background:linear-gradient(135deg,#5f7feb,#2b6cb0);color:#fff;font-weight:900;box-shadow:inset 0 0 0 1px rgba(255,255,255,.35)}
+  .kicker{font:var(--font-caption);color:var(--color-brand);margin-bottom:var(--space-1)}
+  .page-title-row{display:flex;align-items:flex-start;justify-content:space-between;gap:var(--space-4)}
+  h1{margin:0;font:var(--font-page-title)}
+  .lead{color:var(--color-text-secondary);margin:var(--space-2) 0 var(--space-4);max-width:74ch}
+  .badges{display:flex;gap:var(--space-2);flex-wrap:wrap}
+  .badge,.pill,.tag{display:inline-flex;align-items:center;gap:5px;border:1px solid var(--color-border);background:var(--color-surface-alt);
+    border-radius:999px;padding:5px 10px;font-size:12px;font-weight:800;color:var(--color-text-secondary)}
+  .badge.status-info{background:#eaf5ff;border-color:#b9dcff;color:#095da0}
+  .badge.status-success{background:#eaf7ee;border-color:#b7e1c1;color:#22683e}
+  .action-bar{display:flex;gap:var(--space-2);flex-wrap:wrap;margin-top:var(--space-4)}
+  .btn{display:inline-flex;align-items:center;justify-content:center;gap:var(--space-2);min-height:36px;border:1px solid var(--color-border);
+    border-radius:var(--radius-small);padding:0 var(--space-3);background:var(--color-surface);color:var(--color-text-primary);
+    text-decoration:none;font-weight:800;cursor:pointer;box-shadow:0 1px 1px rgba(10,31,68,.06)}
+  .btn:hover{border-color:#9bbde6;color:var(--color-brand);background:#f7fbff;box-shadow:0 2px 8px rgba(10,31,68,.10)}
+  .btn.primary{background:linear-gradient(180deg,#1677d2,#0b5cab);border-color:#084f99;color:#fff}
+  .btn.primary:hover{background:var(--color-brand-hover);color:#fff}
+  .btn.subtle{background:var(--color-surface-alt)}
+  .tabset{position:sticky;top:72px;z-index:50;background:var(--color-surface);border:1px solid var(--color-border);
+    border-radius:var(--radius-medium);box-shadow:var(--shadow-card);display:flex;gap:var(--space-1);padding:var(--space-1);overflow:auto}
+  .tabset a{white-space:nowrap;text-decoration:none;color:var(--color-text-secondary);font-weight:800;border-radius:var(--radius-small);padding:9px 12px}
+  .tabset a:hover{background:var(--color-brand-soft);color:var(--color-brand)}
+  section{scroll-margin-top:128px;margin-top:var(--space-4)}
+  .section-head{display:flex;align-items:flex-end;justify-content:space-between;gap:var(--space-4);margin-bottom:var(--space-3)}
+  h2{font:var(--font-section-title);margin:0;display:flex;align-items:center;gap:var(--space-2)}
+  h2 .dot{width:4px;height:18px;border-radius:999px;background:var(--color-brand)}
+  .sub{color:var(--color-text-muted);font-size:13px;margin:4px 0 0}
+  .card{padding:var(--space-4);margin-bottom:var(--space-3)}
+  .card:hover{box-shadow:0 2px 4px rgba(10,31,68,.10),0 12px 30px rgba(10,31,68,.08)}
+  #map{height:62vh;min-height:380px;max-height:560px;width:100%;border-radius:var(--radius-medium);border:1px solid var(--color-border);z-index:0;
+    background:linear-gradient(90deg,#eef2f7 25%,#f7f9fc 37%,#eef2f7 63%);background-size:400% 100%;animation:skeleton 1.25s ease-in-out infinite}
+  .mapfallback{height:100%;display:flex;align-items:center;justify-content:center;text-align:center;padding:24px;color:var(--color-text-secondary);background:#eef4f8}
+  .legend{display:flex;gap:14px;flex-wrap:wrap;margin-top:10px;font-size:13px;color:var(--color-text-secondary)}
+  .legend span{display:inline-flex;align-items:center;gap:6px}
+  .swatch{width:14px;height:14px;border-radius:50%;display:inline-block}
+  .routeline{width:22px;height:0;border-top:3px solid var(--color-danger);display:inline-block}
+  .pinindex{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+  .pinbtn{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--color-border);background:#fff;
+    border-radius:999px;padding:5px 11px 5px 6px;font-size:13px;font-weight:800;color:var(--color-text-primary);cursor:pointer}
+  .pinbtn:hover,.pinbtn.active{border-color:var(--color-danger);background:#fff4f2}
+  .pinbtn .num{width:20px;height:20px;border-radius:50%;background:var(--color-danger);color:#fff;font-size:12px;font-weight:800;
+    display:inline-flex;align-items:center;justify-content:center}
+  .pinbtn .num.hub{background:#16354a}
+  .pin{width:22px;height:22px;border-radius:50%;color:#fff;font-weight:800;font-size:12px;
+    display:flex;align-items:center;justify-content:center;border:2px solid #fff;box-shadow:0 2px 6px rgba(0,0,0,.35)}
+  .responsive-grid,.grid2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:var(--space-3)}
+  .access{display:grid;gap:10px}
+  .leg{display:grid;grid-template-columns:30px 1fr;gap:10px;padding:10px 0;border-bottom:1px dashed #e6ebee}
+  .leg:last-child{border-bottom:0}
+  .leg .ic{font-size:20px;text-align:center}
+  .leg .ttl{font-weight:800}
+  .leg .meta{font-size:13px;color:var(--color-text-secondary)}
+  .pillrow{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
+  .pill{text-decoration:none;background:#eef4f2;color:#27514a}
+  .pill.book{background:#eaf1f7;color:#1c537a}
+  .day{margin-bottom:14px}
+  .day h3{margin:0 0 12px;font-size:16px;color:var(--color-text-primary)}
+  .timeline{position:relative}
+  .stop{position:relative;padding:12px 0;border-bottom:1px solid #eef2f4}
+  .stop:last-child{border-bottom:0}
+  .stop .top{display:flex;gap:9px;align-items:baseline}
+  .stop .num{flex:0 0 auto;width:22px;height:22px;border-radius:50%;background:var(--color-danger);color:#fff;
+    font-size:12px;font-weight:800;display:inline-flex;align-items:center;justify-content:center;align-self:center}
+  .stop .num.hub{background:#16354a}
+  .stop .t{color:var(--color-brand);font-weight:800;font-variant-numeric:tabular-nums;min-width:46px}
+  .stop .p{font-weight:800}
+  .stop .hint{color:var(--color-text-muted);font-size:13px;margin-left:31px}
+  .movelink{margin:8px 0 2px 31px;display:inline-flex;align-items:center;gap:7px;font-size:13px;font-weight:700;
+    background:#f3f7f5;border:1px solid #e2ebe6;border-radius:10px;padding:5px 11px;color:#2f5a4c;text-decoration:none}
+  .mealgroup{margin-bottom:8px}
+  .mealgroup .when{font-weight:800;font-size:14px;color:var(--color-text-primary);margin:6px 2px 8px}
+  .item{border:1px solid var(--color-border);border-radius:var(--radius-medium);padding:var(--space-4);background:linear-gradient(180deg,#fff,#fbfdff);box-shadow:0 1px 1px rgba(10,31,68,.05)}
+  .item:hover{border-color:#9bbde6;box-shadow:var(--shadow-card);transform:translateY(-1px)}
+  .item .name{font-weight:800}
+  .item .price{font-weight:800;color:#123e5b;font-size:14px}
+  .item .hint{color:var(--color-text-muted);font-size:13px}
+  .tag{border-radius:var(--radius-small);padding:2px 7px;margin:0 6px 6px 0;color:#6a4a14;background:#fdf0d6}
+  .tag.sns{color:#8a2b6b;background:#fbe4f1}
+  .check-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:var(--space-3)}
+  .check-card{position:relative;border:1px solid #c7d8ea;border-radius:var(--radius-medium);padding:var(--space-4);
+    background:linear-gradient(180deg,#fff,#f8fbff);box-shadow:0 1px 1px rgba(10,31,68,.05)}
+  .check-card::before{content:"";position:absolute;left:0;top:0;bottom:0;width:4px;border-radius:var(--radius-medium) 0 0 var(--radius-medium);background:var(--color-warning)}
+  .check-label{font-size:12px;font-weight:850;color:var(--color-warning);margin-bottom:var(--space-1)}
+  .check-title{font-weight:850;color:var(--color-text-primary)}
+  .check-note{color:var(--color-text-muted);font-size:13px;margin-top:4px}
+  .check-status{display:inline-flex;margin-top:8px;border:1px solid #d9c6a0;background:#fff8ed;color:#7a4b00;border-radius:999px;padding:3px 8px;font-size:12px;font-weight:800}
+  .budget-card{padding:0;overflow:hidden}
+  .budget-head{display:flex;justify-content:space-between;gap:var(--space-4);align-items:flex-start;padding:var(--space-4);
+    background:linear-gradient(180deg,#f7fbff,#eef5ff);border-bottom:1px solid var(--color-border)}
+  .budget-head h3{margin:2px 0 0;font:var(--font-section-title)}
+  .budget-total{min-width:180px;border:1px solid #b9d6f4;background:#fff;border-radius:var(--radius-medium);padding:var(--space-3);text-align:right;
+    box-shadow:0 1px 2px rgba(10,31,68,.06)}
+  .budget-total span{display:block;color:var(--color-text-muted);font-size:11px;font-weight:750}
+  .budget-total b{display:block;color:var(--color-brand-deep);font-size:20px;line-height:1.2;margin-top:2px}
+  .budget-table-wrap{padding:var(--space-3);overflow-x:auto}
+  table{width:100%;border-collapse:separate;border-spacing:0;font-size:14px}
+  th,td{padding:12px 12px;border-bottom:1px solid #e3eaf5;text-align:left;vertical-align:top}
+  th{background:#f4f8fd;color:#314763;font-size:12px;font-weight:800}
+  th:first-child{border-top-left-radius:var(--radius-small)}
+  th:last-child{border-top-right-radius:var(--radius-small)}
+  tbody tr:hover td{background:#f8fbff}
+  td.r{text-align:right;font-variant-numeric:tabular-nums;font-weight:800;color:var(--color-brand-deep)}
+  .total-row td{background:#edf5ff!important;border-top:2px solid #9bbde6;border-bottom:0;font-weight:900}
+  .total-row td:first-child{border-bottom-left-radius:var(--radius-small)}
+  .total-row td:last-child{border-bottom-right-radius:var(--radius-small)}
+  .todo{list-style:none;padding:0;margin:0}
+  .todo li{padding:8px 0;border-bottom:1px solid #eef2f4}
+  .todo.book li:before{content:"□";color:var(--color-brand);font-weight:800;margin-right:6px}
+  .todo.decide li:before{content:"•";color:var(--color-warning);font-weight:800;margin-right:6px}
+  .twohead{font-weight:800;margin:2px 0 6px;font-size:14px}
+  .empty-state{border:1px dashed var(--color-border);border-radius:var(--radius-medium);background:var(--color-surface-alt);padding:var(--space-6);color:var(--color-text-muted);text-align:center}
+  .toast{position:fixed;right:var(--space-4);bottom:var(--space-4);z-index:var(--z-toast);background:#17324d;color:#fff;border-radius:var(--radius-medium);
+    box-shadow:var(--shadow-popover);padding:var(--space-3) var(--space-4);font-weight:800;opacity:0;transform:translateY(10px);pointer-events:none;transition:.18s ease}
+  .toast.show{opacity:1;transform:translateY(0)}
+  footer{margin-top:34px;color:var(--color-text-muted);font-size:12px;text-align:center}
+  @keyframes skeleton{0%{background-position:100% 0}100%{background-position:0 0}}
+  @media(max-width:1120px){
+    .shell-body{grid-template-columns:190px minmax(0,1fr)}
+    .summary-panel{position:static;grid-column:2}
+  }
+  @media(max-width:760px){
+    body{background:linear-gradient(180deg,#fff 0,#fff 56px,#0b5cab 56px,#276f9f 170px,#eef4fb 170px,#eef4fb 100%)}
+    .app-shell::before{top:56px;height:132px}
+    .global-header{position:relative;height:56px;min-height:56px;padding:0 12px;gap:8px}
+    .brand-home{gap:8px;min-width:0}
+    .brand-title{font-size:14px;line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .global-actions{margin-left:auto;flex:0 0 auto;max-width:44%;overflow:visible}
+    .global-actions a:not(.back-link){display:none}
+    .global-actions .back-link{min-height:34px;padding:0 9px;font-size:12px}
+    .shell-body{display:block;padding:14px 12px 12px}
+    .side-nav{display:none}
+    .summary-panel{margin-top:var(--space-3)}
+    .hero-main{padding:var(--space-4)}
+    .title-cluster{gap:var(--space-2)}
+    .record-icon{width:36px;height:36px}
+    .page-title-row{display:block}
+    .tabset{top:0}
+    .responsive-grid,.grid2,.check-grid{grid-template-columns:1fr}
+    table,thead,tbody,tr,th,td{display:block}
+    thead{display:none}
+    .budget-head{display:grid}
+    .budget-total{text-align:left;min-width:0}
+    tr{border:1px solid var(--color-border);border-radius:var(--radius-medium);padding:var(--space-2);margin-bottom:var(--space-2);background:#fff}
+    td{border:0;display:grid;grid-template-columns:96px 1fr;gap:var(--space-2)}
+    td:before{content:attr(data-label);font-weight:800;color:var(--color-text-muted)}
+    td.r{text-align:left}
+    #map{min-height:320px;height:52vh}
+  }
+  @media(prefers-reduced-motion:reduce){
+    html{scroll-behavior:auto}
+    *,*::before,*::after{animation:none!important;transition:none!important}
+  }
+</style>
+</head>
+<body>
+<div class="app-shell">
+  <header class="global-header">
+    <a class="brand-home" href="#main-content" aria-label="レポートの先頭へ">
+      <div class="brand-mark" aria-hidden="true">T</div>
+      <div class="brand-title">Travel Planning Console</div>
+    </a>
+    <nav class="global-actions" aria-label="クイックリンク">
+      <a href="#route">地図</a>
+      <a href="#itinerary">行程</a>
+      <a href="#checks">先読み</a>
+      <a href="#budget">費用</a>
+      <a href="#next">予約</a>
+    </nav>
+  </header>
+
+  <div class="shell-body">
+    <nav class="side-nav" aria-label="セクションナビ">
+      <p class="side-nav-title">ページ内ナビ</p>
+      <a href="#route">ルート</a>
+      <a href="#access">アクセス</a>
+      <a href="#itinerary">行程</a>
+      <a href="#meals">食事</a>
+      <a href="#activities">アクティビティ</a>
+      <a href="#checks">先読みチェック</a>
+      <a href="#budget">費用</a>
+      <a href="#next">予約ToDo</a>
+    </nav>
+
+<main class="main-content" id="main-content">
+  <header class="hero">
+    <div class="hero-main">
+    <div class="page-title-row">
+      <div class="title-cluster">
+        <div class="record-icon" aria-hidden="true">旅</div>
+        <div>
+          <div class="kicker">2026年秋｜福井 1泊2日｜東京4人・神戸2人</div>
+          <h1>福井・東尋坊＋あわら温泉 1泊2日</h1>
+        </div>
+      </div>
+    </div>
+    <p class="lead">永平寺の静けさ、東尋坊の海景色、あわらの温泉をつなぎ、11月は越前がにまで味わう福井県内完結ルートです。</p>
+    <div class="badges"><span class="badge">🗓 1泊2日</span><span class="badge">👥 6人</span><span class="badge">🚉 集合: 福井駅</span><span class="badge">🚐 10人乗り1台</span><span class="badge">🦀 狙い目: 11/14–15・11/21–22</span></div>
+    <div class="action-bar" aria-label="主要アクション">
+      <a class="btn subtle" href="#access">アクセスを見る</a>
+      <a class="btn primary" href="#next">予約ToDoを見る</a>
+      <a class="btn" href="#map">地図を確認</a>
+      <a class="btn" href="#checks">先読みチェック</a>
+      <a class="btn" href="#budget">費用を見る</a>
+    </div>
+    </div>
+  </header>
+
+  <nav class="tabset" aria-label="レポートタブ">
+    <a href="#route">概要</a>
+    <a href="#itinerary">行程</a>
+    <a href="#meals">食事</a>
+    <a href="#activities">体験</a>
+    <a href="#stay">宿</a>
+    <a href="#checks">先読み</a>
+    <a href="#budget">費用</a>
+    <a href="#next">予約</a>
+  </nav>
+
+  <section id="route">
+    <h2><span class="dot"></span>ルート地図</h2>
+    <p class="sub">番号順に巡るルート。赤い線は訪問順を示す概略ルートです。</p>
+    <div id="map"></div>
+    <div class="legend">
+      <span><i class="routeline"></i>順路</span>
+      <span><i class="swatch" style="background:#16354a"></i>集合・拠点</span>
+      <span><i class="swatch" style="background:#d23b2c"></i>観光スポット</span>
+      <span><i class="swatch" style="background:#b07d24"></i>食事の街</span>
+    </div>
+    <div class="pinindex" id="pinindex"></div>
+    <p class="sub" style="margin-top:8px">番号をタップすると、地図のその場所に移動します。</p>
+  </section>
+
+  <section id="access">
+    <h2><span class="dot"></span>行き帰りのアクセス</h2>
+    <p class="sub">東京組・神戸組は福井駅で合流。現行ダイヤの代表列車では10:10前後にそろい、福井駅から共通行程を始めます。</p>
+    <div class="card"><div class="twohead">東京発（4人）</div><div class="access" id="acc-a"></div></div>
+    <div class="card"><div class="twohead">神戸発（2人）</div><div class="access" id="acc-b"></div></div>
+  </section>
+
+  <section id="itinerary">
+    <h2><span class="dot"></span>行程</h2>
+    <p class="sub">番号は上の地図のピンと同じ順番です。スポット名は地図リンク、区間リンクは公式時刻・料金ページまたは経路地図に飛びます。</p>
+    <div id="days"></div>
+  </section>
+
+  <section id="meals">
+    <h2><span class="dot"></span>食事候補</h2>
+    <p class="sub">タイミング別の候補。気分と予約状況で選べます。</p>
+    <div id="meal-list"></div>
+  </section>
+
+  <section id="activities">
+    <h2><span class="dot"></span>アクティビティ候補</h2>
+    <p class="sub">行程に入れるかを相談しやすい体験候補です。天気・体力・予約状況で選べます。</p>
+    <div class="grid2" id="activity-list"></div>
+  </section>
+
+  <section id="other">
+    <h2><span class="dot"></span>他にもおすすめのスポット</h2>
+    <p class="sub">天気や気分で順路に足せる候補です。</p>
+    <div class="grid2" id="other-list"></div>
+  </section>
+
+  <section id="car">
+    <h2><span class="dot"></span>レンタカー</h2>
+    <p class="sub">福井駅でW4・ハイエース グランドキャビン（10人乗り）1台を約30時間利用。6人分の1泊荷物を積める実車を指定します。</p>
+    <div class="grid2" id="car-list"></div>
+  </section>
+
+  <section id="stay">
+    <h2><span class="dot"></span>宿</h2>
+    <p class="sub">あわら温泉の1泊2食付き。越前がに会席は料理ランクで総額差が大きいため、6名2室と3室の両方で比較します。</p>
+    <div class="grid2" id="stay-list"></div>
+  </section>
+
+  <section id="checks">
+    <h2><span class="dot"></span>先読みチェック</h2>
+    <p class="sub">予約前に見落としやすい費用・リスク・代替案です。</p>
+    <div class="check-grid" id="check-list"></div>
+  </section>
+
+  <section id="budget">
+    <h2><span class="dot"></span>費用のめやす（1人あたり）</h2>
+    <div class="card budget-card">
+      <div class="budget-head">
+        <div>
+          <p class="summary-title">費用サマリー</p>
+          <h3>1人あたりの概算</h3>
+        </div>
+        <div class="budget-total">
+          <span>合計めやす</span>
+          <b id="budget-total-pill">-</b>
+        </div>
+      </div>
+      <div class="budget-table-wrap"><table id="budget-table"></table></div>
+    </div>
+  </section>
+
+  <section id="next">
+    <h2><span class="dot"></span>これから決める・予約すること</h2>
+    <div class="card"><div class="twohead">予約するもの</div><ul class="todo book" id="book-list"></ul></div>
+    <div class="card"><div class="twohead">グループで決めること（まだ未確定）</div><ul class="todo decide" id="decide-list"></ul></div>
+  </section>
+
+  <footer>所要時間・便は作成時点の各社公式時刻表・地図経路に基づくめやすです。</footer>
+</main>
+
+    <aside class="summary-panel" aria-label="旅の要点">
+      <div>
+        <p class="summary-title">旅の要点</p>
+        <div class="summary-grid">
+          <div class="summary-metric"><span>日数</span><b id="summary-days">-</b></div>
+          <div class="summary-metric"><span>訪問地</span><b id="summary-spots">-</b></div>
+          <div class="summary-metric"><span>食事候補</span><b id="summary-meals">-</b></div>
+          <div class="summary-metric"><span>確認項目</span><b id="summary-checks">-</b></div>
+          <div class="summary-metric"><span>予約項目</span><b id="summary-todos">-</b></div>
+        </div>
+      </div>
+      <div class="utility-links">
+        <p class="summary-title">すぐ確認</p>
+        <a href="#route">ルート地図</a>
+        <a href="#itinerary">当日の流れ</a>
+        <a href="#checks">先読みチェック</a>
+        <a href="#budget">費用のめやす</a>
+        <a href="#next">これから決めること</a>
+      </div>
+    </aside>
+  </div>
+</div>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+  integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+<script>
+/* =================== DATA（ここだけ案件ごとに差し替える） =================== */
+const mapSpots = [
+  {
+    "n": 1,
+    "name": "福井駅",
+    "short": "福井駅",
+    "lat": 36.062,
+    "lng": 136.223,
+    "kind": "hub",
+    "time": "Day1 10:15"
+  },
+  {
+    "n": 2,
+    "name": "大本山永平寺",
+    "short": "永平寺",
+    "lat": 36.0553,
+    "lng": 136.356,
+    "kind": "spot",
+    "time": "Day1 11:10"
+  },
+  {
+    "n": 3,
+    "name": "東尋坊",
+    "short": "東尋坊",
+    "lat": 36.2376,
+    "lng": 136.1265,
+    "kind": "spot",
+    "time": "Day1 14:30"
+  },
+  {
+    "n": 4,
+    "name": "あわら温泉",
+    "short": "あわら温泉",
+    "lat": 36.223,
+    "lng": 136.192,
+    "kind": "spot",
+    "time": "Day1 17:00"
+  },
+  {
+    "n": 5,
+    "name": "越前かにまつり・道の駅越前",
+    "short": "かにまつり",
+    "lat": 35.9188,
+    "lng": 135.9946,
+    "kind": "spot",
+    "time": "Day2 09:35"
+  },
+  {
+    "n": 6,
+    "name": "福井駅",
+    "short": "福井駅・解散",
+    "lat": 36.062,
+    "lng": 136.223,
+    "kind": "hub",
+    "time": "Day2 13:30"
+  }
+];
+
+const foodTowns = [
+  {
+    "name": "永平寺門前",
+    "lat": 36.057,
+    "lng": 136.353
+  },
+  {
+    "name": "あわら温泉街",
+    "lat": 36.223,
+    "lng": 136.192
+  }
+];
+
+const access = {
+  "a": [
+    {
+      "ic": "🚄",
+      "ttl": "東京 → 福井",
+      "meta": "代表: かがやき503号 東京07:20→福井10:09、2時間49分。通常期指定席は片道15,830円、往復31,660円。",
+      "pills": [
+        {
+          "cls": "book",
+          "label": "2026年3月ダイヤ改正: JR東日本",
+          "url": "https://www.jreast.co.jp/press/2025/timetable/"
+        },
+        {
+          "cls": "book",
+          "label": "空席・料金: えきねっと",
+          "url": "https://www.eki-net.com/personal/top/index"
+        }
+      ]
+    },
+    {
+      "ic": "🚄",
+      "ttl": "福井 → 東京",
+      "meta": "代表: かがやき512号 福井16:23→東京19:20、2時間57分。福井駅には出発20分前までに戻ります。",
+      "pills": [
+        {
+          "cls": "book",
+          "label": "2026年3月ダイヤ改正: JR東日本",
+          "url": "https://www.jreast.co.jp/press/2025/timetable/"
+        },
+        {
+          "cls": "book",
+          "label": "予約: えきねっと",
+          "url": "https://www.eki-net.com/personal/top/index"
+        }
+      ]
+    }
+  ],
+  "b": [
+    {
+      "ic": "🚃",
+      "ttl": "三ノ宮 → 大阪 → 敦賀 → 福井",
+      "meta": "代表: 三ノ宮07:26→大阪07:48、サンダーバード7号 大阪08:10→敦賀09:37、つるぎ8号 敦賀09:46→福井10:06。片道7,420円、往復14,840円。",
+      "pills": [
+        {
+          "cls": "book",
+          "label": "時刻・運賃: JRおでかけネット",
+          "url": "https://www.jr-odekake.net/railroad/"
+        },
+        {
+          "cls": "book",
+          "label": "予約: e5489",
+          "url": "https://www.jr-odekake.net/goyoyaku/e5489/"
+        }
+      ]
+    },
+    {
+      "ic": "🚃",
+      "ttl": "福井 → 敦賀 → 大阪 → 三ノ宮",
+      "meta": "代表: つるぎ33号 福井16:41→敦賀17:02、サンダーバード34号 敦賀17:14→大阪18:39。三ノ宮は19:10頃。",
+      "pills": [
+        {
+          "cls": "book",
+          "label": "時刻・運賃: JRおでかけネット",
+          "url": "https://www.jr-odekake.net/railroad/"
+        },
+        {
+          "cls": "book",
+          "label": "予約: e5489",
+          "url": "https://www.jr-odekake.net/goyoyaku/e5489/"
+        }
+      ]
+    }
+  ]
+};
+
+const days = [
+  {
+    "label": "Day1｜禅・海景色・温泉",
+    "stops": [
+      {
+        "num": 1,
+        "kind": "hub",
+        "t": "10:15",
+        "p": "福井駅集合・レンタカー受取",
+        "url": "https://www.google.com/maps/search/?api=1&query=%E7%A6%8F%E4%BA%95%E9%A7%85",
+        "hint": "東京組は10:09着、神戸組は先着。10:35出発を目安に荷物を積みます。",
+        "move": {
+          "ic": "🚗",
+          "label": "車 約30分＋駐車10分",
+          "url": "https://www.google.com/maps/dir/?api=1&origin=%E7%A6%8F%E4%BA%95%E9%A7%85&destination=%E5%A4%A7%E6%9C%AC%E5%B1%B1%E6%B0%B8%E5%B9%B3%E5%AF%BA&travelmode=driving"
+        }
+      },
+      {
+        "num": 2,
+        "t": "11:15",
+        "p": "大本山永平寺・門前ランチ",
+        "url": "https://www.eiheiji.jp/main/archives/89",
+        "hint": "先に昼食を取り、12:10〜13:30に回廊と伽藍を拝観。食事は下の3候補から予約状況で選びます。",
+        "move": {
+          "ic": "🚗",
+          "label": "車 約55分＋駐車10分",
+          "url": "https://www.google.com/maps/dir/?api=1&origin=%E5%A4%A7%E6%9C%AC%E5%B1%B1%E6%B0%B8%E5%B9%B3%E5%AF%BA&destination=%E6%9D%B1%E5%B0%8B%E5%9D%8A&travelmode=driving"
+        }
+      },
+      {
+        "num": 3,
+        "t": "14:35",
+        "p": "東尋坊・海岸散策と遊覧船",
+        "url": "https://kanko-sakai.com/spot/k001/",
+        "hint": "遊覧船は1周約30分・大人1,800円。冬期ダイヤで11月は15:30までのため、14:45便前後を狙い、欠航時は散策とカフェに切り替えます。",
+        "move": {
+          "ic": "🚗",
+          "label": "車 約20分",
+          "url": "https://www.google.com/maps/dir/?api=1&origin=%E6%9D%B1%E5%B0%8B%E5%9D%8A&destination=%E3%81%82%E3%82%8F%E3%82%89%E6%B8%A9%E6%B3%89&travelmode=driving"
+        }
+      },
+      {
+        "num": 4,
+        "t": "16:50",
+        "p": "あわら温泉・チェックイン",
+        "url": "https://awara.info/",
+        "hint": "夕食前に温泉と部屋時間を約2時間確保。夕食後の運転はありません。"
+      }
+    ]
+  },
+  {
+    "label": "Day2｜越前がにの朝市と帰路",
+    "stops": [
+      {
+        "t": "07:00",
+        "p": "朝食・チェックアウト",
+        "url": "#stay",
+        "hint": "08:00出発。かにまつり開催日以外は三国湊散策へ差し替え、Day2の走行を約100km短縮します。",
+        "move": {
+          "ic": "🚗",
+          "label": "車 約80分＋混雑余裕15分",
+          "url": "https://www.google.com/maps/dir/?api=1&origin=%E3%81%82%E3%82%8F%E3%82%89%E6%B8%A9%E6%B3%89&destination=%E9%81%93%E3%81%AE%E9%A7%85%20%E8%B6%8A%E5%89%8D&travelmode=driving"
+        }
+      },
+      {
+        "num": 5,
+        "t": "09:35",
+        "p": "越前かにまつり2026",
+        "url": "https://www.fuku-e.com/event/detail_5236.html",
+        "hint": "11/14・15、11/21・22の9:00〜15:00。10:15頃から海鮮グルメを早めの昼食にし、11:45までに会場を出ます。",
+        "move": {
+          "ic": "🚗",
+          "label": "車 約75分＋給油・返却30分",
+          "url": "https://www.google.com/maps/dir/?api=1&origin=%E9%81%93%E3%81%AE%E9%A7%85%20%E8%B6%8A%E5%89%8D&destination=%E7%A6%8F%E4%BA%95%E9%A7%85&travelmode=driving"
+        }
+      },
+      {
+        "num": 6,
+        "kind": "hub",
+        "t": "13:30",
+        "p": "福井駅・レンタカー返却・解散",
+        "url": "https://www.google.com/maps/search/?api=1&query=%E7%A6%8F%E4%BA%95%E9%A7%85",
+        "hint": "Day2だけで約130km・運転約2時間35分。返却後は東京組16:23、神戸組16:41の代表列車まで駅で休憩します。"
+      }
+    ]
+  }
+];
+
+const meals = [
+  {
+    "when": "Day1昼｜永平寺門前",
+    "items": [
+      {
+        "name": "けんぞう蕎麦",
+        "url": "https://www.kenzousoba.com/",
+        "price": "1,000〜1,999円",
+        "hint": "食べログ3.68/931人、Google 4.1/1,460件。味本命ですが週末30〜90分待ちの可能性があり、遅延時は門前店へ切替。",
+        "tag": "味本命"
+      },
+      {
+        "name": "永平寺そば亭 一休",
+        "url": "https://zen-eiheiji.jp/shop/entry-50.html",
+        "price": "1,000〜1,999円",
+        "hint": "食べログ3.43/186人、Google 4.0/544件。予約可・80席で6名をまとめやすく、門前立地の実行性本命。",
+        "tag": "実行性本命"
+      },
+      {
+        "name": "てらぐち",
+        "url": "https://www.google.com/maps/search/?api=1&query=%E3%81%A6%E3%82%89%E3%81%90%E3%81%A1%20%E6%B0%B8%E5%B9%B3%E5%AF%BA",
+        "price": "〜1,999円",
+        "hint": "食べログ3.46/222人、Google 3.7/149件。基準未達ですが参拝口徒歩数分で、到着遅延時の合理的な例外。",
+        "tag": "立地例外"
+      }
+    ]
+  },
+  {
+    "when": "Day1夜｜あわら温泉",
+    "items": [
+      {
+        "name": "グランディア芳泉・越前がに会席",
+        "url": "https://www.g-housen.co.jp/",
+        "price": "1泊2食 2〜4万円台〜",
+        "hint": "食べログ3.26/約134人、Google 4.3/2,119件。上質本命。タグ付きがにの杯数・追加料金・6名の部屋割りを比較。",
+        "tag": "上質本命"
+      },
+      {
+        "name": "まつや千千・かに会席",
+        "url": "https://matuyasensen.co.jp/",
+        "price": "1泊2食 2〜3万円台〜",
+        "hint": "食べログ3.25/約102人、Google 4.3/1,756件。会話しやすい和会席。夕食開始時刻と料理内容を固定。",
+        "tag": "会話重視"
+      },
+      {
+        "name": "清風荘・かにプラン",
+        "url": "https://www.seifuso.com/",
+        "price": "1泊2食 2〜3万円台〜",
+        "hint": "食べログ3.25/約97人、Google 4.0/1,825件。大人数向き。ビュッフェと会席で料金差が大きい。",
+        "tag": "カジュアル"
+      }
+    ]
+  },
+  {
+    "when": "Day2昼｜越前町",
+    "items": [
+      {
+        "name": "越前かにまつり・海鮮グルメ",
+        "url": "https://www.fuku-e.com/event/detail_5236.html",
+        "price": "1,500〜4,000円",
+        "hint": "かに汁・海鮮焼き等。開催日限定で、混雑と売切れを見込み10時台に食べ始めます。",
+        "tag": "開催日限定",
+        "sns": true
+      },
+      {
+        "name": "越前 蟹の坊",
+        "url": "https://www.google.com/maps/search/?api=1&query=%E8%B6%8A%E5%89%8D%20%E8%9F%B9%E3%81%AE%E5%9D%8A",
+        "price": "3,000〜3,999円",
+        "hint": "食べログ3.58/約352人、Google 4.3/745件。三国港駅側なので、祭りを外す日の旅程本命。",
+        "tag": "通常日本命"
+      },
+      {
+        "name": "料理茶屋 魚志楼",
+        "url": "https://www.google.com/maps/search/?api=1&query=%E6%96%99%E7%90%86%E8%8C%B6%E5%B1%8B%20%E9%AD%9A%E5%BF%97%E6%A5%BC",
+        "price": "2,000〜2,999円",
+        "hint": "食べログ3.50/68人、Google 4.3/191件。歴史建築で会話しやすく、6名は事前電話予約推奨。",
+        "tag": "雰囲気本命"
+      }
+    ]
+  }
+];
+
+const activities = [
+  {
+    "name": "東尋坊観光遊覧船",
+    "url": "https://www.toujinbou-yuransen.jp/",
+    "price": "大人（中学生以上）1,800円",
+    "hint": "1周約30分。4〜10月9:00〜16:00、11〜3月9:00〜15:30。毎週水曜定休、海況で欠航。",
+    "tag": "海上体験"
+  },
+  {
+    "name": "永平寺拝観",
+    "url": "https://www.eiheiji.jp/main/archives/89",
+    "price": "大人700円",
+    "hint": "拝観8:30〜16:30（入場16:00まで）。回廊と七堂伽藍を60〜90分。雨でも組みやすい。",
+    "tag": "文化"
+  },
+  {
+    "name": "福井県立恐竜博物館",
+    "url": "https://www.dinosaur.pref.fukui.jp/guide/admission.html",
+    "price": "大人1,000円",
+    "hint": "荒天時の終日代替。日時指定券が必要で、東尋坊ルートとは朝に入れ替えます。",
+    "tag": "雨天代替"
+  },
+  {
+    "name": "化石研究体験",
+    "url": "https://www.dinosaur.pref.fukui.jp/event/fossil.html",
+    "price": "一般2,200円目安",
+    "hint": "約2時間。恐竜博物館へ切り替える日に事前予約。",
+    "tag": "予約制"
+  }
+];
+
+const other = [
+  {
+    "name": "三國湊の町並み",
+    "url": "https://www.google.com/maps/search/?api=1&query=%E4%B8%89%E5%9C%8B%E6%B9%8A",
+    "price": "",
+    "hint": "かにまつり日以外のDay2候補。あわら温泉から車約20分。"
+  },
+  {
+    "name": "丸岡城",
+    "url": "https://maruoka-castle.jp/",
+    "price": "入場料は公式で確認",
+    "hint": "福井駅へ戻る途中に60分。強風で東尋坊を短縮した日の差し替え。"
+  },
+  {
+    "name": "福井県立恐竜博物館",
+    "url": "https://www.dinosaur.pref.fukui.jp/",
+    "price": "大人1,000円",
+    "hint": "雨天に強いが、あわら・東尋坊とは逆方向のためルート単位で差し替え。"
+  },
+  {
+    "name": "一乗谷朝倉氏遺跡",
+    "url": "https://asakura-museum.pref.fukui.lg.jp/",
+    "price": "博物館は別料金",
+    "hint": "永平寺と組み合わせやすい歴史スポット。"
+  }
+];
+
+const cars = [
+  {
+    "name": "トヨタレンタカー 福井駅東口店（W4クラス）",
+    "url": "https://rent.toyota.co.jp/sp/shop/detail.aspx?rCode=64301&eCode=013",
+    "price": "基本・補償 約4.7万〜6.2万円/30時間",
+    "hint": "福井駅東口で受取・返却。10人乗りは台数が限られるため、6名＋1泊荷物が積めるか実車と荷室を電話確認。燃料等を含む車関連総額は約5.9万〜6.5万円。",
+    "tag": "受取店"
+  },
+  {
+    "name": "ハイエース グランドキャビン（10人乗り）の車種仕様",
+    "url": "https://www.tabirai.net/car/vehicle/vehicle-type/?VID=27",
+    "price": "10人乗り・W4クラス",
+    "hint": "定員・荷室・運転感覚の目安。運転担当2名が事前に見ておく用。",
+    "tag": "車種"
+  },
+  {
+    "name": "たびらいレンタカー 福井駅比較",
+    "url": "https://www.tabirai.net/car/fukui/",
+    "price": "日付・10人乗りで検索",
+    "hint": "W4相当1台を、免責・NOC補償込みの総額で比較。",
+    "tag": "比較"
+  }
+];
+
+const stays = [
+  {
+    "name": "グランディア芳泉",
+    "url": "https://www.g-housen.co.jp/",
+    "price": "1泊2食 2.8万〜5万円台/人",
+    "hint": "大浴場・食事・6名対応の総合本命。越前がにの料理ランクを確認。",
+    "tag": "本命"
+  },
+  {
+    "name": "楽天トラベル：あわら温泉",
+    "url": "https://travel.rakuten.co.jp/onsen/fukui/OK00428.html",
+    "price": "6名・2〜3室で検索",
+    "hint": "キャンセル条件と夕食開始時刻まで比較。"
+  },
+  {
+    "name": "じゃらん：あわら温泉",
+    "url": "https://www.jalan.net/200000/LRG_200200/SML_200202/",
+    "price": "6名・2〜3室で検索",
+    "hint": "カニ会席のプラン本文と総額を比較。"
+  },
+  {
+    "name": "agoda：あわら",
+    "url": "https://www.agoda.com/ja-jp/city/awara-jp.html",
+    "price": "6名で検索",
+    "hint": "素泊まり表示と1泊2食表示を混同せず比較。"
+  }
+];
+
+const budget = [
+  [
+    "東京発 往復鉄道",
+    "3.166万円",
+    "北陸新幹線・通常期指定席"
+  ],
+  [
+    "神戸発 往復鉄道",
+    "1.484万円",
+    "新快速＋サンダーバード＋つるぎ"
+  ],
+  [
+    "宿・夕朝食",
+    "2.0〜4.0万円超",
+    "通常会席と越前がに会席で大きく変動"
+  ],
+  [
+    "レンタカー・燃料・駐車",
+    "0.98〜1.08万円",
+    "10人乗り1台を6人で按分"
+  ],
+  [
+    "昼食・拝観・遊覧船",
+    "0.6〜0.9万円",
+    "イベントでの飲食を含む"
+  ],
+  [
+    "東京発 合計",
+    "通常7.5〜8.3／かに8.6〜10.3万円",
+    "タグ付き越前がにでは予算超過"
+  ],
+  [
+    "神戸発 合計",
+    "通常5.8〜6.6／かに6.9〜8.6万円",
+    "かにの量で7万円超"
+  ]
+];
+
+const foresightList = [
+  {
+    "category": "時期",
+    "title": "越前がには11月6日以降を前提",
+    "status": "11月案",
+    "note": "10月は漁期前。かにまつりは11/14・15、11/21・22の9:00〜15:00です。",
+    "url": "https://www.fuku-e.com/event/detail_5236.html"
+  },
+  {
+    "category": "費用",
+    "title": "東京組は料理ランク次第で予算超過",
+    "status": "上限を決める",
+    "note": "宿の1泊2食を1人3万円以内にできるかが5〜7万円達成の分岐点です。"
+  },
+  {
+    "category": "海況",
+    "title": "遊覧船は風・波で欠航",
+    "status": "当日判断",
+    "note": "欠航時は東尋坊散策を短くし、丸岡城または宿の早着へ切り替えます。",
+    "url": "https://www.toujinbou-yuransen.jp/"
+  },
+  {
+    "category": "混雑",
+    "title": "かにまつりは午前から混雑",
+    "status": "10時前着",
+    "note": "駐車と売切れを避けるため、あわら温泉を8:20に出ます。"
+  },
+  {
+    "category": "運転",
+    "title": "祭り日はDay2だけで約130km",
+    "status": "2名交代",
+    "note": "2日合計は約220km超。あわら温泉から祭り会場まで約80分、会場から福井駅まで約75分を見込み、運転担当を2名決めます。"
+  },
+  {
+    "category": "代替",
+    "title": "荒天時は恐竜博物館へルート交換",
+    "status": "朝に切替",
+    "note": "東尋坊からの追加移動にはせず、Day1の海岸ルート全体を入れ替えます。",
+    "url": "https://www.dinosaur.pref.fukui.jp/guide/admission.html"
+  }
+];
+
+const bookList = [
+  {
+    "label": "東京組の北陸新幹線4席",
+    "url": "https://www.eki-net.com/personal/top/index"
+  },
+  {
+    "label": "神戸組のサンダーバード＋北陸新幹線2席",
+    "url": "https://www.jr-odekake.net/goyoyaku/e5489/"
+  },
+  {
+    "label": "あわら温泉の宿6名・夕朝食付き",
+    "url": "https://travel.rakuten.co.jp/onsen/fukui/OK00428.html"
+  },
+  {
+    "label": "越前がに料理の内容と6人分",
+    "url": "https://www.fuku-e.com/topics/detail_3496.html"
+  },
+  {
+    "label": "W4・10人乗りレンタカー1台",
+    "url": "https://www.tabirai.net/car/fukui/"
+  },
+  {
+    "label": "東尋坊遊覧船の当日運航",
+    "url": "https://www.toujinbou-yuransen.jp/"
+  }
+];
+
+const decideList = [
+  "11/14〜15と11/21〜22のどちらを狙うか",
+  "越前がにを1人1杯にするか、会席の一部にして予算を守るか",
+  "宿を6名2室にするか、ゆとり重視で3室にするか",
+  "遊覧船が欠航した場合、丸岡城と宿の早着のどちらにするか"
+];
+/* =================== /DATA =================== */
+
+
+/* =================== 描画（触らない） =================== */
+function colorOf(k){return k==="hub"?"#16354a":"#d23b2c";}
+function pinIcon(n,color){return L.divIcon({className:"",iconSize:[22,22],iconAnchor:[11,11],
+  html:`<div class="pin" style="background:${color}">${n}</div>`});}
+
+// ピンは実在地に置く。完全同座標の地点だけ約400m離す（拡大時に2つと分かるため）。
+function spread(items,thr=0.0015,r=0.004){
+  const placed=[];
+  return items.map(s=>{
+    let lat=s.lat,lng=s.lng,k=0;
+    while(placed.some(p=>Math.hypot(p[0]-lat,p[1]-lng)<thr)&&k<8){
+      const a=k*Math.PI/3; lat=s.lat+r*Math.sin(a); lng=s.lng+r*Math.cos(a); k++;
+    }
+    placed.push([lat,lng]);
+    return Object.assign({},s,{dlat:lat,dlng:lng});
+  });
+}
+const spots = spread(mapSpots);
+const markers={};
+let routeMap=null;
+
+function showToast(message){
+  const toast=document.getElementById("toast");
+  if(!toast)return;
+  toast.textContent=message;
+  toast.classList.add("show");
+  clearTimeout(showToast._timer);
+  showToast._timer=setTimeout(()=>toast.classList.remove("show"),2200);
+}
+
+function emptyState(label){
+  return `<div class="empty-state">${label}</div>`;
+}
+
+function populateSummary(){
+  const set=(id,value)=>{ const el=document.getElementById(id); if(el)el.textContent=value; };
+  set("summary-days", `${days.length}日`);
+  set("summary-spots", `${spots.length}件`);
+  set("summary-meals", `${meals.reduce((sum,g)=>sum+(g.items||[]).length,0)}件`);
+  set("summary-checks", `${(foresightList||[]).length}件`);
+  set("summary-todos", `${(bookList||[]).length}件`);
+}
+
+document.querySelectorAll(".side-nav a,.tabset a").forEach(link=>{
+  link.addEventListener("click",()=>showToast(`${link.textContent.trim()}を開きます`));
+});
+
+function initMap(){
+  const mapEl=document.getElementById("map");
+  if(!window.L){
+    mapEl.innerHTML='<div class="mapfallback">地図を読み込み中です。表示されない場合は通信環境を確認してください。</div>';
+    return;
+  }
+  mapEl.style.animation="none";
+  routeMap = L.map("map",{scrollWheelZoom:false});
+  L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",{maxZoom:18,attribution:'&copy; OpenStreetMap contributors'}).addTo(routeMap);
+  const latlngs = spots.map(s=>[s.dlat,s.dlng]);
+  L.polyline(latlngs,{color:"#d23b2c",weight:4,opacity:.9,lineJoin:"round"}).addTo(routeMap);
+  spots.forEach(s=>{ markers[s.n]=L.marker([s.dlat,s.dlng],{icon:pinIcon(s.n,colorOf(s.kind))}).addTo(routeMap).bindPopup(`<b>${s.n}. ${s.name}</b><br>${s.time}`); });
+  foodTowns.forEach(f=>{ L.marker([f.lat,f.lng],{icon:L.divIcon({className:"",iconSize:[14,14],iconAnchor:[7,7],
+    html:`<div style="width:14px;height:14px;border-radius:50%;background:#b07d24;border:2px solid #fff;box-shadow:0 1px 4px rgba(0,0,0,.3)"></div>`})}).addTo(routeMap).bindPopup(`<b>🍽 ${f.name}</b>`); });
+  if(latlngs.length) routeMap.fitBounds(L.latLngBounds(latlngs).pad(0.2)); else routeMap.setView([36,138],5);
+}
+
+window.focusPin=(n)=>{ const s=spots.find(x=>x.n===n); if(!s)return;
+  if(routeMap&&markers[n]){ routeMap.setView([s.dlat,s.dlng],14,{animate:true}); markers[n].openPopup(); }
+  document.querySelectorAll(".pinbtn").forEach(b=>b.classList.toggle("active",Number(b.dataset.n)===n));
+  showToast(`${s.short||s.name}へ地図を移動しました`);
+};
+document.getElementById("pinindex").innerHTML = spots.map(s=>
+  `<button class="pinbtn" data-n="${s.n}" onclick="focusPin(${s.n})"><span class="num ${s.kind==='hub'?'hub':''}">${s.n}</span>${s.short}</button>`).join("");
+initMap();
+
+function legRow(l){ const pills=(l.pills||[]).map(p=>`<a class="pill ${p.cls}" href="${p.url}" target="_blank" rel="noopener">${p.label}</a>`).join("");
+  return `<div class="leg"><div class="ic">${l.ic}</div><div><div class="ttl">${l.ttl}</div><div class="meta">${l.meta}</div><div class="pillrow">${pills}</div></div></div>`; }
+document.getElementById("acc-a").innerHTML = (access.a||[]).length ? access.a.map(legRow).join("") : emptyState("アクセス情報は未設定です");
+document.getElementById("acc-b").innerHTML = (access.b||[]).length ? access.b.map(legRow).join("") : emptyState("アクセス情報は未設定です");
+
+document.getElementById("days").innerHTML = days.length ? days.map(d=>`
+  <div class="card day timeline"><h3>${d.label}</h3>
+  ${d.stops.map(s=>`<div class="stop"><div class="top">
+    ${s.num?`<span class="num ${s.kind==='hub'?'hub':''}">${s.num}</span>`:`<span style="width:22px;flex:0 0 auto"></span>`}
+    <div class="t">${s.t}</div>
+    <div class="p">${s.url?`<a href="${s.url}" target="_blank" rel="noopener">${s.p}</a>`:s.p}</div></div>
+    ${s.hint?`<div class="hint">${s.hint}</div>`:""}
+    ${s.move?`<a class="movelink" href="${s.move.url}" target="_blank" rel="noopener">${s.move.ic} ${s.move.label}${/(?:円|料金|運賃)/.test(s.move.label) ? "" : s.move.ic === "🚗" ? "・追加運賃0円（車費は費用欄）" : s.move.ic === "🚶" ? "・0円" : "・運賃はアクセス欄"}</a>`:""}
+  </div>`).join("")}</div>`).join("") : emptyState("行程は未設定です");
+
+const itemCard=(o)=>`<div class="item">${o.tag?`<span class="tag ${o.sns?'sns':''}">${o.tag}</span>`:""}
+  <div class="name"><a href="${o.url}" target="_blank" rel="noopener">${o.name}</a></div>
+  ${o.price?`<div class="price">${o.price}</div>`:""}${o.hint?`<div class="hint">${o.hint}</div>`:""}</div>`;
+document.getElementById("meal-list").innerHTML = meals.length ? meals.map(g=>`<div class="mealgroup"><div class="when">${g.when}</div><div class="grid2">${g.items.map(itemCard).join("")}</div></div>`).join("") : emptyState("食事候補は未設定です");
+document.getElementById("activity-list").innerHTML = activities.length ? activities.map(itemCard).join("") : emptyState("アクティビティ候補は未設定です");
+document.getElementById("other-list").innerHTML = other.length ? other.map(itemCard).join("") : emptyState("追加スポットは未設定です");
+document.getElementById("car-list").innerHTML   = cars.length ? cars.map(itemCard).join("") : emptyState("レンタカー候補は未設定です");
+document.getElementById("stay-list").innerHTML  = stays.length ? stays.map(itemCard).join("") : emptyState("宿候補は未設定です");
+const checkCard=(o)=>`<div class="check-card">
+  <div class="check-label">${o.category||"確認"}</div>
+  <div class="check-title">${o.url?`<a href="${o.url}" target="_blank" rel="noopener">${o.title}</a>`:o.title}</div>
+  ${o.note?`<div class="check-note">${o.note}</div>`:""}
+  ${o.status?`<span class="check-status">${o.status}</span>`:""}
+</div>`;
+document.getElementById("check-list").innerHTML = foresightList.length ? foresightList.map(checkCard).join("") : emptyState("先読みチェックは未設定です");
+const totalBudgetRow = budget.find(r=>String(r[0]).includes("合計"));
+const totalBudgetEl = document.getElementById("budget-total-pill");
+if(totalBudgetEl) totalBudgetEl.textContent = totalBudgetRow ? totalBudgetRow[1] : "調整中";
+document.getElementById("budget-table").innerHTML = `<thead><tr><th>項目</th><th>1人あたり</th><th>メモ</th></tr></thead><tbody>`+
+  budget.map(r=>{
+    const isTotal = String(r[0]).includes("合計");
+    return `<tr class="${isTotal ? "total-row" : ""}"><td data-label="項目">${r[0]}</td><td data-label="1人あたり" class="r">${r[1]}</td><td data-label="メモ">${r[2]}</td></tr>`;
+  }).join("")+`</tbody>`;
+document.getElementById("book-list").innerHTML = bookList.length ? bookList.map(c=>`<li><a href="${c.url}" target="_blank" rel="noopener">${c.label}</a></li>`).join("") : "<li>予約ToDoは未設定です</li>";
+document.getElementById("decide-list").innerHTML = decideList.length ? decideList.map(d=>`<li>${d}</li>`).join("") : "<li>未確定事項は未設定です</li>";
+populateSummary();
+</script>
+</body>
+</html>
